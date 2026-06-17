@@ -14,7 +14,7 @@
   <!-- Project Information -->
   <groupId>tools.vitruv.compmodelcons</groupId>
   <artifactId>tools.vitruv.compmodelcons</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Componentization of Model Consistency</name>
