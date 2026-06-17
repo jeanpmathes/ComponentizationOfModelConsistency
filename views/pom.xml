@@ -12,6 +12,13 @@
     <artifactId>tools.vitruv.compmodelcons.views</artifactId>
 
     <dependencies>
+        <!-- NeoJoin dependencies -->
+        <dependency>
+            <groupId>tools.vitruv</groupId>
+            <artifactId>tools.vitruv.neojoin.frontend.language</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+        </dependency>
+
         <!-- Vitruvius dependencies -->
         <dependency>
             <groupId>tools.vitruv</groupId>
@@ -67,6 +74,10 @@
             <groupId>org.eclipse.xtend</groupId>
             <artifactId>org.eclipse.xtend.lib</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.emf</groupId>
+            <artifactId>org.eclipse.emf.ecore.xmi</artifactId>
+        </dependency>
 
         <!-- external test dependencies -->
         <dependency>
@@ -97,11 +108,6 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.emf</groupId>
-            <artifactId>org.eclipse.emf.ecore.xmi</artifactId>
             <scope>test</scope>
         </dependency>
 
