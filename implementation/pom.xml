@@ -32,6 +32,8 @@
   <!-- Modules -->
   <modules>
     <module>views</module>
+    <module>generator</module>
+    <module>neojoin-maven-plugin</module>
   </modules>
 
   <properties>

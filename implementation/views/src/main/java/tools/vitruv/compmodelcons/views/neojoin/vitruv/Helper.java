@@ -25,7 +25,7 @@ public class Helper { // todo: this class should be removed at some point
         var registry = new EPackageRegistryImpl();
         var packageResourceSet = new ResourceSetImpl();
 
-        // todo: for registry creation, Vitruv probably already loads them so reusing that registry would be nice
+        // todo: for registry creation, Vitruv probably already loads them so reusing that registry would be nice, see what reactions do
         // todo: the created view should maybe also have a package, but NeoJoin already has code to create ecore from NeoJoin
 
         for (var path : List.of("/imdb.ecore", "/library.ecore")) {
