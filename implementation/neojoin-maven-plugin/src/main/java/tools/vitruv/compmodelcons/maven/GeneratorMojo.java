@@ -59,7 +59,8 @@ public class GeneratorMojo extends AbstractMojo {
 
             for (Path neoJoinFilePath : discoverNeoJoinFiles(inputDirectoryPath)) {
                 Path relativeNeoJoinFilePath = inputDirectoryPath.relativize(neoJoinFilePath);
-                Helper.getAQR(neoJoinFilePath.toString()).ifPresent(aqr -> {
+                // todo: no longer use helper, also streamline path handling instead of using the back and forth conversion
+                Helper.getAQR(neoJoinFilePath.toString(), null).ifPresent(aqr -> {
                     try {
                         generator.generate(relativeNeoJoinFilePath, aqr);
                     } catch (IOException e) {

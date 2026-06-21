@@ -16,25 +16,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class Helper { // todo: this class should be removed at some point
-    public static Optional<AQR> getAQR(String file) throws IOException {
-        if (!Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().containsKey("ecore")) {
-            Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(
-                    "ecore", new EcoreResourceFactoryImpl());
-        }
-
-        var registry = new EPackageRegistryImpl();
-        var packageResourceSet = new ResourceSetImpl();
-
-        // todo: for registry creation, Vitruv probably already loads them so reusing that registry would be nice, see what reactions do
+    public static Optional<AQR> getAQR(String file, EPackage.Registry registry) throws IOException {
         // todo: the created view should maybe also have a package, but NeoJoin already has code to create ecore from NeoJoin
-
-        for (var path : List.of("/imdb.ecore", "/library.ecore")) {
-            var resource = packageResourceSet.createResource(URI.createURI(path));
-            var input = Objects.requireNonNull(Helper.class.getResourceAsStream(path));
-            resource.load(input, null);
-            var loadedPackage = (EPackage) resource.getContents().get(0);
-            registry.put(loadedPackage.getNsURI(), loadedPackage);
-        }
 
         NeoJoinStandaloneSetup setup = new NeoJoinStandaloneSetup(registry);
         Parser.Result result = setup.getParser().parse(URI.createFileURI(file));

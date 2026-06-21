@@ -1,6 +1,5 @@
 package tools.vitruv.compmodelcons.views.impl;
 
-import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import tools.vitruv.change.atomic.hid.HierarchicalId;
@@ -20,7 +19,7 @@ import java.util.Optional;
 
 public abstract class TransformingViewType extends AbstractViewType<DefaultSelector, HierarchicalId> {
 
-    public TransformingViewType(String name, EPackage metaModel, URI viewUri) {
+    public TransformingViewType(String name, EPackage metaModel) {
         super(name, metaModel);
     }
 
