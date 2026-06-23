@@ -22,14 +22,14 @@ public class ReactionsChangePropagationSpecificationWrapperImpl extends Abstract
     }
 
     @Override
-    protected LoweredEditableCorrespondenceModelView getLoweredCorrespondenceModel(EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
+    protected LiftedEditableCorrespondenceModelView getLiftedCorrespondenceModel(EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
         var baseView = correspondenceModel.getEditableView(ReactionsCorrespondence.class, CorrespondenceFactory.eINSTANCE::createReactionsCorrespondence);
         // todo: potentially use baseView and ViewChangePropagationParticipationSpecification::getCorrespondingObjects
 
         return new ReactionsEditableCorrespondenceModelView();
     }
 
-    private class ReactionsEditableCorrespondenceModelView extends LoweredEditableCorrespondenceModelView {
+    private class ReactionsEditableCorrespondenceModelView extends LiftedEditableCorrespondenceModelView {
 
         @Override
         public Correspondence addCorrespondenceBetween(List<EObject> list, List<EObject> list1, String s) {

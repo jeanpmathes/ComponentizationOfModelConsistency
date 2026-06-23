@@ -33,8 +33,7 @@
   <modules>
     <module>views</module>
     <module>generator</module>
-    <module>neojoin-maven-plugin</module>
-      <module>change</module>
+    <module>change</module>
   </modules>
 
   <properties>

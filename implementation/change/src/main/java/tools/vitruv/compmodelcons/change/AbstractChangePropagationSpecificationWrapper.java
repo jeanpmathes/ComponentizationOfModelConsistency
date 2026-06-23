@@ -34,26 +34,26 @@ public abstract class AbstractChangePropagationSpecificationWrapper implements C
 
     @Override
     public void propagateChange(EChange<EObject> eChange, EditableCorrespondenceModelView<Correspondence> editableCorrespondenceModelView, ResourceAccess resourceAccess, ViewChangePropagationContext context) {
-        EChange<EObject> loweredEChange = lowerEChange(eChange);
-        EditableCorrespondenceModelView<Correspondence> loweredEditableCorrespondenceModelView = getLoweredCorrespondenceModel(editableCorrespondenceModelView);
-        ResourceAccess loweredResourceAccess = getLoweredResourceAccess(resourceAccess);
+        EChange<EObject> liftedEChange = liftEChange(eChange);
+        EditableCorrespondenceModelView<Correspondence> liftedEditableCorrespondenceModelView = getLiftedCorrespondenceModel(editableCorrespondenceModelView);
+        ResourceAccess liftedResourceAccess = getLiftedResourceAccess(resourceAccess);
 
-        specification.propagateChange(loweredEChange, loweredEditableCorrespondenceModelView, loweredResourceAccess);
+        specification.propagateChange(liftedEChange, liftedEditableCorrespondenceModelView, liftedResourceAccess);
 
-        // Lifting of the correspondences and resource changes happens during change propagation using the classes.
+        // Lowering of the correspondences and resource changes happens during change propagation using the classes.
     }
 
-    private EChange<EObject> lowerEChange(EChange<EObject> eChange) {
+    private EChange<EObject> liftEChange(EChange<EObject> eChange) {
         return eChange;
     }
 
-    protected abstract LoweredEditableCorrespondenceModelView getLoweredCorrespondenceModel(EditableCorrespondenceModelView<Correspondence> correspondenceModel);
+    protected abstract LiftedEditableCorrespondenceModelView getLiftedCorrespondenceModel(EditableCorrespondenceModelView<Correspondence> correspondenceModel);
 
-    private LoweredResourceAccess getLoweredResourceAccess(ResourceAccess resourceAccess) {
-        return new LoweredResourceAccess();
+    private LiftedResourceAccess getLiftedResourceAccess(ResourceAccess resourceAccess) {
+        return new LiftedResourceAccess();
     }
 
-    private class LoweredResourceAccess implements ResourceAccess {
+    private class LiftedResourceAccess implements ResourceAccess {
         @Override
         public URI getMetadataModelURI(String... strings) {
             return null;
@@ -70,7 +70,7 @@ public abstract class AbstractChangePropagationSpecificationWrapper implements C
         }
     }
 
-    protected abstract class LoweredEditableCorrespondenceModelView implements EditableCorrespondenceModelView<Correspondence> {
+    protected abstract class LiftedEditableCorrespondenceModelView implements EditableCorrespondenceModelView<Correspondence> {
 
     }
 }

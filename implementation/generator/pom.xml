@@ -9,7 +9,7 @@
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>generator</artifactId>
+    <artifactId>tools.vitruv.compmodelcons.generator</artifactId>
 
     <properties>
         <maven.compiler.source>25</maven.compiler.source>
@@ -20,6 +20,12 @@
         <dependency>
             <groupId>tools.vitruv</groupId>
             <artifactId>tools.vitruv.neojoin.model</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>tools.vitruv</groupId>
+            <artifactId>tools.vitruv.neojoin.frontend.language</artifactId>
             <version>0.1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
