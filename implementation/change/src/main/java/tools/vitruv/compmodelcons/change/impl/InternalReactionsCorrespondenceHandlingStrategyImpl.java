@@ -4,7 +4,7 @@ import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.view.CorrespondenceModelView;
 import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
-import tools.vitruv.compmodelcons.change.AbstractChangePropagationSpecificationWrapper;
+import tools.vitruv.compmodelcons.change.CorrespondenceHandlingStrategy;
 import tools.vitruv.dsls.reactions.runtime.correspondence.CorrespondenceFactory;
 import tools.vitruv.dsls.reactions.runtime.correspondence.ReactionsCorrespondence;
 import tools.vitruv.dsls.reactions.runtime.reactions.AbstractReactionsChangePropagationSpecification;
@@ -13,23 +13,22 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
-public class ReactionsChangePropagationSpecificationWrapperImpl extends AbstractChangePropagationSpecificationWrapper {
+public class InternalReactionsCorrespondenceHandlingStrategyImpl implements CorrespondenceHandlingStrategy {
     private final AbstractReactionsChangePropagationSpecification specification;
 
-    public ReactionsChangePropagationSpecificationWrapperImpl(AbstractReactionsChangePropagationSpecification specification) {
-        super(specification);
+    public InternalReactionsCorrespondenceHandlingStrategyImpl(AbstractReactionsChangePropagationSpecification specification) {
         this.specification = specification;
     }
 
     @Override
-    protected LiftedEditableCorrespondenceModelView getLiftedCorrespondenceModel(EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
+    public EditableCorrespondenceModelView<Correspondence> getLiftedCorrespondenceModel(EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
         var baseView = correspondenceModel.getEditableView(ReactionsCorrespondence.class, CorrespondenceFactory.eINSTANCE::createReactionsCorrespondence);
         // todo: potentially use baseView and ViewChangePropagationParticipationSpecification::getCorrespondingObjects
 
-        return new ReactionsEditableCorrespondenceModelView();
+        return new LiftedCorrespondenceModelView();
     }
 
-    private class ReactionsEditableCorrespondenceModelView extends LiftedEditableCorrespondenceModelView {
+    private static class LiftedCorrespondenceModelView implements EditableCorrespondenceModelView<Correspondence> {
 
         @Override
         public Correspondence addCorrespondenceBetween(List<EObject> list, List<EObject> list1, String s) {

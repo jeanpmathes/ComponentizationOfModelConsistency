@@ -1,12 +1,18 @@
-package tools.vitruv.compmodelcons.change;
+package tools.vitruv.compmodelcons.views.impl;
 
+import org.eclipse.emf.ecore.EPackage;
+import tools.vitruv.compmodelcons.change.ViewChangePropagationSpecification;
 import tools.vitruv.framework.views.View;
 import tools.vitruv.framework.views.ViewTypeFactory;
 import tools.vitruv.framework.vsum.VirtualModel;
 
 import java.util.Collection;
 
-public abstract class AbstractViewChangePropagationParticipationSpecification implements ViewChangePropagationParticipationSpecification {
+public abstract class ChangeSpecificationAwareViewType extends TransformingViewType implements ViewChangePropagationSpecification {
+    public ChangeSpecificationAwareViewType(String name, EPackage metaModel) {
+        super(name, metaModel);
+    }
+
     @Override
     public View getView(VirtualModel vsum) { // todo: use the generated NeoJoin view type instead of identity mapping
         var selector = vsum.createSelector(ViewTypeFactory.createIdentityMappingViewType("default"));

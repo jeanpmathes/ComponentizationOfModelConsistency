@@ -10,11 +10,11 @@ import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.framework.vsum.VirtualModel;
 
 public class ViewChangePropagationSpecificationAdapter extends AbstractChangePropagationSpecification implements ChangePropagationSpecification {
-    private final ViewChangePropagationParticipationSpecification sourceViewType;
+    private final ViewChangePropagationSpecification sourceViewType;
     private final ChangePropagationSpecificationWrapper specification;
-    private final ViewChangePropagationParticipationSpecification targetViewType;
+    private final ViewChangePropagationSpecification targetViewType;
 
-    public ViewChangePropagationSpecificationAdapter(ViewChangePropagationParticipationSpecification sourceViewType, ChangePropagationSpecificationWrapper specification, ViewChangePropagationParticipationSpecification targetViewType) {
+    public ViewChangePropagationSpecificationAdapter(ViewChangePropagationSpecification sourceViewType, ChangePropagationSpecificationWrapper specification, ViewChangePropagationSpecification targetViewType) {
         super(sourceViewType.getOriginMetamodelDescriptor(), targetViewType.getViewTypeMetamodelDescriptor());
 
         if (!sourceViewType.getViewTypeMetamodelDescriptor().equals(specification.getSourceMetamodelDescriptor())) {

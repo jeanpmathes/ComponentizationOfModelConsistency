@@ -1,4 +1,4 @@
-package tools.vitruv.compmodelcons.change;
+package tools.vitruv.compmodelcons.change.impl;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -9,12 +9,17 @@ import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
 import tools.vitruv.change.propagation.ChangePropagationSpecification;
 import tools.vitruv.change.utils.ResourceAccess;
+import tools.vitruv.compmodelcons.change.ChangePropagationSpecificationWrapper;
+import tools.vitruv.compmodelcons.change.CorrespondenceHandlingStrategy;
+import tools.vitruv.compmodelcons.change.ViewChangePropagationContext;
 
-public abstract class AbstractChangePropagationSpecificationWrapper implements ChangePropagationSpecificationWrapper {
+public class ChangePropagationSpecificationWrapperImpl implements ChangePropagationSpecificationWrapper {
     private final ChangePropagationSpecification specification;
+    private final CorrespondenceHandlingStrategy correspondenceHandlingStrategy;
 
-    public AbstractChangePropagationSpecificationWrapper(ChangePropagationSpecification specification) {
+    public ChangePropagationSpecificationWrapperImpl(ChangePropagationSpecification specification, CorrespondenceHandlingStrategy correspondenceHandlingStrategy) {
         this.specification = specification;
+        this.correspondenceHandlingStrategy = correspondenceHandlingStrategy;
     }
 
     @Override
@@ -35,25 +40,23 @@ public abstract class AbstractChangePropagationSpecificationWrapper implements C
     @Override
     public void propagateChange(EChange<EObject> eChange, EditableCorrespondenceModelView<Correspondence> editableCorrespondenceModelView, ResourceAccess resourceAccess, ViewChangePropagationContext context) {
         EChange<EObject> liftedEChange = liftEChange(eChange);
-        EditableCorrespondenceModelView<Correspondence> liftedEditableCorrespondenceModelView = getLiftedCorrespondenceModel(editableCorrespondenceModelView);
+        EditableCorrespondenceModelView<Correspondence> liftedEditableCorrespondenceModelView = correspondenceHandlingStrategy.getLiftedCorrespondenceModel(editableCorrespondenceModelView);
         ResourceAccess liftedResourceAccess = getLiftedResourceAccess(resourceAccess);
 
         specification.propagateChange(liftedEChange, liftedEditableCorrespondenceModelView, liftedResourceAccess);
 
-        // Lowering of the correspondences and resource changes happens during change propagation using the classes.
+        // Lowering of the correspondences and resource changes happens during change propagation.
     }
 
     private EChange<EObject> liftEChange(EChange<EObject> eChange) {
         return eChange;
     }
 
-    protected abstract LiftedEditableCorrespondenceModelView getLiftedCorrespondenceModel(EditableCorrespondenceModelView<Correspondence> correspondenceModel);
-
-    private LiftedResourceAccess getLiftedResourceAccess(ResourceAccess resourceAccess) {
-        return new LiftedResourceAccess();
+    private ViewBasedResourceAccess getLiftedResourceAccess(ResourceAccess resourceAccess) {
+        return new ViewBasedResourceAccess();
     }
 
-    private class LiftedResourceAccess implements ResourceAccess {
+    private static class ViewBasedResourceAccess implements ResourceAccess {
         @Override
         public URI getMetadataModelURI(String... strings) {
             return null;
@@ -68,9 +71,5 @@ public abstract class AbstractChangePropagationSpecificationWrapper implements C
         public void persistAsRoot(EObject eObject, URI uri) {
 
         }
-    }
-
-    protected abstract class LiftedEditableCorrespondenceModelView implements EditableCorrespondenceModelView<Correspondence> {
-
     }
 }

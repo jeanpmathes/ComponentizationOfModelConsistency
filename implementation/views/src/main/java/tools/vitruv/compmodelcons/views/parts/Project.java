@@ -14,7 +14,7 @@ public class Project implements Part {
     }
 
     @Override
-    public void put(EChange<EObject> eChange) {
+    public void put(EChange<EObject> eChange, ObjectView target) {
 
     }
 

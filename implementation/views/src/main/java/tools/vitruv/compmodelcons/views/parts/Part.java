@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface Part {
     ObjectView get(ObjectView origin, ViewCorrespondences correspondences);
 
-    void put(EChange<EObject> eChange);
+    void put(EChange<EObject> eChange, ObjectView target);
 
     Optional<EChange<EObject>> getChange(EChange<EObject> change);
 }
