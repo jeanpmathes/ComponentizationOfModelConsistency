@@ -16,18 +16,31 @@
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
     <dependencies>
+        <dependency>
+            <groupId>tools.vitruv.compmodelcons</groupId>
+            <artifactId>tools.vitruv.compmodelcons.views</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- Vitruvius dependencies -->
+        <dependency>
+            <groupId>tools.vitruv</groupId>
+            <artifactId>tools.vitruv.dsls.common</artifactId>
+            <version>${vitruv.version}</version>
+        </dependency>
+
+        <!-- NeoJoin dependencies -->
         <dependency>
             <groupId>tools.vitruv</groupId>
             <artifactId>tools.vitruv.neojoin.model</artifactId>
             <version>0.1.0-SNAPSHOT</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>tools.vitruv</groupId>
             <artifactId>tools.vitruv.neojoin.frontend.language</artifactId>
             <version>0.1.0-SNAPSHOT</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 

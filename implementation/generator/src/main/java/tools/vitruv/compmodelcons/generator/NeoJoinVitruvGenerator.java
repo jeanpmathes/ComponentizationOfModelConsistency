@@ -19,8 +19,8 @@ public class NeoJoinVitruvGenerator implements IGenerator {
         Parser.Result result = parser.parse(input.getURI());
 
         if (result instanceof Parser.Result.Success success) {
-            Generator generator = new Generator(success.aqr());
-            fsa.generateFile(input.getURI().trimFileExtension().appendFileExtension(".java").lastSegment(), generator.generate());
+            Generator generator = new Generator(input.getURI().trimFileExtension().lastSegment(), success.aqr());
+            fsa.generateFile(generator.getFileName(), generator.generate());
         }
     }
 }
