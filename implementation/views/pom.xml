@@ -12,13 +12,6 @@
     <artifactId>tools.vitruv.compmodelcons.views</artifactId>
 
     <dependencies>
-        <dependency>
-            <groupId>tools.vitruv.compmodelcons</groupId>
-            <artifactId>tools.vitruv.compmodelcons.change</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-
         <!-- NeoJoin dependencies -->
         <dependency>
             <groupId>tools.vitruv</groupId>
@@ -143,4 +136,32 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.11.0</version>
+                <executions>
+                    <execution>
+                        <id>mockito-agent-property</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.6</version>
+                <configuration>
+                    <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

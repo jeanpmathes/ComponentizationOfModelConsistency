@@ -23,6 +23,11 @@
             <artifactId>tools.vitruv.compmodelcons.views</artifactId>
             <version>0.1.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>tools.vitruv.compmodelcons</groupId>
+            <artifactId>tools.vitruv.compmodelcons.change</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+        </dependency>
 
         <!-- Vitruvius dependencies -->
         <dependency>

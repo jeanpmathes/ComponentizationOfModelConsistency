@@ -12,6 +12,12 @@
     <artifactId>tools.vitruv.compmodelcons.change</artifactId>
 
     <dependencies>
+        <dependency>
+            <groupId>tools.vitruv.compmodelcons</groupId>
+            <artifactId>tools.vitruv.compmodelcons.views</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+        </dependency>
+
         <!-- NeoJoin dependencies -->
         <dependency>
             <groupId>tools.vitruv</groupId>
@@ -37,12 +43,22 @@
         </dependency>
         <dependency>
             <groupId>tools.vitruv</groupId>
+            <artifactId>tools.vitruv.framework.vsum</artifactId>
+            <version>3.2.4-compmodelcons-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>tools.vitruv</groupId>
             <artifactId>tools.vitruv.change.correspondence</artifactId>
             <version>${vitruv.version}</version>
         </dependency>
         <dependency>
             <groupId>tools.vitruv</groupId>
             <artifactId>tools.vitruv.change.propagation</artifactId>
+            <version>${vitruv.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>tools.vitruv</groupId>
+            <artifactId>tools.vitruv.dsls.reactions.runtime</artifactId>
             <version>${vitruv.version}</version>
         </dependency>
 
@@ -139,18 +155,6 @@
             <artifactId>tools.vitruv.framework.p2wrappers.javautils</artifactId>
             <version>${vitruv.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>tools.vitruv</groupId>
-            <artifactId>tools.vitruv.dsls.reactions.runtime</artifactId>
-            <version>3.2.4-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>tools.vitruv</groupId>
-            <artifactId>tools.vitruv.framework.vsum</artifactId>
-            <version>3.2.4-compmodelcons-SNAPSHOT</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

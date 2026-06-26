@@ -2,7 +2,7 @@ package tools.vitruv.compmodelcons.generator.backend;
 
 import org.eclipse.emf.ecore.EPackage;
 import tools.vitruv.change.composite.MetamodelDescriptor;
-import tools.vitruv.compmodelcons.views.impl.ChangeSpecificationAwareViewType;
+import tools.vitruv.compmodelcons.change.ChangeSpecificationAwareViewType;
 import tools.vitruv.dsls.common.JavaFileGenerator;
 import tools.vitruv.dsls.common.JavaImportHelper;
 import tools.vitruv.neojoin.aqr.AQR;
@@ -93,7 +93,10 @@ public class Generator {
         builder.append("        return List.of();\n"); // todo: fill
         builder.append("    }\n\n");
 
-        // todo: create part tree, base class should do the generateView / transformChange implementation with it
+        builder.append("    @Override\n");
+        builder.append("    protected Part createStructure() {\n");
+        builder.append("        return null;\n"); // todo: fill
+        builder.append("    }\n");
     }
 
     public String getFileName() {

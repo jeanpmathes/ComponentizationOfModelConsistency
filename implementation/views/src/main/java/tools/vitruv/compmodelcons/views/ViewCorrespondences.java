@@ -17,7 +17,9 @@ import java.util.List;
  * </ol>
  */
 public interface ViewCorrespondences {
-    List<EObject> getCorrespondingViewObjectsForOriginObjects(List<EObject> list);
+    List<EObject> getCorrespondingViewObjectsForOriginObjects(List<EObject> originObjects);
 
-    List<EObject> getCorrespondingOriginObjectsForViewObjects(List<EObject> list);
+    List<EObject> getCorrespondingOriginObjectsForViewObjects(List<EObject> viewObjects);
+
+    boolean correspond(List<EObject> originObjects, List<EObject> viewObjects);
 }
