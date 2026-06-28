@@ -16,17 +16,17 @@ import java.util.Optional;
 public class Project implements Operation {
     private final EClass createdClass;
     private final boolean isRoot;
-    private final Operation source;
+    private final Operation inner;
 
-    public Project(EClass createdClass, boolean isRoot, Operation source) {
+    public Project(EClass createdClass, boolean isRoot, Operation inner) {
         this.createdClass = createdClass;
         this.isRoot = isRoot;
-        this.source = source;
+        this.inner = inner;
     }
 
     @Override
     public List<ObjectBinding> get(Context context) {
-        return source.get(context).stream().map(origin -> {
+        return inner.get(context).stream().map(origin -> {
             EObject result = createdClass.getEPackage().getEFactoryInstance().create(createdClass);
             context.getCorrespondences().addCorrespondence(origin.originObjects(), result);
 
@@ -45,21 +45,21 @@ public class Project implements Operation {
             return Optional.empty();
         }
 
-        boolean canHandleChange;
+        boolean isResponsibleForHandlingChange;
 
         if (eChange instanceof EObjectExistenceEChange<EObject> eObjectEObjectExistenceEChange) {
-            canHandleChange = eObjectEObjectExistenceEChange.getAffectedElement().eClass().equals(createdClass);
+            isResponsibleForHandlingChange = eObjectEObjectExistenceEChange.getAffectedElement().eClass().equals(createdClass);
         } else if (eChange instanceof EObjectAddedEChange<EObject> eObjectEObjectAddedEChange) {
-            canHandleChange = eObjectEObjectAddedEChange.getNewValue().eClass().equals(createdClass);
+            isResponsibleForHandlingChange = eObjectEObjectAddedEChange.getNewValue().eClass().equals(createdClass);
         } else if (eChange instanceof EObjectSubtractedEChange<EObject> eObjectEObjectSubtractedEChange) {
-            canHandleChange = eObjectEObjectSubtractedEChange.getOldValue().eClass().equals(createdClass);
+            isResponsibleForHandlingChange = eObjectEObjectSubtractedEChange.getOldValue().eClass().equals(createdClass);
         } else if (eChange instanceof FeatureEChange<EObject, ?> featureEChange) {
-            canHandleChange = featureEChange.getAffectedElement().eClass().equals(createdClass);
+            isResponsibleForHandlingChange = featureEChange.getAffectedElement().eClass().equals(createdClass);
         } else {
-            throw new IllegalStateException("Unhandled change type: " + eChange.getClass().getSimpleName());
+            throw new IllegalStateException("Unknown change type: " + eChange.getClass().getSimpleName());
         }
 
-        if (!canHandleChange) {
+        if (!isResponsibleForHandlingChange) {
             return Optional.empty();
         }
 
@@ -71,7 +71,7 @@ public class Project implements Operation {
             peeledTarget = binding.origin;
         }
 
-        return source
+        return inner
                 .put(eChange, peeledTarget, context)
                 .map(origin -> new ProjectObjectBindingImpl(origin, viewObject));
     }

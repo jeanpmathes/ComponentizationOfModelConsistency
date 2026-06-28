@@ -21,5 +21,5 @@ public interface ViewCorrespondences {
 
     List<EObject> getCorrespondingOriginObjectsForViewObjects(List<EObject> viewObjects);
 
-    boolean correspond(List<EObject> originObjects, List<EObject> viewObjects);
+    boolean correspond(List<EObject> originObjects, EObject viewObjects);
 }

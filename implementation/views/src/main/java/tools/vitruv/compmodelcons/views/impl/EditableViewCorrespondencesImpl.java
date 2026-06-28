@@ -25,8 +25,8 @@ public class EditableViewCorrespondencesImpl implements EditableViewCorresponden
     }
 
     @Override
-    public boolean correspond(List<EObject> originObjects, List<EObject> viewObjects) {
-        return correspondences.containsKey(originObjects) && correspondences.get(originObjects).equals(viewObjects);
+    public boolean correspond(List<EObject> originObjects, EObject viewObjects) {
+        return correspondences.containsKey(originObjects) && correspondences.get(originObjects).equals(List.of(viewObjects));
     }
 
     @Override

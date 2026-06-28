@@ -102,10 +102,6 @@ public class Source implements Operation {
             if (isRoot) {
                 context.getOriginModel(sourceClass.getEPackage()).getContents().add(inserted);
             } else {
-                if (container.isChangeable()) {
-                    throw new IllegalArgumentException("Container is not changeable");
-                }
-
                 List<EObject> candidates = context.getOriginObjects(container.getEContainingClass());
 
                 if (candidates.size() != 1) {
@@ -116,6 +112,10 @@ public class Source implements Operation {
                     //noinspection unchecked
                     ((EList<EObject>) candidates.get(0).eGet(container)).add(inserted);
                 } else {
+                    if (container.isChangeable()) {
+                        throw new IllegalArgumentException("Container is not changeable");
+                    }
+
                     candidates.get(0).eSet(container, inserted);
                 }
             }
@@ -133,14 +133,14 @@ public class Source implements Operation {
             if (isRoot) {
                 context.getOriginModel(sourceClass.getEPackage()).getContents().remove(removed);
             } else {
-                if (container.isChangeable()) {
-                    throw new IllegalArgumentException("Container is not changeable");
-                }
-
                 if (container.isMany()) {
                     //noinspection unchecked
                     ((EList<EObject>) removed.eContainer().eGet(container)).remove(removed);
                 } else {
+                    if (container.isChangeable()) {
+                        throw new IllegalArgumentException("Container is not changeable");
+                    }
+
                     removed.eContainer().eUnset(container);
                 }
             }
