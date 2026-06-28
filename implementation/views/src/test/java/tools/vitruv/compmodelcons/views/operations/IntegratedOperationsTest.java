@@ -20,7 +20,7 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
     public void testSimpleEmptyViewOfRestaurantsAsRoot() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
-        EClass restaurantClass = (EClass) models.getPackage(Model.RESTAURANT).getEClassifier("Restaurant");
+        EClass restaurantClass = getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
 
         // ViewType Setup
@@ -37,7 +37,7 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         doDelete(removed, operation);
 
         // Action: Create and insert a new restaurant.
-        EObject created = viewType.getEFactoryInstance().create(emptyClass);
+        EObject created = createEObject(emptyClass);
         ObjectBinding inserted = doCreate(created, operation);
         doInsertRoot(inserted, operation);
 

@@ -11,19 +11,19 @@ import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.impl.EcoreResourceFactoryImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.junit.jupiter.api.BeforeEach;
-import tools.vitruv.change.atomic.EChange;
-import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
 import tools.vitruv.compmodelcons.views.Context;
 import tools.vitruv.compmodelcons.views.EditableViewCorrespondences;
-import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.impl.EditableViewCorrespondencesImpl;
 
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AbstractOperationTest {
     protected Models models;
@@ -88,6 +88,14 @@ class AbstractOperationTest {
         EClass eClass = EcoreFactory.eINSTANCE.createEClass();
         ePackage.getEClassifiers().add(eClass);
         return eClass;
+    }
+
+    protected static EObject createEObject(EClass eClass) {
+        return eClass.getEPackage().getEFactoryInstance().create(eClass);
+    }
+
+    protected static EClass getEClass(EPackage ePackage, String name) {
+        return (EClass) ePackage.getEClassifier(name);
     }
 
     protected static <T> void assertForAll(Collection<T> collection, Predicate<? super T> predicate) {

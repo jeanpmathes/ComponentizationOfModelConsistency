@@ -8,19 +8,16 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 
-import javax.naming.OperationNotSupportedException;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.times;
 
 public class SourceTest extends AbstractOperationTest {
     @Test
     public void testGetShouldReturnAllObjectsOfGivenType() {
         // Origin Setup
-        EClass restaurantClass = (EClass) models.getPackage(Model.RESTAURANT).getEClassifier("Restaurant");
+        EClass restaurantClass = getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
 
         // Operation Setup
@@ -53,7 +50,7 @@ public class SourceTest extends AbstractOperationTest {
         operation.get(context);
 
         // Pre-Action Change
-        EObject created = viewType.getEFactoryInstance().create(emptyClass);
+        EObject created = createEObject(emptyClass);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
 
         // Action
@@ -84,7 +81,7 @@ public class SourceTest extends AbstractOperationTest {
         List<ObjectBinding> results = operation.get(context);
 
         // Pre-Action Change
-        EObject deleted = emptyClass.getEPackage().getEFactoryInstance().create(emptyClass);
+        EObject deleted = createEObject(emptyClass);
         correspondences.addCorrespondence(results.get(0).originObjects(), deleted);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(deleted);
 
@@ -115,7 +112,7 @@ public class SourceTest extends AbstractOperationTest {
         operation.get(context);
 
         // Pre-Action Change
-        EObject inserted = viewType.getEFactoryInstance().create(emptyClass);
+        EObject inserted = createEObject(emptyClass);
         context.getViewModel().getContents().add(inserted);
         int index = context.getViewModel().getContents().indexOf(inserted);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertRootChange(inserted, context.getViewModel(), index);
@@ -149,7 +146,7 @@ public class SourceTest extends AbstractOperationTest {
         List<ObjectBinding> results = operation.get(context);
 
         // Pre-Action Change
-        EObject removed = viewType.getEFactoryInstance().create(emptyClass);
+        EObject removed = createEObject(emptyClass);
         context.getViewModel().getContents().add(removed);
         int index = context.getViewModel().getContents().indexOf(removed);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, context.getViewModel(), index);
@@ -170,9 +167,9 @@ public class SourceTest extends AbstractOperationTest {
     public void testPufOfRootInsertionShouldInsertNonRootElementIntoOriginContainer() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
-        EClass restaurantClass = (EClass) models.getPackage(Model.RESTAURANT).getEClassifier("Restaurant");
+        EClass restaurantClass = getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
-        EObject restaurant = restaurantClass.getEPackage().getEFactoryInstance().create(restaurantClass);
+        EObject restaurant = createEObject(restaurantClass);
 
         // ViewType Setup
         EPackage viewType = createEPackage();
@@ -185,7 +182,7 @@ public class SourceTest extends AbstractOperationTest {
         operation.get(context);
 
         // Pre-Action Change
-        EObject inserted = viewType.getEFactoryInstance().create(emptyClass);
+        EObject inserted = createEObject(emptyClass);
         context.getViewModel().getContents().add(inserted);
         int index = context.getViewModel().getContents().indexOf(inserted);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertRootChange(inserted, context.getViewModel(), index);
@@ -207,7 +204,7 @@ public class SourceTest extends AbstractOperationTest {
     public void testPutOfRootRemovalShouldRemoveNonRootElementFromOriginContainer() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
-        EClass restaurantClass = (EClass) models.getPackage(Model.RESTAURANT).getEClassifier("Restaurant");
+        EClass restaurantClass = getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
 
         // ViewType Setup

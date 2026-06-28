@@ -69,7 +69,7 @@ public class ProjectTest extends AbstractOperationTest {
     public void testPutWithNoOriginObjectShouldCallTheInnerOperation() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
-        EObject otherStore = store.eClass().getEPackage().getEFactoryInstance().create(store.eClass());
+        EObject otherStore = createEObject(store.eClass());
 
         // ViewType Setup
         EPackage viewType = createEPackage();
@@ -84,7 +84,7 @@ public class ProjectTest extends AbstractOperationTest {
         operation.get(context);
 
         // Pre-Action Change
-        EObject created = viewType.getEFactoryInstance().create(emptyClass);
+        EObject created = createEObject(emptyClass);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
 
         // Action
