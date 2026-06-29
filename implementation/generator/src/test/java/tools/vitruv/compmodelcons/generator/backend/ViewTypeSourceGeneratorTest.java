@@ -1,16 +1,20 @@
 package tools.vitruv.compmodelcons.generator.backend;
 
+import org.eclipse.emf.ecore.EPackage;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class GeneratorTest extends AbstractGeneratorTest {
+class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
     @Test
     public void testNaming() throws URISyntaxException, IOException {
-        Generator generator = createGenerator("model_a2model_b", """
+        EPackage ePackage = createEPackage();
+
+        ViewTypeSourceGenerator generator = createGenerator(ePackage, "model_a2model_b", """
                 from Restaurant r
                 create {}
                 """);

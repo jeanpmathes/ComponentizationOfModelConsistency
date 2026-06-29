@@ -2,6 +2,7 @@ package tools.vitruv.compmodelcons.generator.backend;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EcoreFactory;
 import tools.vitruv.neojoin.NeoJoinStandaloneSetup;
 import tools.vitruv.neojoin.Parser;
 import tools.vitruv.neojoin.aqr.AQR;
@@ -18,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 public class AbstractGeneratorTest {
     private static AQR createAQR(String query) throws URISyntaxException, IOException {
-        PackageModelCollector collector = new PackageModelCollector(Paths.get(Objects.requireNonNull(GeneratorTest.class.getClassLoader().getResource("models")).toURI()).toString());
+        PackageModelCollector collector = new PackageModelCollector(Paths.get(Objects.requireNonNull(ViewTypeSourceGeneratorTest.class.getClassLoader().getResource("models")).toURI()).toString());
         EPackage.Registry registry = collector.collect();
 
         Path path = Files.createTempFile("view", ".nj");
@@ -37,8 +38,12 @@ public class AbstractGeneratorTest {
         return success.aqr();
     }
 
-    protected static Generator createGenerator(String name, String neojoin) throws URISyntaxException, IOException {
+    protected static ViewTypeSourceGenerator createGenerator(EPackage ePackage, String name, String neojoin) throws URISyntaxException, IOException {
         AQR aqr = createAQR(neojoin);
-        return new Generator(name, aqr);
+        return new ViewTypeSourceGenerator(name, ePackage, aqr);
+    }
+
+    protected static EPackage createEPackage() {
+        return EcoreFactory.eINSTANCE.createEPackage();
     }
 }

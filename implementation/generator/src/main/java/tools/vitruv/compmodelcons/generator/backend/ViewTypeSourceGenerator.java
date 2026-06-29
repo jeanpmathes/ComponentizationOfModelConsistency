@@ -3,6 +3,7 @@ package tools.vitruv.compmodelcons.generator.backend;
 import org.eclipse.emf.ecore.EPackage;
 import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.compmodelcons.change.ChangeSpecificationAwareViewType;
+import tools.vitruv.compmodelcons.generator.tools.NamingGenerator;
 import tools.vitruv.dsls.common.JavaFileGenerator;
 import tools.vitruv.dsls.common.JavaImportHelper;
 import tools.vitruv.neojoin.aqr.AQR;
@@ -10,38 +11,17 @@ import tools.vitruv.neojoin.aqr.AQR;
 import java.util.Collection;
 import java.util.List;
 
-public class Generator {
+public class ViewTypeSourceGenerator {
     private final JavaImportHelper importHelper = new JavaImportHelper();
 
     private final String name;
+    private final EPackage metamodel;
     private final AQR aqr;
 
-    public Generator(String name, AQR aqr) {
-        this.name = convertToPascalCase(name);
+    public ViewTypeSourceGenerator(String name, EPackage metamodel, AQR aqr) {
+        this.name = NamingGenerator.convertToPascalCase(name);
+        this.metamodel = metamodel;
         this.aqr = aqr;
-    }
-
-    private static String convertToPascalCase(String name) {
-        StringBuilder builder = new StringBuilder();
-
-        boolean shouldNextBeUpperCase = true;
-        for (char c : name.toCharArray()) {
-            if (Character.isLetter(c)) {
-                if (shouldNextBeUpperCase) {
-                    builder.append(Character.toUpperCase(c));
-                    shouldNextBeUpperCase = false;
-                } else {
-                    builder.append(c);
-                }
-            } else if (Character.isDigit(c)) {
-                builder.append(c);
-                shouldNextBeUpperCase = true;
-            } else if (Character.isWhitespace(c) || c == '_') {
-                shouldNextBeUpperCase = true;
-            }
-        }
-
-        return builder.toString();
     }
 
     public String generate() {
@@ -100,11 +80,11 @@ public class Generator {
     }
 
     public String getFileName() {
-        return String.format("neojoin/viewtypes/%s/%s%s", aqr.export().name(), getClassName(), JavaFileGenerator.JAVA_FILE_EXTENSION);
+        return String.format("%s/%s%s", NamingGenerator.getPackagePath(aqr), getClassName(), JavaFileGenerator.JAVA_FILE_EXTENSION);
     }
 
     private String getPackageName() {
-        return String.format("neojoin.viewtypes.%s", aqr.export().name());
+        return NamingGenerator.getPackageName(aqr);
     }
 
     private String getClassName() {
