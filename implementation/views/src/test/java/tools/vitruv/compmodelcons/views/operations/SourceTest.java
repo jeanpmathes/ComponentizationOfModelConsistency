@@ -3,10 +3,14 @@ package tools.vitruv.compmodelcons.views.operations;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EReference;
 import org.junit.jupiter.api.Test;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
+import tools.vitruv.compmodelcons.views.Utilities;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
+import tools.vitruv.compmodelcons.views.impl.InsertNonRootEObjectImpl;
+import tools.vitruv.compmodelcons.views.impl.RemoveNonRootEObjectImpl;
 
 import java.util.List;
 import java.util.Optional;
@@ -129,6 +133,45 @@ public class SourceTest extends AbstractOperationTest {
     }
 
     @Test
+    public void testPufOfNonRootInsertionShouldInsertRootElementIntoOriginModel() {
+        // Origin Setup
+        EObject store = models.getRoot(Model.RESTAURANT);
+        EClass storeClass = store.eClass();
+        List<EObject> stores = context.getOriginObjects(storeClass);
+        EObject otherStore = storeClass.getEPackage().getEFactoryInstance().create(storeClass);
+
+        // ViewType Setup
+        EPackage viewType = createEPackage();
+        EClass rootClass = createEClass(viewType);
+        EClass emptyClass = createEClass(viewType);
+        EReference emptyContainment = createContainmentEReference(rootClass, emptyClass);
+
+        // View Setup
+        EObject root = createEObject(rootClass);
+
+        // Operation Setup
+        Source operation = new Source(storeClass);
+
+        // Pre-Action Get
+        operation.get(context);
+
+        // Pre-Action Change
+        EObject inserted = createEObject(emptyClass);
+        Utilities.getList(root, emptyContainment).add(inserted);
+        EChange<EObject> change = new InsertNonRootEObjectImpl<>(inserted);
+
+        // Action
+        Optional<ObjectBinding> result = operation.put(change, ObjectBinding.ofOriginObject(otherStore), context);
+
+        // Assertions
+        assertTrue(result.isPresent());
+        assertEquals(1, result.get().originObjects().size());
+        assertEquals(otherStore, result.get().originObjects().get(0));
+        assertEquals(stores.size() + 1, context.getOriginObjects(storeClass).size());
+        assertTrue(context.getOriginObjects(storeClass).contains(otherStore));
+    }
+
+    @Test
     public void testPutOfRootRemovalShouldRemoveRootElementFromOriginModel() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
@@ -150,6 +193,45 @@ public class SourceTest extends AbstractOperationTest {
         context.getViewModel().getContents().add(removed);
         int index = context.getViewModel().getContents().indexOf(removed);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, context.getViewModel(), index);
+
+        // Action
+        Optional<ObjectBinding> result = operation.put(change, results.get(0), context);
+
+        // Assertions
+        assertTrue(result.isPresent());
+        assertEquals(1, result.get().originObjects().size());
+        assertEquals(store, result.get().originObjects().get(0));
+        assertEquals(results.get(0).originObjects().get(0), result.get().originObjects().get(0));
+        assertEquals(stores.size() - 1, context.getOriginObjects(storeClass).size());
+        assertFalse(context.getOriginObjects(storeClass).contains(store));
+    }
+
+    @Test
+    public void testPutOfNonRootRemovalShouldRemoveRootElementFromOriginModel() {
+        // Origin Setup
+        EObject store = models.getRoot(Model.RESTAURANT);
+        EClass storeClass = store.eClass();
+        List<EObject> stores = context.getOriginObjects(storeClass);
+
+        // ViewType Setup
+        EPackage viewType = createEPackage();
+        EClass rootClass = createEClass(viewType);
+        EClass emptyClass = createEClass(viewType);
+        EReference emptyContainment = createContainmentEReference(rootClass, emptyClass);
+
+        // View Setup
+        EObject root = createEObject(rootClass);
+
+        // Operation Setup
+        Source operation = new Source(storeClass);
+
+        // Pre-Action Get
+        List<ObjectBinding> results = operation.get(context);
+
+        // Pre-Action Change
+        EObject removed = createEObject(emptyClass);
+        Utilities.getList(root, emptyContainment).add(removed);
+        EChange<EObject> change = new RemoveNonRootEObjectImpl<>(removed);
 
         // Action
         Optional<ObjectBinding> result = operation.put(change, results.get(0), context);
@@ -201,6 +283,47 @@ public class SourceTest extends AbstractOperationTest {
     }
 
     @Test
+    public void testPufOfNonRootInsertionShouldInsertNonRootElementIntoOriginContainer() {
+        // Origin Setup
+        EObject store = models.getRoot(Model.RESTAURANT);
+        EClass restaurantClass = getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
+        List<EObject> restaurants = context.getOriginObjects(restaurantClass);
+        EObject restaurant = createEObject(restaurantClass);
+
+        // ViewType Setup
+        EPackage viewType = createEPackage();
+        EClass rootClass = createEClass(viewType);
+        EClass emptyClass = createEClass(viewType);
+        EReference emptyContainment = createContainmentEReference(rootClass, emptyClass);
+
+        // View Setup
+        EObject root = createEObject(rootClass);
+
+        // Operation Setup
+        Source operation = new Source(restaurantClass);
+
+        // Pre-Action Get
+        operation.get(context);
+
+        // Pre-Action Change
+        EObject inserted = createEObject(emptyClass);
+        Utilities.getList(root, emptyContainment).add(inserted);
+        EChange<EObject> change = new InsertNonRootEObjectImpl<>(inserted);
+
+        // Action
+        Optional<ObjectBinding> result = operation.put(change, ObjectBinding.ofOriginObject(restaurant), context);
+
+        // Assertions
+        assertTrue(result.isPresent());
+        assertEquals(1, result.get().originObjects().size());
+        assertEquals(restaurant, result.get().originObjects().get(0));
+        assertEquals(restaurants.size() + 1, context.getOriginObjects(restaurantClass).size());
+        assertTrue(context.getOriginObjects(restaurantClass).contains(restaurant));
+        assertFalse(context.getViewModel().getContents().contains(restaurant));
+        assertTrue(store.eContents().contains(restaurant));
+    }
+
+    @Test
     public void testPutOfRootRemovalShouldRemoveNonRootElementFromOriginContainer() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
@@ -222,6 +345,45 @@ public class SourceTest extends AbstractOperationTest {
         context.getViewModel().getContents().add(removed);
         int index = context.getViewModel().getContents().indexOf(removed);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, context.getViewModel(), index);
+
+        // Action
+        Optional<ObjectBinding> result = operation.put(change, results.get(0), context);
+
+        // Assertions
+        assertTrue(result.isPresent());
+        assertEquals(1, result.get().originObjects().size());
+        assertEquals(results.get(0).originObjects().get(0), result.get().originObjects().get(0));
+        assertEquals(restaurants.size() - 1, context.getOriginObjects(restaurantClass).size());
+        assertFalse(context.getOriginObjects(restaurantClass).contains(result.get().originObjects().get(0)));
+        assertFalse(store.eContents().contains(result.get().originObjects().get(0)));
+    }
+
+    @Test
+    public void testPutOfNonRootRemovalShouldRemoveNonRootElementFromOriginContainer() {
+        // Origin Setup
+        EObject store = models.getRoot(Model.RESTAURANT);
+        EClass restaurantClass = getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
+        List<EObject> restaurants = context.getOriginObjects(restaurantClass);
+
+        // ViewType Setup
+        EPackage viewType = createEPackage();
+        EClass rootClass = createEClass(viewType);
+        EClass emptyClass = createEClass(viewType);
+        EReference emptyContainment = createContainmentEReference(rootClass, emptyClass);
+
+        // View Setup
+        EObject root = createEObject(rootClass);
+
+        // Operation Setup
+        Source operation = new Source(restaurantClass);
+
+        // Pre-Action Get
+        List<ObjectBinding> results = operation.get(context);
+
+        // Pre-Action Change
+        EObject removed = createEObject(emptyClass);
+        Utilities.getList(root, emptyContainment).add(removed);
+        EChange<EObject> change = new RemoveNonRootEObjectImpl<>(removed);
 
         // Action
         Optional<ObjectBinding> result = operation.put(change, results.get(0), context);

@@ -1,13 +1,10 @@
 package tools.vitruv.compmodelcons.generator;
 
 import com.google.inject.Inject;
-import org.eclipse.emf.codegen.ecore.generator.Generator;
-import org.eclipse.emf.codegen.ecore.generator.GeneratorAdapterFactory;
-import org.eclipse.emf.codegen.ecore.genmodel.*;
-import org.eclipse.emf.codegen.ecore.genmodel.generator.GenBaseGeneratorAdapter;
-import org.eclipse.emf.codegen.ecore.genmodel.generator.GenModelGeneratorAdapterFactory;
-import org.eclipse.emf.common.util.BasicMonitor;
-import org.eclipse.emf.common.util.Diagnostic;
+import org.eclipse.emf.codegen.ecore.genmodel.GenJDKLevel;
+import org.eclipse.emf.codegen.ecore.genmodel.GenModel;
+import org.eclipse.emf.codegen.ecore.genmodel.GenModelFactory;
+import org.eclipse.emf.codegen.ecore.genmodel.GenPackage;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
@@ -75,8 +72,6 @@ public class NeoJoinVitruvGenerator implements IGenerator {
 
         GenModel genModel = createGenModel(input, name, aqr, metaModel);
         fsa.generateFile(baseFileName + GENMODEL_EXTENSION, getContentsForFile(resourceSet, name, GENMODEL_EXTENSION, genModel));
-
-        generateMetaModelCode(genModel);
 
         return new MetaModel(metaModel, genModel.getGenPackages().get(0));
     }
@@ -148,21 +143,6 @@ public class NeoJoinVitruvGenerator implements IGenerator {
         genModelResource.save(output, Map.of(XMLResource.OPTION_ENCODING, "UTF-8"));
 
         return output.toString();
-    }
-
-    private void generateMetaModelCode(GenModel genModel) {
-        GeneratorAdapterFactory.Descriptor.Registry.INSTANCE.addDescriptor(
-                GenModelPackage.eNS_URI,
-                GenModelGeneratorAdapterFactory.DESCRIPTOR
-        );
-
-        Generator generator = new Generator();
-        generator.setInput(genModel);
-
-        Diagnostic result = generator.generate(genModel, GenBaseGeneratorAdapter.MODEL_PROJECT_TYPE, new BasicMonitor.Printing(System.err));
-        if (result.getSeverity() >= Diagnostic.WARNING) {
-            throw new IllegalStateException(result.toString());
-        }
     }
 
     private record MetaModel(EPackage ePackage, GenPackage genPackage) {

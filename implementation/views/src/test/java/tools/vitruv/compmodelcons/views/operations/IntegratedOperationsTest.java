@@ -28,7 +28,7 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         EClass emptyClass = createEClass(viewType);
 
         // Operation Setup
-        Project operation = new Project(emptyClass, true, new Source(restaurantClass));
+        Project operation = new Project(emptyClass, new Source(restaurantClass));
 
         // Action: Remove and delete one of the restaurants.
         List<ObjectBinding> resultsOfGet = operation.get(context);

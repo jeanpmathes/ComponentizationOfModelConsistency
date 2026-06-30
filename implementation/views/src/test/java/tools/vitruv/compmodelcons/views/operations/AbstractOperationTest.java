@@ -1,10 +1,7 @@
 package tools.vitruv.compmodelcons.views.operations;
 
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EClass;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EPackage;
-import org.eclipse.emf.ecore.EcoreFactory;
+import org.eclipse.emf.ecore.*;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
@@ -13,6 +10,7 @@ import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.junit.jupiter.api.BeforeEach;
 import tools.vitruv.compmodelcons.views.Context;
 import tools.vitruv.compmodelcons.views.EditableViewCorrespondences;
+import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.impl.EditableViewCorrespondencesImpl;
 
 import java.net.URISyntaxException;
@@ -90,12 +88,37 @@ class AbstractOperationTest {
         return eClass;
     }
 
+    protected static EReference createContainmentEReference(EClass eClass, EClass eReferenceType) {
+        EReference eReference = EcoreFactory.eINSTANCE.createEReference();
+        eReference.setContainment(true);
+        eReference.setUpperBound(-1);
+        eReference.setEType(eReferenceType);
+
+        eClass.getEStructuralFeatures().add(eReference);
+
+        return eReference;
+    }
+
     protected static EObject createEObject(EClass eClass) {
         return eClass.getEPackage().getEFactoryInstance().create(eClass);
     }
 
     protected static EClass getEClass(EPackage ePackage, String name) {
         return (EClass) ePackage.getEClassifier(name);
+    }
+
+    protected static ObjectBinding createBinding(EObject originObject, EObject viewObject) {
+        return new ObjectBinding() {
+            @Override
+            public List<EObject> originObjects() {
+                return List.of(originObject);
+            }
+
+            @Override
+            public EObject viewObject() {
+                return viewObject;
+            }
+        };
     }
 
     protected static <T> void assertForAll(Collection<T> collection, Predicate<? super T> predicate) {

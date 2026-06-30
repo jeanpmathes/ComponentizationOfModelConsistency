@@ -15,28 +15,21 @@ import java.util.Optional;
 
 public class Project implements Operation {
     private final EClass createdClass;
-    private final boolean isRoot;
-    private final Operation inner;
+    private final Operation origin;
 
-    public Project(EClass createdClass, boolean isRoot, Operation inner) {
+    public Project(EClass createdClass, Operation origin) {
         this.createdClass = createdClass;
-        this.isRoot = isRoot;
-        this.inner = inner;
+        this.origin = origin;
     }
 
     @Override
     public List<ObjectBinding> get(Context context) {
-        return inner.get(context).stream().map(origin -> {
+        return origin.get(context).stream().map(originBinding -> {
             EObject result = createdClass.getEPackage().getEFactoryInstance().create(createdClass);
-            context.getCorrespondences().addCorrespondence(origin.originObjects(), result);
 
-            if (isRoot) {
-                context.getViewModel().getContents().add(result);
-            }
-            // todo: add mechanism to add this created EObject to the root, could be an operation-like that wraps the entire query
-            // todo: or see how NeoJoin intends to do this, might be a subquery thing
+            context.getCorrespondences().addCorrespondence(originBinding.originObjects(), result);
 
-            return (ObjectBinding) new ProjectObjectBindingImpl(origin, result);
+            return (ObjectBinding) new ProjectObjectBindingImpl(originBinding, result);
         }).toList();
     }
 
@@ -49,14 +42,14 @@ public class Project implements Operation {
 
         if (eChange instanceof EObjectExistenceEChange<EObject> eObjectEObjectExistenceEChange) {
             isResponsibleForHandlingChange = eObjectEObjectExistenceEChange.getAffectedElement().eClass().equals(createdClass);
+        } else if (eChange instanceof FeatureEChange<EObject, ?> featureEChange) {
+            isResponsibleForHandlingChange = featureEChange.getAffectedElement().eClass().equals(createdClass);
         } else if (eChange instanceof EObjectAddedEChange<EObject> eObjectEObjectAddedEChange) {
             isResponsibleForHandlingChange = eObjectEObjectAddedEChange.getNewValue().eClass().equals(createdClass);
         } else if (eChange instanceof EObjectSubtractedEChange<EObject> eObjectEObjectSubtractedEChange) {
             isResponsibleForHandlingChange = eObjectEObjectSubtractedEChange.getOldValue().eClass().equals(createdClass);
-        } else if (eChange instanceof FeatureEChange<EObject, ?> featureEChange) {
-            isResponsibleForHandlingChange = featureEChange.getAffectedElement().eClass().equals(createdClass);
         } else {
-            throw new IllegalStateException("Unknown change type: " + eChange.getClass().getSimpleName());
+            throw new IllegalArgumentException("Unknown change type: " + eChange.getClass().getSimpleName());
         }
 
         if (!isResponsibleForHandlingChange) {
@@ -68,12 +61,12 @@ public class Project implements Operation {
 
         if (!target.originObjects().isEmpty()) {
             ProjectObjectBindingImpl binding = (ProjectObjectBindingImpl) target;
-            peeledTarget = binding.origin;
+            peeledTarget = binding.originBinding;
         }
 
-        return inner
+        return origin
                 .put(eChange, peeledTarget, context)
-                .map(origin -> new ProjectObjectBindingImpl(origin, viewObject));
+                .map(originBinding -> new ProjectObjectBindingImpl(originBinding, viewObject));
     }
 
 
@@ -81,11 +74,11 @@ public class Project implements Operation {
         return Optional.empty();
     }
 
-    private record ProjectObjectBindingImpl(ObjectBinding origin, EObject viewObject) implements ObjectBinding {
+    private record ProjectObjectBindingImpl(ObjectBinding originBinding, EObject viewObject) implements ObjectBinding {
 
         @Override
             public List<EObject> originObjects() {
-                return origin.originObjects();
+            return originBinding.originObjects();
             }
         }
 }

@@ -16,7 +16,7 @@ import static org.mockito.Mockito.*;
 
 public class ProjectTest extends AbstractOperationTest {
     @Test
-    public void testGetShouldCreateCorrespondenceAndAddRootViewObjectToViewResource() {
+    public void testGetShouldCreateCorrespondence() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
 
@@ -25,44 +25,19 @@ public class ProjectTest extends AbstractOperationTest {
         EClass emptyClass = createEClass(viewType);
 
         // Operation Setup
-        Operation source = mock(Operation.class);
-        when(source.get(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
-        Project operation = new Project(emptyClass, true, source);
+        Operation originOperation = mock(Operation.class);
+        Project operation = new Project(emptyClass, originOperation);
 
         // Action
+        when(originOperation.get(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
         List<ObjectBinding> result = operation.get(context);
 
         // Assertions
-        verify(source, times(1)).get(context);
+        verify(originOperation, times(1)).get(context);
         assertEquals(1, result.size());
         assertEquals(result.get(0).viewObject().eClass(), emptyClass);
-        assertTrue(context.getViewModel().getContents().contains(result.get(0).viewObject()));
         assertTrue(correspondences.correspond(List.of(store), result.get(0).viewObject()));
-    }
-
-    @Test
-    public void testGetShouldCreateCorrespondenceButNotAddNonRootViewObjectToViewResource() {
-        // Origin Setup
-        EObject store = models.getRoot(Model.RESTAURANT);
-
-        // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass emptyClass = createEClass(viewType);
-
-        // Operation Setup
-        Operation source = mock(Operation.class);
-        when(source.get(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
-        Project operation = new Project(emptyClass, false, source);
-
-        // Action
-        List<ObjectBinding> result = operation.get(context);
-
-        // Assertions
-        verify(source, times(1)).get(context);
-        assertEquals(1, result.size());
-        assertEquals(result.get(0).viewObject().eClass(), emptyClass);
         assertFalse(context.getViewModel().getContents().contains(result.get(0).viewObject()));
-        assertTrue(correspondences.correspond(List.of(store), result.get(0).viewObject()));
     }
 
     @Test
@@ -76,11 +51,11 @@ public class ProjectTest extends AbstractOperationTest {
         EClass emptyClass = createEClass(viewType);
 
         // Operation Setup
-        Operation inner = mock(Operation.class);
-        Project operation = new Project(emptyClass, true, inner);
+        Operation originOperation = mock(Operation.class);
+        Project operation = new Project(emptyClass, originOperation);
 
         // Pre-Action Get
-        when(inner.get(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
+        when(originOperation.get(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
         operation.get(context);
 
         // Pre-Action Change
@@ -88,11 +63,11 @@ public class ProjectTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
 
         // Action
-        when(inner.put(any(), any(), any())).thenReturn(Optional.of(ObjectBinding.ofOriginObject(otherStore)));
+        when(originOperation.put(any(), any(), any())).thenReturn(Optional.of(ObjectBinding.ofOriginObject(otherStore)));
         Optional<ObjectBinding> result = operation.put(change, ObjectBinding.ofViewObject(created), context);
 
         // Assertions
-        verify(inner, times(1)).put(eq(change), any(), eq(context));
+        verify(originOperation, times(1)).put(eq(change), any(), eq(context));
         assertTrue(result.isPresent());
         assertEquals(created, result.get().viewObject());
         assertEquals(otherStore, result.get().originObjects().get(0));
@@ -108,22 +83,22 @@ public class ProjectTest extends AbstractOperationTest {
         EClass emptyClass = createEClass(viewType);
 
         // Operation Setup
-        Operation inner = mock(Operation.class);
-        Project operation = new Project(emptyClass, true, inner);
+        Operation originOperation = mock(Operation.class);
+        Project operation = new Project(emptyClass, originOperation);
 
         // Pre-Action Get
-        when(inner.get(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
+        when(originOperation.get(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
         List<ObjectBinding> results = operation.get(context);
 
         // Pre-Action Change
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(results.get(0).viewObject());
 
         // Action
-        when(inner.put(any(), any(), any())).thenReturn(Optional.of(ObjectBinding.ofOriginObject(results.get(0).originObjects().get(0))));
+        when(originOperation.put(any(), any(), any())).thenReturn(Optional.of(ObjectBinding.ofOriginObject(results.get(0).originObjects().get(0))));
         Optional<ObjectBinding> result = operation.put(change, results.get(0), context);
 
         // Assertions
-        verify(inner, times(1)).put(eq(change), any(), eq(context));
+        verify(originOperation, times(1)).put(eq(change), any(), eq(context));
         assertTrue(result.isPresent());
         assertEquals(results.get(0).viewObject(), result.get().viewObject());
         assertEquals(results.get(0).originObjects(), result.get().originObjects());

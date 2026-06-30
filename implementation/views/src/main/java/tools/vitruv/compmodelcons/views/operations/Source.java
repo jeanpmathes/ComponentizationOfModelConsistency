@@ -1,13 +1,18 @@
 package tools.vitruv.compmodelcons.views.operations;
 
-import org.eclipse.emf.common.util.EList;
-import org.eclipse.emf.ecore.*;
+import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EClassifier;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EReference;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.eobject.CreateEObject;
 import tools.vitruv.change.atomic.eobject.DeleteEObject;
 import tools.vitruv.change.atomic.root.InsertRootEObject;
 import tools.vitruv.change.atomic.root.RemoveRootEObject;
 import tools.vitruv.compmodelcons.views.Context;
+import tools.vitruv.compmodelcons.views.InsertNonRootEObject;
+import tools.vitruv.compmodelcons.views.RemoveNonRootEObject;
+import tools.vitruv.compmodelcons.views.Utilities;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 
 import java.util.HashSet;
@@ -72,7 +77,7 @@ public class Source implements Operation {
     public Optional<ObjectBinding> put(EChange<EObject> eChange, ObjectBinding target, Context context) {
         if (eChange instanceof CreateEObject<EObject> createEObject) {
             if (!target.originObjects().isEmpty()) {
-                throw new IllegalStateException("Cannot create an origin object if there is already an origin object");
+                throw new IllegalArgumentException("Cannot create an origin object if there is already an origin object");
             }
 
             EObject created = sourceClass.getEPackage().getEFactoryInstance().create(sourceClass);
@@ -83,7 +88,7 @@ public class Source implements Operation {
 
         if (eChange instanceof DeleteEObject<EObject> deleteEObject) {
             if (target.originObjects().size() != 1) {
-                throw new IllegalStateException("Cannot delete an origin object if that object is not singular");
+                throw new IllegalArgumentException("Cannot delete an origin object if that object is not singular");
             }
 
             EObject deleted = target.originObjects().get(0);
@@ -92,9 +97,9 @@ public class Source implements Operation {
             return Optional.empty();
         }
 
-        if (eChange instanceof InsertRootEObject<EObject>) {
+        if (eChange instanceof InsertRootEObject<EObject> || eChange instanceof InsertNonRootEObject<EObject>) {
             if (target.originObjects().size() != 1) {
-                throw new IllegalStateException("Cannot insert an origin object if that object is not singular");
+                throw new IllegalArgumentException("Cannot insert an origin object if that object is not singular");
             }
 
             EObject inserted = target.originObjects().get(0);
@@ -105,17 +110,12 @@ public class Source implements Operation {
                 List<EObject> candidates = context.getOriginObjects(container.getEContainingClass());
 
                 if (candidates.size() != 1) {
-                    throw new IllegalStateException("Could not find a singular container for insertion");
+                    throw new IllegalArgumentException("Could not find a singular container for insertion");
                 }
 
                 if (container.isMany()) {
-                    //noinspection unchecked
-                    ((EList<EObject>) candidates.get(0).eGet(container)).add(inserted);
+                    Utilities.getList(candidates.get(0), container).add(inserted);
                 } else {
-                    if (container.isChangeable()) {
-                        throw new IllegalArgumentException("Container is not changeable");
-                    }
-
                     candidates.get(0).eSet(container, inserted);
                 }
             }
@@ -123,9 +123,9 @@ public class Source implements Operation {
             return Optional.of(ObjectBinding.ofOriginObject(inserted));
         }
 
-        if (eChange instanceof RemoveRootEObject<EObject>) {
+        if (eChange instanceof RemoveRootEObject<EObject> || eChange instanceof RemoveNonRootEObject<EObject>) {
             if (target.originObjects().size() != 1) {
-                throw new IllegalStateException("Cannot remove an origin object if that object is not singular");
+                throw new IllegalArgumentException("Cannot remove an origin object if that object is not singular");
             }
 
             EObject removed = target.originObjects().get(0);
@@ -134,13 +134,8 @@ public class Source implements Operation {
                 context.getOriginModel(sourceClass.getEPackage()).getContents().remove(removed);
             } else {
                 if (container.isMany()) {
-                    //noinspection unchecked
-                    ((EList<EObject>) removed.eContainer().eGet(container)).remove(removed);
+                    Utilities.getList(removed.eContainer(), container).remove(removed);
                 } else {
-                    if (container.isChangeable()) {
-                        throw new IllegalArgumentException("Container is not changeable");
-                    }
-
                     removed.eContainer().eUnset(container);
                 }
             }
