@@ -14,14 +14,14 @@ public class ViewChangePropagationSpecificationAdapter extends AbstractChangePro
     private final ChangePropagationSpecificationWrapper specification;
     private final ViewChangePropagationSpecification targetViewType;
 
-    public ViewChangePropagationSpecificationAdapter(ViewChangePropagationSpecification sourceViewType, ChangePropagationSpecificationWrapper specification, ViewChangePropagationSpecification targetViewType) {
-        super(sourceViewType.getOriginMetamodelDescriptor(), targetViewType.getViewTypeMetamodelDescriptor());
+    public ViewChangePropagationSpecificationAdapter(ViewChangePropagationSpecification sourceViewType, int sourceViewTypeMetamodelIndex, ChangePropagationSpecificationWrapper specification, ViewChangePropagationSpecification targetViewType, int targetViewTypeMetamodelIndex) {
+        super(sourceViewType.getOriginMetamodelDescriptors().get(sourceViewTypeMetamodelIndex), targetViewType.getOriginMetamodelDescriptors().get(targetViewTypeMetamodelIndex));
 
         if (!sourceViewType.getViewTypeMetamodelDescriptor().equals(specification.getSourceMetamodelDescriptor())) {
             throw new IllegalArgumentException("The view type of the source does not match the source metamodel of the change propagation specification");
         }
 
-        if (!specification.getTargetMetamodelDescriptor().equals(targetViewType.getOriginMetamodelDescriptor())) {
+        if (!specification.getTargetMetamodelDescriptor().equals(targetViewType.getViewTypeMetamodelDescriptor())) {
             throw new IllegalArgumentException("The target metamodel of the change propagation specification does not match the origina metamodel of the target");
         }
 

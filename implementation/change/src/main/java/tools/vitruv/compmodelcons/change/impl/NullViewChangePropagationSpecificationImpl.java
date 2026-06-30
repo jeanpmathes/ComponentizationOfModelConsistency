@@ -5,21 +5,23 @@ import tools.vitruv.compmodelcons.change.ViewChangePropagationSpecification;
 import tools.vitruv.framework.views.View;
 import tools.vitruv.framework.vsum.VirtualModel;
 
+import java.util.List;
+
 public class NullViewChangePropagationSpecificationImpl implements ViewChangePropagationSpecification {
-    private final MetamodelDescriptor metamodelDescriptor;
+    private final List<MetamodelDescriptor> metamodelDescriptors;
 
     public NullViewChangePropagationSpecificationImpl(MetamodelDescriptor metamodelDescriptor) {
-        this.metamodelDescriptor = metamodelDescriptor;
+        this.metamodelDescriptors = List.of(metamodelDescriptor);
     }
 
     @Override
-    public MetamodelDescriptor getOriginMetamodelDescriptor() {
-        return metamodelDescriptor;
+    public List<MetamodelDescriptor> getOriginMetamodelDescriptors() {
+        return metamodelDescriptors;
     }
 
     @Override
     public MetamodelDescriptor getViewTypeMetamodelDescriptor() {
-        return metamodelDescriptor;
+        return metamodelDescriptors.get(0);
     }
 
     @Override

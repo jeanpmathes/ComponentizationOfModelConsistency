@@ -15,7 +15,7 @@ public abstract class OperationBasedViewType extends TransformingViewType {
         super(name, metaModel);
     }
 
-    protected abstract Operation createStructure(Resource model);
+    protected abstract Operation createStructure();
 
     @Override
     protected void generateView(Collection<Resource> sources, List<Resource> target) {
