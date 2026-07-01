@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface Operation {
     List<ObjectBinding> get(Context context);
 
-    Optional<ObjectBinding> put(EChange<EObject> eChange, ObjectBinding target, Context context);
+    ObjectBinding put(EChange<EObject> eChange, ObjectBinding target, Context context);
 
     Optional<EChange<EObject>> getChange(EChange<EObject> change);
 }

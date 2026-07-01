@@ -31,6 +31,10 @@ public class EditableViewCorrespondencesImpl implements EditableViewCorresponden
 
     @Override
     public void addCorrespondence(List<EObject> originObjects, EObject viewObject) {
+        if (originObjects.isEmpty()) {
+            return;
+        }
+
         correspondences.put(originObjects, List.of(viewObject));
     }
 

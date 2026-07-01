@@ -9,7 +9,6 @@ import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -63,14 +62,13 @@ public class ProjectTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
 
         // Action
-        when(originOperation.put(any(), any(), any())).thenReturn(Optional.of(ObjectBinding.ofOriginObject(otherStore)));
-        Optional<ObjectBinding> result = operation.put(change, ObjectBinding.ofViewObject(created), context);
+        when(originOperation.put(any(), any(), any())).thenReturn(ObjectBinding.ofOriginObject(otherStore));
+        ObjectBinding result = operation.put(change, ObjectBinding.ofViewObject(created), context);
 
         // Assertions
         verify(originOperation, times(1)).put(eq(change), any(), eq(context));
-        assertTrue(result.isPresent());
-        assertEquals(created, result.get().viewObject());
-        assertEquals(otherStore, result.get().originObjects().get(0));
+        assertEquals(created, result.viewObject());
+        assertEquals(otherStore, result.originObjects().get(0));
     }
 
     @Test
@@ -94,13 +92,12 @@ public class ProjectTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(results.get(0).viewObject());
 
         // Action
-        when(originOperation.put(any(), any(), any())).thenReturn(Optional.of(ObjectBinding.ofOriginObject(results.get(0).originObjects().get(0))));
-        Optional<ObjectBinding> result = operation.put(change, results.get(0), context);
+        when(originOperation.put(any(), any(), any())).thenReturn(ObjectBinding.ofOriginObject(results.get(0).originObjects().get(0)));
+        ObjectBinding result = operation.put(change, results.get(0), context);
 
         // Assertions
         verify(originOperation, times(1)).put(eq(change), any(), eq(context));
-        assertTrue(result.isPresent());
-        assertEquals(results.get(0).viewObject(), result.get().viewObject());
-        assertEquals(results.get(0).originObjects(), result.get().originObjects());
+        assertEquals(results.get(0).viewObject(), result.viewObject());
+        assertEquals(results.get(0).originObjects(), result.originObjects());
     }
 }

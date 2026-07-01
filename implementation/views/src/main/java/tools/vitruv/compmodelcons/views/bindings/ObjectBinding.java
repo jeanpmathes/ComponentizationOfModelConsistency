@@ -20,6 +20,20 @@ public interface ObjectBinding {
         };
     }
 
+    static ObjectBinding empty() {
+        return new ObjectBinding() {
+            @Override
+            public List<EObject> originObjects() {
+                return List.of();
+            }
+
+            @Override
+            public EObject viewObject() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
     static ObjectBinding ofViewObject(EObject eObject) {
         return new ObjectBinding() {
             @Override

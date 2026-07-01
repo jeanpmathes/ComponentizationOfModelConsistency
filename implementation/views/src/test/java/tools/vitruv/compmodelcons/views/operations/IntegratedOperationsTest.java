@@ -9,6 +9,7 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -22,63 +23,65 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         EObject store = models.getRoot(Model.RESTAURANT);
         EClass restaurantClass = getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
+        List<EObject> storeContents = List.copyOf(store.eContents());
 
         // ViewType Setup
         EPackage viewType = createEPackage();
         EClass emptyClass = createEClass(viewType);
 
         // Operation Setup
-        Project operation = new Project(emptyClass, new Source(restaurantClass));
+        Root operation = new Root(emptyClass, Optional.of(new Project(emptyClass, new Source(restaurantClass))), List.of());
 
-        // Action: Remove and delete one of the restaurants.
-        List<ObjectBinding> resultsOfGet = operation.get(context);
-        ObjectBinding removed = resultsOfGet.get(0);
-        doRemoveRoot(removed, operation);
-        doDelete(removed, operation);
+        // Action: Get the view.
+        List<ObjectBinding> results = new ArrayList<>(operation.get(context));
 
-        // Action: Create and insert a new restaurant.
-        EObject created = createEObject(emptyClass);
-        ObjectBinding inserted = doCreate(created, operation);
-        doInsertRoot(inserted, operation);
+        // Action: Remove and delete one of the restaurants by removing and deleting an empty.
+        EObject removed = context.getViewModel().getContents().get(0);
+        doRemoveRoot(removed, operation, results);
+        doDelete(removed, operation, results);
+
+        // Action: Create and insert a new restaurant by creating and inserting an empty.
+        EObject created = doCreate(emptyClass, operation, results);
+        doInsertRoot(created, operation, results);
 
         // Assertions
-        List<ObjectBinding> result = operation.get(context);
-        assertEquals(restaurants.size(), result.size());
+        assertTrue(context.getViewModel().getContents().contains(created));
+        assertFalse(context.getViewModel().getContents().contains(removed));
         assertEquals(restaurants.size(), context.getOriginObjects(restaurantClass).size());
         assertEquals(1, Sets.difference(new HashSet<>(restaurants), new HashSet<>(context.getOriginObjects(restaurantClass))).size());
         assertEquals(1, Sets.difference(new HashSet<>(context.getOriginObjects(restaurantClass)), new HashSet<>(restaurants)).size());
-        assertTrue(store.eContents().contains(inserted.originObjects().get(0)));
-        assertFalse(store.eContents().contains(removed.originObjects().get(0)));
+        assertEquals(storeContents.size(), store.eContents().size());
+        assertEquals(1, Sets.difference(new HashSet<>(storeContents), new HashSet<>(store.eContents())).size());
+        assertEquals(1, Sets.difference(new HashSet<>(store.eContents()), new HashSet<>(storeContents)).size());
     }
 
-    private ObjectBinding doCreate(EObject created, Operation operation) {
+    private EObject doCreate(EClass eClass, Operation operation, List<ObjectBinding> roots) {
+        EObject created = createEObject(eClass);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
-        Optional<ObjectBinding> result = operation.put(change, ObjectBinding.ofViewObject(created), context);
-        assertTrue(result.isPresent());
-        return result.get();
+        ObjectBinding result = operation.put(change, roots.get(0), context);
+        roots.set(0, result);
+        return created;
     }
 
-    private void doDelete(ObjectBinding removed, Operation operation) {
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(removed.viewObject());
-        Optional<ObjectBinding> result = operation.put(change, removed, context);
-        assertFalse(result.isPresent());
+    private void doDelete(EObject removed, Operation operation, List<ObjectBinding> roots) {
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(removed);
+        ObjectBinding result = operation.put(change, roots.get(0), context);
+        roots.set(0, result);
     }
 
-    private ObjectBinding doInsertRoot(ObjectBinding inserted, Operation operation) {
-        context.getViewModel().getContents().add(inserted.viewObject());
-        int index = context.getViewModel().getContents().indexOf(inserted.viewObject());
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertRootChange(inserted.viewObject(), context.getViewModel(), index);
-        Optional<ObjectBinding> result = operation.put(change, inserted, context);
-        assertTrue(result.isPresent());
-        return result.get();
+    private void doInsertRoot(EObject inserted, Operation operation, List<ObjectBinding> roots) {
+        context.getViewModel().getContents().add(inserted);
+        int index = context.getViewModel().getContents().indexOf(inserted);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertRootChange(inserted, context.getViewModel(), index);
+        ObjectBinding result = operation.put(change, roots.get(0), context);
+        roots.set(0, result);
     }
 
-    private ObjectBinding doRemoveRoot(ObjectBinding removed, Operation operation) {
-        int index = context.getViewModel().getContents().indexOf(removed.viewObject());
-        context.getViewModel().getContents().remove(removed.viewObject());
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed.viewObject(), context.getViewModel(), index);
-        Optional<ObjectBinding> result = operation.put(change, removed, context);
-        assertTrue(result.isPresent());
-        return result.get();
+    private void doRemoveRoot(EObject removed, Operation operation, List<ObjectBinding> roots) {
+        int index = context.getViewModel().getContents().indexOf(removed);
+        context.getViewModel().getContents().remove(removed);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, context.getViewModel(), index);
+        ObjectBinding result = operation.put(change, roots.get(0), context);
+        roots.set(0, result);
     }
 }

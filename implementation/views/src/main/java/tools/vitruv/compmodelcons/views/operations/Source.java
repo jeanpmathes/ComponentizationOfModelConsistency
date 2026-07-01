@@ -74,7 +74,7 @@ public class Source implements Operation {
     }
 
     @Override
-    public Optional<ObjectBinding> put(EChange<EObject> eChange, ObjectBinding target, Context context) {
+    public ObjectBinding put(EChange<EObject> eChange, ObjectBinding target, Context context) {
         if (eChange instanceof CreateEObject<EObject> createEObject) {
             if (!target.originObjects().isEmpty()) {
                 throw new IllegalArgumentException("Cannot create an origin object if there is already an origin object");
@@ -83,7 +83,7 @@ public class Source implements Operation {
             EObject created = sourceClass.getEPackage().getEFactoryInstance().create(sourceClass);
             context.getCorrespondences().addCorrespondence(List.of(created), createEObject.getAffectedElement());
 
-            return Optional.of(ObjectBinding.ofOriginObject(created));
+            return ObjectBinding.ofOriginObject(created);
         }
 
         if (eChange instanceof DeleteEObject<EObject> deleteEObject) {
@@ -94,7 +94,7 @@ public class Source implements Operation {
             EObject deleted = target.originObjects().get(0);
             context.getCorrespondences().removeCorrespondence(List.of(deleted), deleteEObject.getAffectedElement());
 
-            return Optional.empty();
+            return ObjectBinding.empty();
         }
 
         if (eChange instanceof InsertRootEObject<EObject> || eChange instanceof InsertNonRootEObject<EObject>) {
@@ -120,7 +120,7 @@ public class Source implements Operation {
                 }
             }
 
-            return Optional.of(ObjectBinding.ofOriginObject(inserted));
+            return ObjectBinding.ofOriginObject(inserted);
         }
 
         if (eChange instanceof RemoveRootEObject<EObject> || eChange instanceof RemoveNonRootEObject<EObject>) {
@@ -140,13 +140,10 @@ public class Source implements Operation {
                 }
             }
 
-            return Optional.of(ObjectBinding.ofOriginObject(removed));
+            return ObjectBinding.ofOriginObject(removed);
         }
 
-        // todo: maybe it needs other events for insertion / removal of objects that are not root in view
-        // todo: or maybe the delete / remove changes need to insert as well, but only if not root in view (but how to get whether the view element is root or not?)
-
-        return Optional.empty();
+        throw new IllegalArgumentException("Inappropriate change type: " + eChange.getClass());
     }
 
     @Override

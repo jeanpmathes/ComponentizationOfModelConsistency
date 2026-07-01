@@ -3,10 +3,6 @@ package tools.vitruv.compmodelcons.views.operations;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
-import tools.vitruv.change.atomic.eobject.EObjectAddedEChange;
-import tools.vitruv.change.atomic.eobject.EObjectExistenceEChange;
-import tools.vitruv.change.atomic.eobject.EObjectSubtractedEChange;
-import tools.vitruv.change.atomic.feature.FeatureEChange;
 import tools.vitruv.compmodelcons.views.Context;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 
@@ -14,6 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class Project implements Operation {
+    private static final String wrongClassForPutMessage = "Cannot put a change on an object that is not of the created class";
+
     private final EClass createdClass;
     private final Operation origin;
 
@@ -33,27 +31,9 @@ public class Project implements Operation {
         }).toList();
     }
 
-    public Optional<ObjectBinding> put(EChange<EObject> eChange, ObjectBinding target, Context context) {
+    public ObjectBinding put(EChange<EObject> eChange, ObjectBinding target, Context context) {
         if (!target.viewObject().eClass().equals(createdClass)) {
-            return Optional.empty();
-        }
-
-        boolean isResponsibleForHandlingChange;
-
-        if (eChange instanceof EObjectExistenceEChange<EObject> eObjectEObjectExistenceEChange) {
-            isResponsibleForHandlingChange = eObjectEObjectExistenceEChange.getAffectedElement().eClass().equals(createdClass);
-        } else if (eChange instanceof FeatureEChange<EObject, ?> featureEChange) {
-            isResponsibleForHandlingChange = featureEChange.getAffectedElement().eClass().equals(createdClass);
-        } else if (eChange instanceof EObjectAddedEChange<EObject> eObjectEObjectAddedEChange) {
-            isResponsibleForHandlingChange = eObjectEObjectAddedEChange.getNewValue().eClass().equals(createdClass);
-        } else if (eChange instanceof EObjectSubtractedEChange<EObject> eObjectEObjectSubtractedEChange) {
-            isResponsibleForHandlingChange = eObjectEObjectSubtractedEChange.getOldValue().eClass().equals(createdClass);
-        } else {
-            throw new IllegalArgumentException("Unknown change type: " + eChange.getClass().getSimpleName());
-        }
-
-        if (!isResponsibleForHandlingChange) {
-            return Optional.empty();
+            throw new IllegalArgumentException(wrongClassForPutMessage);
         }
 
         EObject viewObject = target.viewObject();
@@ -64,9 +44,8 @@ public class Project implements Operation {
             peeledTarget = binding.originBinding;
         }
 
-        return origin
-                .put(eChange, peeledTarget, context)
-                .map(originBinding -> new ProjectObjectBindingImpl(originBinding, viewObject));
+        ObjectBinding originBinding = origin.put(eChange, peeledTarget, context);
+        return new ProjectObjectBindingImpl(originBinding, viewObject);
     }
 
 

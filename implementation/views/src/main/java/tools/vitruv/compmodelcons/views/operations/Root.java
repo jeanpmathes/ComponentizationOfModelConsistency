@@ -24,9 +24,9 @@ public class Root implements Operation {
     private final Map<EClass, Integer> containmentIndices = new HashMap<>();
     private final Set<EReference> containmentReferences = new HashSet<>();
 
-    public Root(EClass rootClass, Operation root, List<Contained> contained) {
+    public Root(EClass rootClass, Optional<Operation> root, List<Contained> contained) {
         this.rootClass = rootClass;
-        this.root = root;
+        this.root = root.orElse(new Project(rootClass, new Empty()));
         this.contained = contained;
 
         for (int index = 0; index < contained.size(); index++) {
@@ -45,7 +45,6 @@ public class Root implements Operation {
                         Map<EObject, ObjectBinding> result = new HashMap<>();
                         for (ObjectBinding containedBinding : entry.operation().get(context)) {
                             result.put(containedBinding.viewObject(), containedBinding);
-
                             Utilities.getList(rootBinding.viewObject(), entry.reference()).add(containedBinding.viewObject());
                         }
                         return result;
@@ -54,7 +53,7 @@ public class Root implements Operation {
     }
 
     @Override
-    public Optional<ObjectBinding> put(EChange<EObject> eChange, ObjectBinding target, Context context) {
+    public ObjectBinding put(EChange<EObject> eChange, ObjectBinding target, Context context) {
         if (eChange instanceof InsertEReference<EObject> insertEReference && isContainmentRelevantChange(insertEReference)) {
             eChange = new InsertNonRootEObjectImpl<>(insertEReference.getNewValue());
         }
@@ -66,30 +65,30 @@ public class Root implements Operation {
 
         if (affectedViewObject.eClass().equals(rootClass)) {
             if (target.originObjects().isEmpty()) {
-                return root
-                        .put(eChange, ObjectBinding.ofViewObject(affectedViewObject), context)
-                        .map(rootBinding -> new RootObjectBindingImpl(rootBinding, Stream.generate(() -> (Map<EObject, ObjectBinding>) new HashMap<EObject, ObjectBinding>()).limit(contained.size()).toList()));
+                ObjectBinding rootBinding = root.put(eChange, ObjectBinding.ofViewObject(affectedViewObject), context);
+                return new RootObjectBindingImpl(
+                        rootBinding,
+                        Stream.generate(() -> (Map<EObject, ObjectBinding>) new HashMap<EObject, ObjectBinding>()).limit(contained.size()).toList());
             } else {
                 RootObjectBindingImpl rootTarget = (RootObjectBindingImpl) target;
                 ObjectBinding peeledTarget = rootTarget.rootBinding;
-                return root
-                        .put(eChange, peeledTarget, context)
-                        .map(rootBinding -> new RootObjectBindingImpl(rootBinding, rootTarget.containedBindings));
+                ObjectBinding rootBinding = root.put(eChange, peeledTarget, context);
+                return new RootObjectBindingImpl(rootBinding, rootTarget.containedBindings);
             }
         } else {
             if (target.originObjects().isEmpty()) {
-                throw new IllegalArgumentException("Cannot put a change on a non-root object if there is no root target");
+                throw new IllegalArgumentException("Cannot put a change on an uncontained (new) object if there is no root target to add this object to");
             }
             RootObjectBindingImpl rootTarget = (RootObjectBindingImpl) target;
             int classIndex = containmentIndices.get(affectedViewObject.eClass());
             ObjectBinding peeledTarget = Optional.ofNullable(rootTarget.containedBindings.get(classIndex).get(affectedViewObject)).orElse(ObjectBinding.ofViewObject(affectedViewObject));
-
-            return contained.get(classIndex).operation()
-                    .put(eChange, peeledTarget, context)
-                    .map(containedBinding -> {
-                        rootTarget.containedBindings.get(classIndex).put(affectedViewObject, containedBinding);
-                        return new RootObjectBindingImpl(rootTarget.rootBinding, rootTarget.containedBindings);
-                    });
+            ObjectBinding containedBinding = contained.get(classIndex).operation().put(eChange, peeledTarget, context);
+            if (containedBinding.originObjects().isEmpty()) {
+                rootTarget.containedBindings.get(classIndex).remove(affectedViewObject);
+            } else {
+                rootTarget.containedBindings.get(classIndex).put(affectedViewObject, containedBinding);
+            }
+            return new RootObjectBindingImpl(rootTarget.rootBinding, rootTarget.containedBindings);
         }
     }
 
@@ -117,6 +116,23 @@ public class Root implements Operation {
         @Override
         public EObject viewObject() {
             return rootBinding.viewObject();
+        }
+    }
+
+    private static class Empty implements Operation {
+        @Override
+        public List<ObjectBinding> get(Context context) {
+            return List.of(ObjectBinding.empty());
+        }
+
+        @Override
+        public ObjectBinding put(EChange<EObject> eChange, ObjectBinding target, Context context) {
+            throw new UnsupportedOperationException("Modification of the default, uncorresponding root is not supported");
+        }
+
+        @Override
+        public Optional<EChange<EObject>> getChange(EChange<EObject> change) {
+            return Optional.empty();
         }
     }
 }

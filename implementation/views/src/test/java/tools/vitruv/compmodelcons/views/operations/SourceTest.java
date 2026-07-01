@@ -13,7 +13,6 @@ import tools.vitruv.compmodelcons.views.impl.InsertNonRootEObjectImpl;
 import tools.vitruv.compmodelcons.views.impl.RemoveNonRootEObjectImpl;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -58,14 +57,13 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
 
         // Action
-        Optional<ObjectBinding> result = operation.put(change, ObjectBinding.ofViewObject(created), context);
+        ObjectBinding result = operation.put(change, ObjectBinding.ofViewObject(created), context);
 
         // Assertions
-        assertTrue(result.isPresent());
-        assertThrows(UnsupportedOperationException.class, () -> result.get().viewObject());
-        assertEquals(1, result.get().originObjects().size());
-        assertEquals(storeClass, result.get().originObjects().get(0).eClass());
-        assertTrue(correspondences.correspond(result.get().originObjects(), created));
+        assertThrows(UnsupportedOperationException.class, result::viewObject);
+        assertEquals(1, result.originObjects().size());
+        assertEquals(storeClass, result.originObjects().get(0).eClass());
+        assertTrue(correspondences.correspond(result.originObjects(), created));
     }
 
     @Test
@@ -90,10 +88,11 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(deleted);
 
         // Action
-        Optional<ObjectBinding> result = operation.put(change, results.get(0), context);
+        ObjectBinding result = operation.put(change, results.get(0), context);
 
         // Assertions
-        assertFalse(result.isPresent());
+        assertThrows(UnsupportedOperationException.class, result::viewObject);
+        assertTrue(result.originObjects().isEmpty());
         assertFalse(correspondences.correspond(results.get(0).originObjects(), deleted));
     }
 
@@ -122,12 +121,12 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertRootChange(inserted, context.getViewModel(), index);
 
         // Action
-        Optional<ObjectBinding> result = operation.put(change, ObjectBinding.ofOriginObject(otherStore), context);
+        ObjectBinding result = operation.put(change, ObjectBinding.ofOriginObject(otherStore), context);
 
         // Assertions
-        assertTrue(result.isPresent());
-        assertEquals(1, result.get().originObjects().size());
-        assertEquals(otherStore, result.get().originObjects().get(0));
+        assertThrows(UnsupportedOperationException.class, result::viewObject);
+        assertEquals(1, result.originObjects().size());
+        assertEquals(otherStore, result.originObjects().get(0));
         assertEquals(stores.size() + 1, context.getOriginObjects(storeClass).size());
         assertTrue(context.getOriginObjects(storeClass).contains(otherStore));
     }
@@ -161,12 +160,12 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = new InsertNonRootEObjectImpl<>(inserted);
 
         // Action
-        Optional<ObjectBinding> result = operation.put(change, ObjectBinding.ofOriginObject(otherStore), context);
+        ObjectBinding result = operation.put(change, ObjectBinding.ofOriginObject(otherStore), context);
 
         // Assertions
-        assertTrue(result.isPresent());
-        assertEquals(1, result.get().originObjects().size());
-        assertEquals(otherStore, result.get().originObjects().get(0));
+        assertThrows(UnsupportedOperationException.class, result::viewObject);
+        assertEquals(1, result.originObjects().size());
+        assertEquals(otherStore, result.originObjects().get(0));
         assertEquals(stores.size() + 1, context.getOriginObjects(storeClass).size());
         assertTrue(context.getOriginObjects(storeClass).contains(otherStore));
     }
@@ -195,13 +194,13 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, context.getViewModel(), index);
 
         // Action
-        Optional<ObjectBinding> result = operation.put(change, results.get(0), context);
+        ObjectBinding result = operation.put(change, results.get(0), context);
 
         // Assertions
-        assertTrue(result.isPresent());
-        assertEquals(1, result.get().originObjects().size());
-        assertEquals(store, result.get().originObjects().get(0));
-        assertEquals(results.get(0).originObjects().get(0), result.get().originObjects().get(0));
+        assertThrows(UnsupportedOperationException.class, result::viewObject);
+        assertEquals(1, result.originObjects().size());
+        assertEquals(store, result.originObjects().get(0));
+        assertEquals(results.get(0).originObjects().get(0), result.originObjects().get(0));
         assertEquals(stores.size() - 1, context.getOriginObjects(storeClass).size());
         assertFalse(context.getOriginObjects(storeClass).contains(store));
     }
@@ -234,13 +233,13 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = new RemoveNonRootEObjectImpl<>(removed);
 
         // Action
-        Optional<ObjectBinding> result = operation.put(change, results.get(0), context);
+        ObjectBinding result = operation.put(change, results.get(0), context);
 
         // Assertions
-        assertTrue(result.isPresent());
-        assertEquals(1, result.get().originObjects().size());
-        assertEquals(store, result.get().originObjects().get(0));
-        assertEquals(results.get(0).originObjects().get(0), result.get().originObjects().get(0));
+        assertThrows(UnsupportedOperationException.class, result::viewObject);
+        assertEquals(1, result.originObjects().size());
+        assertEquals(store, result.originObjects().get(0));
+        assertEquals(results.get(0).originObjects().get(0), result.originObjects().get(0));
         assertEquals(stores.size() - 1, context.getOriginObjects(storeClass).size());
         assertFalse(context.getOriginObjects(storeClass).contains(store));
     }
@@ -270,12 +269,12 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertRootChange(inserted, context.getViewModel(), index);
 
         // Action
-        Optional<ObjectBinding> result = operation.put(change, ObjectBinding.ofOriginObject(restaurant), context);
+        ObjectBinding result = operation.put(change, ObjectBinding.ofOriginObject(restaurant), context);
 
         // Assertions
-        assertTrue(result.isPresent());
-        assertEquals(1, result.get().originObjects().size());
-        assertEquals(restaurant, result.get().originObjects().get(0));
+        assertThrows(UnsupportedOperationException.class, result::viewObject);
+        assertEquals(1, result.originObjects().size());
+        assertEquals(restaurant, result.originObjects().get(0));
         assertEquals(restaurants.size() + 1, context.getOriginObjects(restaurantClass).size());
         assertTrue(context.getOriginObjects(restaurantClass).contains(restaurant));
         assertFalse(context.getViewModel().getContents().contains(restaurant));
@@ -311,12 +310,12 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = new InsertNonRootEObjectImpl<>(inserted);
 
         // Action
-        Optional<ObjectBinding> result = operation.put(change, ObjectBinding.ofOriginObject(restaurant), context);
+        ObjectBinding result = operation.put(change, ObjectBinding.ofOriginObject(restaurant), context);
 
         // Assertions
-        assertTrue(result.isPresent());
-        assertEquals(1, result.get().originObjects().size());
-        assertEquals(restaurant, result.get().originObjects().get(0));
+        assertThrows(UnsupportedOperationException.class, result::viewObject);
+        assertEquals(1, result.originObjects().size());
+        assertEquals(restaurant, result.originObjects().get(0));
         assertEquals(restaurants.size() + 1, context.getOriginObjects(restaurantClass).size());
         assertTrue(context.getOriginObjects(restaurantClass).contains(restaurant));
         assertFalse(context.getViewModel().getContents().contains(restaurant));
@@ -347,15 +346,15 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, context.getViewModel(), index);
 
         // Action
-        Optional<ObjectBinding> result = operation.put(change, results.get(0), context);
+        ObjectBinding result = operation.put(change, results.get(0), context);
 
         // Assertions
-        assertTrue(result.isPresent());
-        assertEquals(1, result.get().originObjects().size());
-        assertEquals(results.get(0).originObjects().get(0), result.get().originObjects().get(0));
+        assertThrows(UnsupportedOperationException.class, result::viewObject);
+        assertEquals(1, result.originObjects().size());
+        assertEquals(results.get(0).originObjects().get(0), result.originObjects().get(0));
         assertEquals(restaurants.size() - 1, context.getOriginObjects(restaurantClass).size());
-        assertFalse(context.getOriginObjects(restaurantClass).contains(result.get().originObjects().get(0)));
-        assertFalse(store.eContents().contains(result.get().originObjects().get(0)));
+        assertFalse(context.getOriginObjects(restaurantClass).contains(result.originObjects().get(0)));
+        assertFalse(store.eContents().contains(result.originObjects().get(0)));
     }
 
     @Test
@@ -386,14 +385,14 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = new RemoveNonRootEObjectImpl<>(removed);
 
         // Action
-        Optional<ObjectBinding> result = operation.put(change, results.get(0), context);
+        ObjectBinding result = operation.put(change, results.get(0), context);
 
         // Assertions
-        assertTrue(result.isPresent());
-        assertEquals(1, result.get().originObjects().size());
-        assertEquals(results.get(0).originObjects().get(0), result.get().originObjects().get(0));
+        assertThrows(UnsupportedOperationException.class, result::viewObject);
+        assertEquals(1, result.originObjects().size());
+        assertEquals(results.get(0).originObjects().get(0), result.originObjects().get(0));
         assertEquals(restaurants.size() - 1, context.getOriginObjects(restaurantClass).size());
-        assertFalse(context.getOriginObjects(restaurantClass).contains(result.get().originObjects().get(0)));
-        assertFalse(store.eContents().contains(result.get().originObjects().get(0)));
+        assertFalse(context.getOriginObjects(restaurantClass).contains(result.originObjects().get(0)));
+        assertFalse(store.eContents().contains(result.originObjects().get(0)));
     }
 }
