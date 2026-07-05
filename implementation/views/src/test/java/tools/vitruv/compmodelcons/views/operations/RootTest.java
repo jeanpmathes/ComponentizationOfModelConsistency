@@ -10,7 +10,6 @@ import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
 import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.InsertNonRootEObject;
 import tools.vitruv.compmodelcons.views.RemoveNonRootEObject;
-import tools.vitruv.compmodelcons.views.Utilities;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 
 import java.util.HashSet;
@@ -53,8 +52,8 @@ public class RootTest extends AbstractOperationTest {
         verify(emptyContainedOperation, times(1)).get(context);
         assertEquals(1, results.size());
         assertTrue(context.getViewModel().getContents().contains(results.get(0).viewObject()));
-        assertEquals(restaurants.size(), Utilities.getList(results.get(0).viewObject(), emptyContainment).size());
-        assertEquals(empties.stream().map(ObjectBinding::viewObject).collect(Collectors.toSet()), new HashSet<>(Utilities.getList(results.get(0).viewObject(), emptyContainment)));
+        assertEquals(restaurants.size(), DynamicModels.getList(results.get(0).viewObject(), emptyContainment).size());
+        assertEquals(empties.stream().map(ObjectBinding::viewObject).collect(Collectors.toSet()), new HashSet<>(DynamicModels.getList(results.get(0).viewObject(), emptyContainment)));
     }
 
     @Test
@@ -84,8 +83,8 @@ public class RootTest extends AbstractOperationTest {
         assertEquals(1, results.size());
         assertTrue(results.get(0).originObjects().isEmpty());
         assertTrue(context.getViewModel().getContents().contains(results.get(0).viewObject()));
-        assertEquals(restaurants.size(), Utilities.getList(results.get(0).viewObject(), emptyContainment).size());
-        assertEquals(empties.stream().map(ObjectBinding::viewObject).collect(Collectors.toSet()), new HashSet<>(Utilities.getList(results.get(0).viewObject(), emptyContainment)));
+        assertEquals(restaurants.size(), DynamicModels.getList(results.get(0).viewObject(), emptyContainment).size());
+        assertEquals(empties.stream().map(ObjectBinding::viewObject).collect(Collectors.toSet()), new HashSet<>(DynamicModels.getList(results.get(0).viewObject(), emptyContainment)));
     }
 
     @Test
@@ -182,8 +181,8 @@ public class RootTest extends AbstractOperationTest {
         // Pre-Action Change
         EObject inserted = DynamicModels.createEObject(emptyClass);
         EObject insertedCorrespondence = DynamicModels.createEObject(restaurantClass);
-        Utilities.getList(root.viewObject(), emptyContainment).add(inserted);
-        int index = Utilities.getList(root.viewObject(), emptyContainment).indexOf(inserted);
+        DynamicModels.getList(root.viewObject(), emptyContainment).add(inserted);
+        int index = DynamicModels.getList(root.viewObject(), emptyContainment).indexOf(inserted);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertReferenceChange(root.viewObject(), emptyContainment, inserted, index);
 
         // Action
@@ -229,8 +228,8 @@ public class RootTest extends AbstractOperationTest {
 
         // Pre-Action Change
         EObject removed = empties.get(0).viewObject();
-        int index = Utilities.getList(root.viewObject(), emptyContainment).indexOf(removed);
-        Utilities.getList(root.viewObject(), emptyContainment).remove(removed);
+        int index = DynamicModels.getList(root.viewObject(), emptyContainment).indexOf(removed);
+        DynamicModels.getList(root.viewObject(), emptyContainment).remove(removed);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveReferenceChange(root.viewObject(), emptyContainment, removed, index);
 
         // Action

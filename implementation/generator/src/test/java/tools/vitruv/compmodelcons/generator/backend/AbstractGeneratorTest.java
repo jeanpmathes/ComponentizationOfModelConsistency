@@ -5,8 +5,8 @@ import org.eclipse.emf.codegen.ecore.genmodel.GenModelFactory;
 import org.eclipse.emf.codegen.ecore.genmodel.GenPackage;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EPackage;
-import org.eclipse.emf.ecore.EcoreFactory;
 import tools.vitruv.compmodelcons.generator.tools.NamingGenerator;
+import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.neojoin.NeoJoinStandaloneSetup;
 import tools.vitruv.neojoin.Parser;
 import tools.vitruv.neojoin.aqr.AQR;
@@ -68,7 +68,7 @@ public class AbstractGeneratorTest {
     }
 
     protected static EPackage createEPackage() {
-        EPackage ePackage = EcoreFactory.eINSTANCE.createEPackage();
+        EPackage ePackage = DynamicModels.createEPackage();
         ePackage.setName(MODEL_NAME);
         return ePackage;
     }

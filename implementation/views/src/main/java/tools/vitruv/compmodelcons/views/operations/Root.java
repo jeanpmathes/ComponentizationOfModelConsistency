@@ -7,9 +7,9 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.feature.FeatureEChange;
 import tools.vitruv.change.atomic.feature.reference.InsertEReference;
 import tools.vitruv.change.atomic.feature.reference.RemoveEReference;
+import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
-import tools.vitruv.compmodelcons.views.Utilities;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.impl.InsertNonRootEObjectImpl;
 import tools.vitruv.compmodelcons.views.impl.RemoveNonRootEObjectImpl;
@@ -46,7 +46,7 @@ public class Root implements Operation {
                         Map<EObject, ObjectBinding> result = new HashMap<>();
                         for (ObjectBinding containedBinding : entry.operation().get(context)) {
                             result.put(containedBinding.viewObject(), containedBinding);
-                            Utilities.getList(rootBinding.viewObject(), entry.reference()).add(containedBinding.viewObject());
+                            DynamicModels.getList(rootBinding.viewObject(), entry.reference()).add(containedBinding.viewObject());
                         }
                         return result;
                     }).toList());
@@ -62,7 +62,7 @@ public class Root implements Operation {
             change = new RemoveNonRootEObjectImpl<>(removeEReference.getOldValue());
         }
 
-        EObject affectedViewObject = Utilities.getAffectedEObject(change);
+        EObject affectedViewObject = DynamicModels.getAffectedEObject(change);
 
         if (affectedViewObject.eClass().equals(rootClass)) {
             if (target.originObjects().isEmpty()) {
@@ -77,9 +77,6 @@ public class Root implements Operation {
                 return new RootObjectBindingImpl(rootBinding, rootTarget.containedBindings);
             }
         } else {
-            if (target.originObjects().isEmpty()) {
-                throw new IllegalArgumentException("Cannot put a change on an uncontained (new) object if there is no root target to add this object to");
-            }
             RootObjectBindingImpl rootTarget = (RootObjectBindingImpl) target;
             int classIndex = containmentIndices.get(affectedViewObject.eClass());
             ObjectBinding peeledTarget = Optional.ofNullable(rootTarget.containedBindings.get(classIndex).get(affectedViewObject)).orElse(ObjectBinding.ofViewObject(affectedViewObject));

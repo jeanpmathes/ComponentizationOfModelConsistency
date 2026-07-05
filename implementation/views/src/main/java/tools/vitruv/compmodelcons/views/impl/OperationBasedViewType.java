@@ -32,8 +32,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public abstract class OperationBasedViewType extends AbstractViewType<AllSelector, HierarchicalId> {
-    private final static String ViewTypeMustBeUsedWithViewsCreatedByItMessage = "Viewtype must only be used in combination with views created by it";
-
     private final List<EPackage> originMetamodels;
     private final IdentityMappingViewType sourceModelsViewType;
 

@@ -26,7 +26,6 @@ import tools.vitruv.change.atomic.uuid.Uuid;
 import tools.vitruv.change.atomic.uuid.UuidResolver;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.compmodelcons.views.DynamicModels;
-import tools.vitruv.compmodelcons.views.Utilities;
 import tools.vitruv.compmodelcons.views.operations.Operation;
 import tools.vitruv.compmodelcons.views.operations.Project;
 import tools.vitruv.compmodelcons.views.operations.Source;
@@ -115,11 +114,11 @@ class OperationBasedViewTypeTest {
             repository.getComponents().add(pcm.Component());
         }, view -> {
             EObject root = view.getRootObjects().iterator().next();
-            Utilities.getList(root, nonRootContainment).add(DynamicModels.createEObject(viewNonRootClass));
-            Utilities.getList(root, nonRootContainment).remove(0);
-            Utilities.getList(root, nonRootContainment).remove(0);
-            Utilities.getList(root, nonRootContainment).add(DynamicModels.createEObject(viewNonRootClass));
-            Utilities.getList(root, nonRootContainment).add(DynamicModels.createEObject(viewNonRootClass));
+            DynamicModels.getList(root, nonRootContainment).add(DynamicModels.createEObject(viewNonRootClass));
+            DynamicModels.getList(root, nonRootContainment).remove(0);
+            DynamicModels.getList(root, nonRootContainment).remove(0);
+            DynamicModels.getList(root, nonRootContainment).add(DynamicModels.createEObject(viewNonRootClass));
+            DynamicModels.getList(root, nonRootContainment).add(DynamicModels.createEObject(viewNonRootClass));
         });
     }
 

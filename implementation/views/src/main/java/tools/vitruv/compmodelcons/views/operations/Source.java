@@ -116,7 +116,7 @@ public class Source implements Operation {
                 }
 
                 if (container.isMany()) {
-                    Utilities.getList(candidates.get(0), container).add(inserted);
+                    DynamicModels.getList(candidates.get(0), container).add(inserted);
                 } else {
                     candidates.get(0).eSet(container, inserted);
                 }
@@ -136,7 +136,7 @@ public class Source implements Operation {
                 context.removeRootFromOriginModel(sourceClass.getEPackage(), removed);
             } else {
                 if (container.isMany()) {
-                    Utilities.getList(removed.eContainer(), container).remove(removed);
+                    DynamicModels.getList(removed.eContainer(), container).remove(removed);
                 } else {
                     removed.eContainer().eUnset(container);
                 }

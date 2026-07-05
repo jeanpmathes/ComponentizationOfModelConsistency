@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
 import tools.vitruv.compmodelcons.views.DynamicModels;
-import tools.vitruv.compmodelcons.views.Utilities;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.impl.InsertNonRootEObjectImpl;
 import tools.vitruv.compmodelcons.views.impl.RemoveNonRootEObjectImpl;
@@ -157,7 +156,7 @@ public class SourceTest extends AbstractOperationTest {
 
         // Pre-Action Change
         EObject inserted = DynamicModels.createEObject(emptyClass);
-        Utilities.getList(root, emptyContainment).add(inserted);
+        DynamicModels.getList(root, emptyContainment).add(inserted);
         EChange<EObject> change = new InsertNonRootEObjectImpl<>(inserted);
 
         // Action
@@ -230,7 +229,7 @@ public class SourceTest extends AbstractOperationTest {
 
         // Pre-Action Change
         EObject removed = DynamicModels.createEObject(emptyClass);
-        Utilities.getList(root, emptyContainment).add(removed);
+        DynamicModels.getList(root, emptyContainment).add(removed);
         EChange<EObject> change = new RemoveNonRootEObjectImpl<>(removed);
 
         // Action
@@ -307,7 +306,7 @@ public class SourceTest extends AbstractOperationTest {
 
         // Pre-Action Change
         EObject inserted = DynamicModels.createEObject(emptyClass);
-        Utilities.getList(root, emptyContainment).add(inserted);
+        DynamicModels.getList(root, emptyContainment).add(inserted);
         EChange<EObject> change = new InsertNonRootEObjectImpl<>(inserted);
 
         // Action
@@ -382,7 +381,7 @@ public class SourceTest extends AbstractOperationTest {
 
         // Pre-Action Change
         EObject removed = DynamicModels.createEObject(emptyClass);
-        Utilities.getList(root, emptyContainment).add(removed);
+        DynamicModels.getList(root, emptyContainment).add(removed);
         EChange<EObject> change = new RemoveNonRootEObjectImpl<>(removed);
 
         // Action

@@ -5,9 +5,11 @@ import tools.vitruv.compmodelcons.views.impl.OperationBasedViewType;
 import tools.vitruv.framework.views.View;
 import tools.vitruv.framework.vsum.VirtualModel;
 
+import java.util.List;
+
 public abstract class ChangeSpecificationAwareViewType extends OperationBasedViewType implements ViewChangePropagationSpecification {
-    public ChangeSpecificationAwareViewType(String name, EPackage metaModel) {
-        super(name);
+    public ChangeSpecificationAwareViewType(String name, List<EPackage> originMetamodels, EPackage viewTypeMetamodel) {
+        super(name, originMetamodels, viewTypeMetamodel);
     }
 
     @Override
