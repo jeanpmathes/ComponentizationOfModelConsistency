@@ -7,6 +7,7 @@ import org.eclipse.emf.ecore.EReference;
 import org.junit.jupiter.api.Test;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
+import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.InsertNonRootEObject;
 import tools.vitruv.compmodelcons.views.RemoveNonRootEObject;
 import tools.vitruv.compmodelcons.views.Utilities;
@@ -25,17 +26,17 @@ public class RootTest extends AbstractOperationTest {
     public void testGetShouldProvideAndAttachAllObjectsToRootOrTheirContainmentReference() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
-        List<EObject> restaurants = context.getOriginObjects(getEClass(models.getPackage(Model.RESTAURANT), "Restaurant"));
+        List<EObject> restaurants = context.getOriginObjects(DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant"));
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass rootClass = createEClass(viewType);
-        EClass emptyClass = createEClass(viewType);
-        EReference emptyContainment = createContainmentEReference(rootClass, emptyClass);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass rootClass = DynamicModels.createEClass(viewType);
+        EClass emptyClass = DynamicModels.createEClass(viewType);
+        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
-        ObjectBinding root = createBinding(store, createEObject(rootClass));
-        List<ObjectBinding> empties = restaurants.stream().map(r -> createBinding(r, createEObject(emptyClass))).toList();
+        ObjectBinding root = createBinding(store, DynamicModels.createEObject(rootClass));
+        List<ObjectBinding> empties = restaurants.stream().map(r -> createBinding(r, DynamicModels.createEObject(emptyClass))).toList();
 
         // Operation Setup
         Operation rootOperation = mock(Operation.class);
@@ -59,16 +60,16 @@ public class RootTest extends AbstractOperationTest {
     @Test
     public void testGetShouldProvideAndAttachAllObjectsToRootOrTheirContainmentReferenceWhenUsingEmptyRoot() {
         // Origin Setup
-        List<EObject> restaurants = context.getOriginObjects(getEClass(models.getPackage(Model.RESTAURANT), "Restaurant"));
+        List<EObject> restaurants = context.getOriginObjects(DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant"));
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass rootClass = createEClass(viewType);
-        EClass emptyClass = createEClass(viewType);
-        EReference emptyContainment = createContainmentEReference(rootClass, emptyClass);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass rootClass = DynamicModels.createEClass(viewType);
+        EClass emptyClass = DynamicModels.createEClass(viewType);
+        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
-        List<ObjectBinding> empties = restaurants.stream().map(r -> createBinding(r, createEObject(emptyClass))).toList();
+        List<ObjectBinding> empties = restaurants.stream().map(r -> createBinding(r, DynamicModels.createEObject(emptyClass))).toList();
 
         // Operation Setup
         Operation emptyContainedOperation = mock(Operation.class);
@@ -91,17 +92,17 @@ public class RootTest extends AbstractOperationTest {
     public void testPutOfRootRemovalShouldPropagateToRootOperation() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
-        List<EObject> restaurants = context.getOriginObjects(getEClass(models.getPackage(Model.RESTAURANT), "Restaurant"));
+        List<EObject> restaurants = context.getOriginObjects(DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant"));
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass rootClass = createEClass(viewType);
-        EClass emptyClass = createEClass(viewType);
-        EReference emptyContainment = createContainmentEReference(rootClass, emptyClass);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass rootClass = DynamicModels.createEClass(viewType);
+        EClass emptyClass = DynamicModels.createEClass(viewType);
+        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
-        ObjectBinding root = createBinding(store, createEObject(rootClass));
-        List<ObjectBinding> empties = restaurants.stream().map(r -> createBinding(r, createEObject(emptyClass))).toList();
+        ObjectBinding root = createBinding(store, DynamicModels.createEObject(rootClass));
+        List<ObjectBinding> empties = restaurants.stream().map(r -> createBinding(r, DynamicModels.createEObject(emptyClass))).toList();
 
         // Operation Setup
         Operation rootOperation = mock(Operation.class);
@@ -132,8 +133,8 @@ public class RootTest extends AbstractOperationTest {
     @Test
     public void testPutOfChangeOfEmptyRootShouldFail() {
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass rootClass = createEClass(viewType);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass rootClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
         Root operation = new Root(rootClass, Optional.empty(), List.of());
@@ -155,18 +156,18 @@ public class RootTest extends AbstractOperationTest {
     public void testPutOfInsertReferenceChangeShouldPropagateAsInsertNonRootChangeToSpecificContainedOperation() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
-        EClass restaurantClass = getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
+        EClass restaurantClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass rootClass = createEClass(viewType);
-        EClass emptyClass = createEClass(viewType);
-        EReference emptyContainment = createContainmentEReference(rootClass, emptyClass);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass rootClass = DynamicModels.createEClass(viewType);
+        EClass emptyClass = DynamicModels.createEClass(viewType);
+        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
-        ObjectBinding root = createBinding(store, createEObject(rootClass));
-        List<ObjectBinding> empties = restaurants.stream().map(r -> createBinding(r, createEObject(emptyClass))).toList();
+        ObjectBinding root = createBinding(store, DynamicModels.createEObject(rootClass));
+        List<ObjectBinding> empties = restaurants.stream().map(r -> createBinding(r, DynamicModels.createEObject(emptyClass))).toList();
 
         // Operation Setup
         Operation rootOperation = mock(Operation.class);
@@ -179,8 +180,8 @@ public class RootTest extends AbstractOperationTest {
         List<ObjectBinding> results = operation.get(context);
 
         // Pre-Action Change
-        EObject inserted = createEObject(emptyClass);
-        EObject insertedCorrespondence = createEObject(restaurantClass);
+        EObject inserted = DynamicModels.createEObject(emptyClass);
+        EObject insertedCorrespondence = DynamicModels.createEObject(restaurantClass);
         Utilities.getList(root.viewObject(), emptyContainment).add(inserted);
         int index = Utilities.getList(root.viewObject(), emptyContainment).indexOf(inserted);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertReferenceChange(root.viewObject(), emptyContainment, inserted, index);
@@ -204,17 +205,17 @@ public class RootTest extends AbstractOperationTest {
     public void testPutOfRemoveReferenceChangeShouldPropagateAsRemoveNonRootChangeToSpecificContainedOperation() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
-        List<EObject> restaurants = context.getOriginObjects(getEClass(models.getPackage(Model.RESTAURANT), "Restaurant"));
+        List<EObject> restaurants = context.getOriginObjects(DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant"));
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass rootClass = createEClass(viewType);
-        EClass emptyClass = createEClass(viewType);
-        EReference emptyContainment = createContainmentEReference(rootClass, emptyClass);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass rootClass = DynamicModels.createEClass(viewType);
+        EClass emptyClass = DynamicModels.createEClass(viewType);
+        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
-        ObjectBinding root = createBinding(store, createEObject(rootClass));
-        List<ObjectBinding> empties = restaurants.stream().map(r -> createBinding(r, createEObject(emptyClass))).toList();
+        ObjectBinding root = createBinding(store, DynamicModels.createEObject(rootClass));
+        List<ObjectBinding> empties = restaurants.stream().map(r -> createBinding(r, DynamicModels.createEObject(emptyClass))).toList();
 
         // Operation Setup
         Operation rootOperation = mock(Operation.class);
@@ -251,17 +252,17 @@ public class RootTest extends AbstractOperationTest {
     public void testPutOfDeleteChangeShouldPropagateAsDeleteChangeToSpecificContainedOperation() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
-        List<EObject> restaurants = context.getOriginObjects(getEClass(models.getPackage(Model.RESTAURANT), "Restaurant"));
+        List<EObject> restaurants = context.getOriginObjects(DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant"));
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass rootClass = createEClass(viewType);
-        EClass emptyClass = createEClass(viewType);
-        EReference emptyContainment = createContainmentEReference(rootClass, emptyClass);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass rootClass = DynamicModels.createEClass(viewType);
+        EClass emptyClass = DynamicModels.createEClass(viewType);
+        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
-        ObjectBinding root = createBinding(store, createEObject(rootClass));
-        List<ObjectBinding> empties = restaurants.stream().map(r -> createBinding(r, createEObject(emptyClass))).toList();
+        ObjectBinding root = createBinding(store, DynamicModels.createEObject(rootClass));
+        List<ObjectBinding> empties = restaurants.stream().map(r -> createBinding(r, DynamicModels.createEObject(emptyClass))).toList();
 
         // Operation Setup
         Operation rootOperation = mock(Operation.class);

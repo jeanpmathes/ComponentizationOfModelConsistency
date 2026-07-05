@@ -7,7 +7,8 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.feature.FeatureEChange;
 import tools.vitruv.change.atomic.feature.reference.InsertEReference;
 import tools.vitruv.change.atomic.feature.reference.RemoveEReference;
-import tools.vitruv.compmodelcons.views.Context;
+import tools.vitruv.compmodelcons.views.GetContext;
+import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.Utilities;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.impl.InsertNonRootEObjectImpl;
@@ -36,7 +37,7 @@ public class Root implements Operation {
     }
 
     @Override
-    public List<ObjectBinding> get(Context context) {
+    public List<ObjectBinding> get(GetContext context) {
         return root.get(context).stream().map(rootBinding -> {
             context.getViewModel().getContents().add(rootBinding.viewObject());
 
@@ -53,26 +54,26 @@ public class Root implements Operation {
     }
 
     @Override
-    public ObjectBinding put(EChange<EObject> eChange, ObjectBinding target, Context context) {
-        if (eChange instanceof InsertEReference<EObject> insertEReference && isContainmentRelevantChange(insertEReference)) {
-            eChange = new InsertNonRootEObjectImpl<>(insertEReference.getNewValue());
+    public ObjectBinding put(EChange<EObject> change, ObjectBinding target, PutContext context) {
+        if (change instanceof InsertEReference<EObject> insertEReference && isContainmentRelevantChange(insertEReference)) {
+            change = new InsertNonRootEObjectImpl<>(insertEReference.getNewValue());
         }
-        if (eChange instanceof RemoveEReference<EObject> removeEReference && isContainmentRelevantChange(removeEReference)) {
-            eChange = new RemoveNonRootEObjectImpl<>(removeEReference.getOldValue());
+        if (change instanceof RemoveEReference<EObject> removeEReference && isContainmentRelevantChange(removeEReference)) {
+            change = new RemoveNonRootEObjectImpl<>(removeEReference.getOldValue());
         }
 
-        EObject affectedViewObject = Utilities.getAffectedEObject(eChange);
+        EObject affectedViewObject = Utilities.getAffectedEObject(change);
 
         if (affectedViewObject.eClass().equals(rootClass)) {
             if (target.originObjects().isEmpty()) {
-                ObjectBinding rootBinding = root.put(eChange, ObjectBinding.ofViewObject(affectedViewObject), context);
+                ObjectBinding rootBinding = root.put(change, ObjectBinding.ofViewObject(affectedViewObject), context);
                 return new RootObjectBindingImpl(
                         rootBinding,
                         Stream.generate(() -> (Map<EObject, ObjectBinding>) new HashMap<EObject, ObjectBinding>()).limit(contained.size()).toList());
             } else {
                 RootObjectBindingImpl rootTarget = (RootObjectBindingImpl) target;
                 ObjectBinding peeledTarget = rootTarget.rootBinding;
-                ObjectBinding rootBinding = root.put(eChange, peeledTarget, context);
+                ObjectBinding rootBinding = root.put(change, peeledTarget, context);
                 return new RootObjectBindingImpl(rootBinding, rootTarget.containedBindings);
             }
         } else {
@@ -82,7 +83,7 @@ public class Root implements Operation {
             RootObjectBindingImpl rootTarget = (RootObjectBindingImpl) target;
             int classIndex = containmentIndices.get(affectedViewObject.eClass());
             ObjectBinding peeledTarget = Optional.ofNullable(rootTarget.containedBindings.get(classIndex).get(affectedViewObject)).orElse(ObjectBinding.ofViewObject(affectedViewObject));
-            ObjectBinding containedBinding = contained.get(classIndex).operation().put(eChange, peeledTarget, context);
+            ObjectBinding containedBinding = contained.get(classIndex).operation().put(change, peeledTarget, context);
             if (containedBinding.originObjects().isEmpty()) {
                 rootTarget.containedBindings.get(classIndex).remove(affectedViewObject);
             } else {
@@ -121,12 +122,12 @@ public class Root implements Operation {
 
     private static class Empty implements Operation {
         @Override
-        public List<ObjectBinding> get(Context context) {
+        public List<ObjectBinding> get(GetContext context) {
             return List.of(ObjectBinding.empty());
         }
 
         @Override
-        public ObjectBinding put(EChange<EObject> eChange, ObjectBinding target, Context context) {
+        public ObjectBinding put(EChange<EObject> change, ObjectBinding target, PutContext context) {
             throw new UnsupportedOperationException("Modification of the default, uncorresponding root is not supported");
         }
 

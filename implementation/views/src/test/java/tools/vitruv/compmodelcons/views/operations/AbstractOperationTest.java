@@ -1,15 +1,18 @@
 package tools.vitruv.compmodelcons.views.operations;
 
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.*;
+import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.impl.EcoreResourceFactoryImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.junit.jupiter.api.BeforeEach;
-import tools.vitruv.compmodelcons.views.Context;
 import tools.vitruv.compmodelcons.views.EditableViewCorrespondences;
+import tools.vitruv.compmodelcons.views.GetContext;
+import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.impl.EditableViewCorrespondencesImpl;
 
@@ -26,8 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AbstractOperationTest {
     protected Models models;
     protected EditableViewCorrespondences correspondences;
-
-    protected Context context;
+    protected TestContext context;
 
     protected static Models loadModels() throws URISyntaxException {
         ResourceSet resourceSet = new ResourceSetImpl();
@@ -51,10 +53,6 @@ class AbstractOperationTest {
         }
 
         return new Models(resourceSet, models);
-    }
-
-    protected static EPackage createEPackage() {
-        return EcoreFactory.eINSTANCE.createEPackage();
     }
 
     public enum Model {
@@ -82,31 +80,6 @@ class AbstractOperationTest {
         }
     }
 
-    protected static EClass createEClass(EPackage ePackage) {
-        EClass eClass = EcoreFactory.eINSTANCE.createEClass();
-        ePackage.getEClassifiers().add(eClass);
-        return eClass;
-    }
-
-    protected static EReference createContainmentEReference(EClass eClass, EClass eReferenceType) {
-        EReference eReference = EcoreFactory.eINSTANCE.createEReference();
-        eReference.setContainment(true);
-        eReference.setUpperBound(-1);
-        eReference.setEType(eReferenceType);
-
-        eClass.getEStructuralFeatures().add(eReference);
-
-        return eReference;
-    }
-
-    protected static EObject createEObject(EClass eClass) {
-        return eClass.getEPackage().getEFactoryInstance().create(eClass);
-    }
-
-    protected static EClass getEClass(EPackage ePackage, String name) {
-        return (EClass) ePackage.getEClassifier(name);
-    }
-
     protected static ObjectBinding createBinding(EObject originObject, EObject viewObject) {
         return new ObjectBinding() {
             @Override
@@ -125,48 +98,50 @@ class AbstractOperationTest {
         assertTrue(collection.stream().allMatch(predicate));
     }
 
-    protected static <T> boolean isTrueForOne(Collection<T> collection, Predicate<? super T> predicate) {
-        return collection.stream().filter(predicate).count() == 1;
-    }
-
     @BeforeEach
     public void setUp() throws URISyntaxException {
         models = loadModels();
         correspondences = new EditableViewCorrespondencesImpl();
+        context = new TestContext();
+    }
 
-        final Resource viewModel = models.createViewModel();
+    public class TestContext implements GetContext, PutContext {
+        private final Resource viewModel = models.createViewModel();
 
-        context = new Context() {
-            @Override
-            public List<EObject> getOriginObjects(EClass eClass) {
-                List<EObject> result = new ArrayList<>();
-                for (Model model : Model.values()) {
-                    var iterator = models.getModel(model).getAllContents();
-                    while (iterator.hasNext()) {
-                        EObject eObject = iterator.next();
-                        if (eClass.isSuperTypeOf(eObject.eClass())) {
-                            result.add(eObject);
-                        }
+        @Override
+        public Resource getViewModel() {
+            return viewModel;
+        }
+
+        @Override
+        public void addRootToOriginModel(EPackage originPackage, EObject originObject) {
+            models.getModel(originPackage).getContents().add(originObject);
+        }
+
+        @Override
+        public void removeRootFromOriginModel(EPackage originPackage, EObject originObject) {
+            models.getModel(originPackage).getContents().remove(originObject);
+        }
+
+        @Override
+        public List<EObject> getOriginObjects(EClass eClass) {
+            List<EObject> result = new ArrayList<>();
+            for (Model model : Model.values()) {
+                var iterator = models.getModel(model).getAllContents();
+                while (iterator.hasNext()) {
+                    EObject eObject = iterator.next();
+                    if (eClass.isSuperTypeOf(eObject.eClass())) {
+                        result.add(eObject);
                     }
                 }
-                return result;
             }
+            return result;
+        }
 
-            @Override
-            public Resource getOriginModel(EPackage ePackage) {
-                return models.getModel(ePackage);
-            }
-
-            @Override
-            public Resource getViewModel() {
-                return viewModel;
-            }
-
-            @Override
-            public EditableViewCorrespondences getCorrespondences() {
-                return correspondences;
-            }
-        };
+        @Override
+        public EditableViewCorrespondences getCorrespondences() {
+            return correspondences;
+        }
     }
 
     protected static class Models {

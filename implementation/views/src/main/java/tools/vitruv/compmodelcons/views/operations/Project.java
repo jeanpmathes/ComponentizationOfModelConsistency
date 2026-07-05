@@ -3,7 +3,8 @@ package tools.vitruv.compmodelcons.views.operations;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
-import tools.vitruv.compmodelcons.views.Context;
+import tools.vitruv.compmodelcons.views.GetContext;
+import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public class Project implements Operation {
     }
 
     @Override
-    public List<ObjectBinding> get(Context context) {
+    public List<ObjectBinding> get(GetContext context) {
         return origin.get(context).stream().map(originBinding -> {
             EObject result = createdClass.getEPackage().getEFactoryInstance().create(createdClass);
 
@@ -31,7 +32,7 @@ public class Project implements Operation {
         }).toList();
     }
 
-    public ObjectBinding put(EChange<EObject> eChange, ObjectBinding target, Context context) {
+    public ObjectBinding put(EChange<EObject> change, ObjectBinding target, PutContext context) {
         if (!target.viewObject().eClass().equals(createdClass)) {
             throw new IllegalArgumentException(wrongClassForPutMessage);
         }
@@ -44,7 +45,7 @@ public class Project implements Operation {
             peeledTarget = binding.originBinding;
         }
 
-        ObjectBinding originBinding = origin.put(eChange, peeledTarget, context);
+        ObjectBinding originBinding = origin.put(change, peeledTarget, context);
         return new ProjectObjectBindingImpl(originBinding, viewObject);
     }
 

@@ -11,14 +11,14 @@ import tools.vitruv.framework.views.impl.ViewCreatingViewType;
 import java.util.Collection;
 import java.util.List;
 
-public class DefaultSelector implements ViewSelector {
+public class AllSelector implements ViewSelector {
 
-    public DefaultSelector(ViewCreatingViewType<DefaultSelector, HierarchicalId> viewType, ChangeableViewSource viewSource) {
+    private final ViewCreatingViewType<AllSelector, HierarchicalId> viewType;
+
+    public AllSelector(ViewCreatingViewType<AllSelector, HierarchicalId> viewType, ChangeableViewSource viewSource) {
         this.viewType = viewType;
         this.viewSource = viewSource;
     }
-
-    private final ViewCreatingViewType<DefaultSelector, HierarchicalId> viewType;
 
     private final ChangeableViewSource viewSource;
 

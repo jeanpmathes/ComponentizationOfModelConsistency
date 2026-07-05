@@ -4,15 +4,13 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
+import org.jetbrains.annotations.UnknownNullability;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.eobject.CreateEObject;
 import tools.vitruv.change.atomic.eobject.DeleteEObject;
 import tools.vitruv.change.atomic.root.InsertRootEObject;
 import tools.vitruv.change.atomic.root.RemoveRootEObject;
-import tools.vitruv.compmodelcons.views.Context;
-import tools.vitruv.compmodelcons.views.InsertNonRootEObject;
-import tools.vitruv.compmodelcons.views.RemoveNonRootEObject;
-import tools.vitruv.compmodelcons.views.Utilities;
+import tools.vitruv.compmodelcons.views.*;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 
 import java.util.HashSet;
@@ -34,6 +32,9 @@ public class Source implements Operation {
     private static boolean isRoot(EClass sourceClass) {
         for (EClassifier eClassifier : sourceClass.getEPackage().getEClassifiers()) {
             if (eClassifier instanceof EClass eClass) {
+                if (eClass.isSuperTypeOf(sourceClass)) {
+                    continue;
+                }
                 for (EReference eReference : eClass.getEReferences()) {
                     if (eReference.isContainment() && eReference.getEReferenceType().isSuperTypeOf(sourceClass)) {
                         return false;
@@ -50,7 +51,7 @@ public class Source implements Operation {
         for (EClassifier eClassifier : sourceClass.getEPackage().getEClassifiers()) {
             if (eClassifier instanceof EClass eClass) {
                 for (EReference eReference : eClass.getEReferences()) {
-                    if (eReference.isContainment() && eReference.getEReferenceType().isSuperTypeOf(sourceClass)) {
+                    if (eReference.isContainment() && eReference.isMany() && eReference.getEReferenceType().isSuperTypeOf(sourceClass)) {
                         containers.add(eReference);
                     }
                 }
@@ -69,24 +70,25 @@ public class Source implements Operation {
     }
 
     @Override
-    public List<ObjectBinding> get(Context context) {
+    public List<ObjectBinding> get(@UnknownNullability GetContext context) {
         return context.getOriginObjects(sourceClass).stream().map(ObjectBinding::ofOriginObject).toList();
     }
 
     @Override
-    public ObjectBinding put(EChange<EObject> eChange, ObjectBinding target, Context context) {
-        if (eChange instanceof CreateEObject<EObject> createEObject) {
+    public ObjectBinding put(EChange<EObject> change, ObjectBinding target, PutContext context) {
+        if (change instanceof CreateEObject<EObject> createEObject) {
             if (!target.originObjects().isEmpty()) {
                 throw new IllegalArgumentException("Cannot create an origin object if there is already an origin object");
             }
 
             EObject created = sourceClass.getEPackage().getEFactoryInstance().create(sourceClass);
+
             context.getCorrespondences().addCorrespondence(List.of(created), createEObject.getAffectedElement());
 
             return ObjectBinding.ofOriginObject(created);
         }
 
-        if (eChange instanceof DeleteEObject<EObject> deleteEObject) {
+        if (change instanceof DeleteEObject<EObject> deleteEObject) {
             if (target.originObjects().size() != 1) {
                 throw new IllegalArgumentException("Cannot delete an origin object if that object is not singular");
             }
@@ -97,7 +99,7 @@ public class Source implements Operation {
             return ObjectBinding.empty();
         }
 
-        if (eChange instanceof InsertRootEObject<EObject> || eChange instanceof InsertNonRootEObject<EObject>) {
+        if (change instanceof InsertRootEObject<EObject> || change instanceof InsertNonRootEObject<EObject>) {
             if (target.originObjects().size() != 1) {
                 throw new IllegalArgumentException("Cannot insert an origin object if that object is not singular");
             }
@@ -105,7 +107,7 @@ public class Source implements Operation {
             EObject inserted = target.originObjects().get(0);
 
             if (isRoot) {
-                context.getOriginModel(sourceClass.getEPackage()).getContents().add(inserted);
+                context.addRootToOriginModel(sourceClass.getEPackage(), inserted);
             } else {
                 List<EObject> candidates = context.getOriginObjects(container.getEContainingClass());
 
@@ -123,7 +125,7 @@ public class Source implements Operation {
             return ObjectBinding.ofOriginObject(inserted);
         }
 
-        if (eChange instanceof RemoveRootEObject<EObject> || eChange instanceof RemoveNonRootEObject<EObject>) {
+        if (change instanceof RemoveRootEObject<EObject> || change instanceof RemoveNonRootEObject<EObject>) {
             if (target.originObjects().size() != 1) {
                 throw new IllegalArgumentException("Cannot remove an origin object if that object is not singular");
             }
@@ -131,7 +133,7 @@ public class Source implements Operation {
             EObject removed = target.originObjects().get(0);
 
             if (isRoot) {
-                context.getOriginModel(sourceClass.getEPackage()).getContents().remove(removed);
+                context.removeRootFromOriginModel(sourceClass.getEPackage(), removed);
             } else {
                 if (container.isMany()) {
                     Utilities.getList(removed.eContainer(), container).remove(removed);
@@ -143,7 +145,7 @@ public class Source implements Operation {
             return ObjectBinding.ofOriginObject(removed);
         }
 
-        throw new IllegalArgumentException("Inappropriate change type: " + eChange.getClass());
+        throw new IllegalArgumentException("Inappropriate change type: " + change.getClass());
     }
 
     @Override

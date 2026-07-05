@@ -7,6 +7,7 @@ import org.eclipse.emf.ecore.EReference;
 import org.junit.jupiter.api.Test;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
+import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.Utilities;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.impl.InsertNonRootEObjectImpl;
@@ -20,7 +21,7 @@ public class SourceTest extends AbstractOperationTest {
     @Test
     public void testGetShouldReturnAllObjectsOfGivenType() {
         // Origin Setup
-        EClass restaurantClass = getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
+        EClass restaurantClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
 
         // Operation Setup
@@ -43,8 +44,8 @@ public class SourceTest extends AbstractOperationTest {
         EClass storeClass = store.eClass();
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass emptyClass = createEClass(viewType);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
         Source operation = new Source(storeClass);
@@ -53,7 +54,7 @@ public class SourceTest extends AbstractOperationTest {
         operation.get(context);
 
         // Pre-Action Change
-        EObject created = createEObject(emptyClass);
+        EObject created = DynamicModels.createEObject(emptyClass);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
 
         // Action
@@ -73,8 +74,8 @@ public class SourceTest extends AbstractOperationTest {
         EClass storeClass = store.eClass();
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass emptyClass = createEClass(viewType);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
         Source operation = new Source(storeClass);
@@ -83,7 +84,7 @@ public class SourceTest extends AbstractOperationTest {
         List<ObjectBinding> results = operation.get(context);
 
         // Pre-Action Change
-        EObject deleted = createEObject(emptyClass);
+        EObject deleted = DynamicModels.createEObject(emptyClass);
         correspondences.addCorrespondence(results.get(0).originObjects(), deleted);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(deleted);
 
@@ -105,8 +106,8 @@ public class SourceTest extends AbstractOperationTest {
         EObject otherStore = storeClass.getEPackage().getEFactoryInstance().create(storeClass);
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass emptyClass = createEClass(viewType);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
         Source operation = new Source(storeClass);
@@ -115,7 +116,7 @@ public class SourceTest extends AbstractOperationTest {
         operation.get(context);
 
         // Pre-Action Change
-        EObject inserted = createEObject(emptyClass);
+        EObject inserted = DynamicModels.createEObject(emptyClass);
         context.getViewModel().getContents().add(inserted);
         int index = context.getViewModel().getContents().indexOf(inserted);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertRootChange(inserted, context.getViewModel(), index);
@@ -140,13 +141,13 @@ public class SourceTest extends AbstractOperationTest {
         EObject otherStore = storeClass.getEPackage().getEFactoryInstance().create(storeClass);
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass rootClass = createEClass(viewType);
-        EClass emptyClass = createEClass(viewType);
-        EReference emptyContainment = createContainmentEReference(rootClass, emptyClass);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass rootClass = DynamicModels.createEClass(viewType);
+        EClass emptyClass = DynamicModels.createEClass(viewType);
+        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
-        EObject root = createEObject(rootClass);
+        EObject root = DynamicModels.createEObject(rootClass);
 
         // Operation Setup
         Source operation = new Source(storeClass);
@@ -155,7 +156,7 @@ public class SourceTest extends AbstractOperationTest {
         operation.get(context);
 
         // Pre-Action Change
-        EObject inserted = createEObject(emptyClass);
+        EObject inserted = DynamicModels.createEObject(emptyClass);
         Utilities.getList(root, emptyContainment).add(inserted);
         EChange<EObject> change = new InsertNonRootEObjectImpl<>(inserted);
 
@@ -178,8 +179,8 @@ public class SourceTest extends AbstractOperationTest {
         List<EObject> stores = context.getOriginObjects(storeClass);
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass emptyClass = createEClass(viewType);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
         Source operation = new Source(storeClass);
@@ -188,7 +189,7 @@ public class SourceTest extends AbstractOperationTest {
         List<ObjectBinding> results = operation.get(context);
 
         // Pre-Action Change
-        EObject removed = createEObject(emptyClass);
+        EObject removed = DynamicModels.createEObject(emptyClass);
         context.getViewModel().getContents().add(removed);
         int index = context.getViewModel().getContents().indexOf(removed);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, context.getViewModel(), index);
@@ -213,13 +214,13 @@ public class SourceTest extends AbstractOperationTest {
         List<EObject> stores = context.getOriginObjects(storeClass);
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass rootClass = createEClass(viewType);
-        EClass emptyClass = createEClass(viewType);
-        EReference emptyContainment = createContainmentEReference(rootClass, emptyClass);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass rootClass = DynamicModels.createEClass(viewType);
+        EClass emptyClass = DynamicModels.createEClass(viewType);
+        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
-        EObject root = createEObject(rootClass);
+        EObject root = DynamicModels.createEObject(rootClass);
 
         // Operation Setup
         Source operation = new Source(storeClass);
@@ -228,7 +229,7 @@ public class SourceTest extends AbstractOperationTest {
         List<ObjectBinding> results = operation.get(context);
 
         // Pre-Action Change
-        EObject removed = createEObject(emptyClass);
+        EObject removed = DynamicModels.createEObject(emptyClass);
         Utilities.getList(root, emptyContainment).add(removed);
         EChange<EObject> change = new RemoveNonRootEObjectImpl<>(removed);
 
@@ -248,13 +249,13 @@ public class SourceTest extends AbstractOperationTest {
     public void testPufOfRootInsertionShouldInsertNonRootElementIntoOriginContainer() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
-        EClass restaurantClass = getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
+        EClass restaurantClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
-        EObject restaurant = createEObject(restaurantClass);
+        EObject restaurant = DynamicModels.createEObject(restaurantClass);
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass emptyClass = createEClass(viewType);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
         Source operation = new Source(restaurantClass);
@@ -263,7 +264,7 @@ public class SourceTest extends AbstractOperationTest {
         operation.get(context);
 
         // Pre-Action Change
-        EObject inserted = createEObject(emptyClass);
+        EObject inserted = DynamicModels.createEObject(emptyClass);
         context.getViewModel().getContents().add(inserted);
         int index = context.getViewModel().getContents().indexOf(inserted);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertRootChange(inserted, context.getViewModel(), index);
@@ -285,18 +286,18 @@ public class SourceTest extends AbstractOperationTest {
     public void testPufOfNonRootInsertionShouldInsertNonRootElementIntoOriginContainer() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
-        EClass restaurantClass = getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
+        EClass restaurantClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
-        EObject restaurant = createEObject(restaurantClass);
+        EObject restaurant = DynamicModels.createEObject(restaurantClass);
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass rootClass = createEClass(viewType);
-        EClass emptyClass = createEClass(viewType);
-        EReference emptyContainment = createContainmentEReference(rootClass, emptyClass);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass rootClass = DynamicModels.createEClass(viewType);
+        EClass emptyClass = DynamicModels.createEClass(viewType);
+        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
-        EObject root = createEObject(rootClass);
+        EObject root = DynamicModels.createEObject(rootClass);
 
         // Operation Setup
         Source operation = new Source(restaurantClass);
@@ -305,7 +306,7 @@ public class SourceTest extends AbstractOperationTest {
         operation.get(context);
 
         // Pre-Action Change
-        EObject inserted = createEObject(emptyClass);
+        EObject inserted = DynamicModels.createEObject(emptyClass);
         Utilities.getList(root, emptyContainment).add(inserted);
         EChange<EObject> change = new InsertNonRootEObjectImpl<>(inserted);
 
@@ -326,12 +327,12 @@ public class SourceTest extends AbstractOperationTest {
     public void testPutOfRootRemovalShouldRemoveNonRootElementFromOriginContainer() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
-        EClass restaurantClass = getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
+        EClass restaurantClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass emptyClass = createEClass(viewType);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
         Source operation = new Source(restaurantClass);
@@ -361,17 +362,17 @@ public class SourceTest extends AbstractOperationTest {
     public void testPutOfNonRootRemovalShouldRemoveNonRootElementFromOriginContainer() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
-        EClass restaurantClass = getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
+        EClass restaurantClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass rootClass = createEClass(viewType);
-        EClass emptyClass = createEClass(viewType);
-        EReference emptyContainment = createContainmentEReference(rootClass, emptyClass);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass rootClass = DynamicModels.createEClass(viewType);
+        EClass emptyClass = DynamicModels.createEClass(viewType);
+        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
-        EObject root = createEObject(rootClass);
+        EObject root = DynamicModels.createEObject(rootClass);
 
         // Operation Setup
         Source operation = new Source(restaurantClass);
@@ -380,7 +381,7 @@ public class SourceTest extends AbstractOperationTest {
         List<ObjectBinding> results = operation.get(context);
 
         // Pre-Action Change
-        EObject removed = createEObject(emptyClass);
+        EObject removed = DynamicModels.createEObject(emptyClass);
         Utilities.getList(root, emptyContainment).add(removed);
         EChange<EObject> change = new RemoveNonRootEObjectImpl<>(removed);
 

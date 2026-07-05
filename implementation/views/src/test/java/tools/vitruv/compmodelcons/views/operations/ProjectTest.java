@@ -6,6 +6,7 @@ import org.eclipse.emf.ecore.EPackage;
 import org.junit.jupiter.api.Test;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
+import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 
 import java.util.List;
@@ -20,8 +21,8 @@ public class ProjectTest extends AbstractOperationTest {
         EObject store = models.getRoot(Model.RESTAURANT);
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass emptyClass = createEClass(viewType);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
         Operation originOperation = mock(Operation.class);
@@ -43,11 +44,11 @@ public class ProjectTest extends AbstractOperationTest {
     public void testPutWithNoOriginObjectShouldCallTheInnerOperation() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
-        EObject otherStore = createEObject(store.eClass());
+        EObject otherStore = DynamicModels.createEObject(store.eClass());
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass emptyClass = createEClass(viewType);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
         Operation originOperation = mock(Operation.class);
@@ -58,7 +59,7 @@ public class ProjectTest extends AbstractOperationTest {
         operation.get(context);
 
         // Pre-Action Change
-        EObject created = createEObject(emptyClass);
+        EObject created = DynamicModels.createEObject(emptyClass);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
 
         // Action
@@ -77,8 +78,8 @@ public class ProjectTest extends AbstractOperationTest {
         EObject store = models.getRoot(Model.RESTAURANT);
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass emptyClass = createEClass(viewType);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
         Operation originOperation = mock(Operation.class);

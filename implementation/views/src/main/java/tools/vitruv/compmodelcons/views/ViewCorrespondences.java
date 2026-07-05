@@ -16,7 +16,7 @@ import java.util.List;
  *     </li>
  * </ol>
  */
-public interface ViewCorrespondences {
+public interface ViewCorrespondences { // todo: evaluate whether correspondences are actually needed
     List<EObject> getCorrespondingViewObjectsForOriginObjects(List<EObject> originObjects);
 
     List<EObject> getCorrespondingOriginObjectsForViewObjects(List<EObject> viewObjects);

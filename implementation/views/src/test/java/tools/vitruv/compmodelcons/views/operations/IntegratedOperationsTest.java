@@ -7,6 +7,7 @@ import org.eclipse.emf.ecore.EPackage;
 import org.junit.jupiter.api.Test;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
+import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 
 import java.util.ArrayList;
@@ -21,13 +22,13 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
     public void testSimpleEmptyViewOfRestaurantsAsRoot() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
-        EClass restaurantClass = getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
+        EClass restaurantClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
         List<EObject> storeContents = List.copyOf(store.eContents());
 
         // ViewType Setup
-        EPackage viewType = createEPackage();
-        EClass emptyClass = createEClass(viewType);
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
         Root operation = new Root(emptyClass, Optional.of(new Project(emptyClass, new Source(restaurantClass))), List.of());
@@ -56,7 +57,7 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
     }
 
     private EObject doCreate(EClass eClass, Operation operation, List<ObjectBinding> roots) {
-        EObject created = createEObject(eClass);
+        EObject created = DynamicModels.createEObject(eClass);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
         ObjectBinding result = operation.put(change, roots.get(0), context);
         roots.set(0, result);
