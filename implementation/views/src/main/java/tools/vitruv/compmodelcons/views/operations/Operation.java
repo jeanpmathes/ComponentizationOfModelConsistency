@@ -13,8 +13,22 @@ import java.util.Optional;
  * A part of a bidirectional transformation, itself a bidirectional transformation as well.
  */
 public interface Operation {
+    /**
+     * Produce a list of object bindings, performing a step from origin to view.
+     *
+     * @param context the context of the operation
+     * @return a list of object bindings
+     */
     List<ObjectBinding> GET(GetContext context);
 
+    /**
+     * Apply a change of the view towards the origin.
+     *
+     * @param change  the change of the view, using an extended change model
+     * @param target  the object binding of the changed object; must be a binding previously produced by this operation
+     * @param context the context of the operation
+     * @return the new object binding of the changed object
+     */
     ObjectBinding PUT(EChange<EObject> change, ObjectBinding target, PutContext context);
 
     Optional<EChange<EObject>> GET_CHANGE(EChange<EObject> change);

@@ -9,9 +9,30 @@ import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 
 import java.util.Optional;
 
+/**
+ * A part of a bidirectional transformation, itself a bidirectional transformation as well.
+ * These operations are specific for features.
+ */
 public interface FeatureOperation {
+    /**
+     * Produce a feature binding, performing a step from origin to view.
+     *
+     * @param subject the object binding of the subject that contains the relevant feature; must have a view object
+     * @param context the context of the operation
+     * @return the feature binding
+     */
     FeatureBinding GET(ObjectBinding subject, GetContext context);
 
+    /**
+     * Apply a change of the view towards the origin.
+     *
+     * @param change  the change of the view, using an extended change model
+     * @param feature the feature binding of the changed feature; must be a binding previously produced by this operation
+     * @param subject the object binding of the subject that contains the relevant feature; must have a view object
+     * @param value   the value of the view feature; is empty when unset
+     * @param context the context of the operation
+     * @return the new feature binding of the changed feature
+     */
     FeatureBinding PUT(EChange<EObject> change, FeatureBinding feature, ObjectBinding subject, Optional<Object> value, PutContext context);
 
     Optional<EChange<EObject>> GET_CHANGE(EChange<EObject> change);
