@@ -55,7 +55,7 @@ public class ViewTypeSourceGenerator {
     }
 
     private void appendBody(StringBuilder builder) {
-        builder.append("    private static final String name = \"").append(name).append("\";\n");
+        builder.append("    public static final String NAME = \"").append(name).append("\";\n");
 
         importHelper.typeRef(List.class);
         importHelper.typeRef(EPackage.class);
@@ -67,11 +67,12 @@ public class ViewTypeSourceGenerator {
             }
             builder.append("        ").append(getQualifiedPackageInstanceAccessor(originMetamodels.get(index)));
         }
+        builder.append("\n");
         builder.append("    );\n");
         builder.append("    private static final EPackage viewtype = ").append(genViewtype.getImportedPackageInterfaceName()).append(".").append(genViewtype.getFactoryInstanceName()).append(";\n\n");
 
         builder.append("    public ").append(getClassName()).append("() {\n");
-        builder.append("        super(name, originMetamodels, viewtype);\n");
+        builder.append("        super(NAME, originMetamodels, viewtype);\n");
         builder.append("    }\n\n");
 
         importHelper.typeRef(MetamodelDescriptor.class);
