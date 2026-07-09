@@ -19,7 +19,7 @@ import tools.vitruv.compmodelcons.views.EditableViewCorrespondences;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
-import tools.vitruv.compmodelcons.views.operations.Operation;
+import tools.vitruv.compmodelcons.views.operations.Root;
 import tools.vitruv.framework.views.*;
 import tools.vitruv.framework.views.changederivation.StateBasedChangeResolutionStrategy;
 import tools.vitruv.framework.views.impl.AbstractViewType;
@@ -35,7 +35,7 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
     private final List<EPackage> originMetamodels;
     private final IdentityMappingViewType sourceModelsViewType;
 
-    private Operation structure;
+    private Root structure;
 
     public OperationBasedViewType(String name, List<EPackage> originMetamodels, EPackage viewTypeMetamodel) {
         super(name, viewTypeMetamodel);
@@ -44,9 +44,9 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
         this.sourceModelsViewType = new IdentityMappingViewType(String.format("%s_InternalIdentity", name));
     }
 
-    protected abstract Operation createStructure();
+    protected abstract Root createStructure();
 
-    private Operation getStructure() {
+    private Root getStructure() {
         if (structure == null) {
             structure = createStructure();
         }
@@ -200,7 +200,7 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
             viewResourceSet.getResources().clear();
 
             viewModel = viewResourceSet.createResource(URI.createURI(String.format("view:/%s.view", getName())));
-            viewRoot = unwrap(getStructure().get(new GetContextImpl()));
+            viewRoot = unwrap(getStructure().GET(new GetContextImpl()));
 
             viewChanged = false;
             addChangeListeners(viewResourceSet);
@@ -212,7 +212,7 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
             VitruviusChange<EObject> change = changeRecorder.endRecording();
 
             PutContext context = new PutContextImpl();
-            change.getEChanges().forEach(eChange -> viewRoot = getStructure().put(eChange, viewRoot, context));
+            change.getEChanges().forEach(eChange -> viewRoot = getStructure().PUT(eChange, viewRoot, context));
 
             viewChanged = false;
             changeRecorder.beginRecording();
@@ -370,14 +370,19 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
             }
         }
 
-        private class GetContextImpl extends AbstractContext implements GetContext {
+        private final class GetContextImpl extends AbstractContext implements GetContext {
             @Override
             public Resource getViewModel() {
                 return viewModel;
             }
         }
 
-        private class PutContextImpl extends AbstractContext implements PutContext {
+        private final class PutContextImpl extends AbstractContext implements PutContext {
+            @Override
+            public Resource getViewModel() {
+                return viewModel;
+            }
+
             @Override
             public void addRootToOriginModel(EPackage originPackage, EObject originObject) {
                 // The main reason for this is that the View interface does not offer the methods to do so.

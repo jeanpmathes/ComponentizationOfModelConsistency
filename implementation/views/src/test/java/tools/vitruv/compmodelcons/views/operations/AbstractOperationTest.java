@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import tools.vitruv.compmodelcons.views.EditableViewCorrespondences;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
+import tools.vitruv.compmodelcons.views.bindings.FeatureBinding;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.impl.EditableViewCorrespondencesImpl;
 
@@ -90,6 +91,25 @@ class AbstractOperationTest {
             @Override
             public EObject viewObject() {
                 return viewObject;
+            }
+        };
+    }
+
+    protected static FeatureBinding createBinding(EObject originSubjectObject, EObject viewSubjectObject, Object value) {
+        return new FeatureBinding() {
+            @Override
+            public List<EObject> originSubjectObjects() {
+                return List.of(originSubjectObject);
+            }
+
+            @Override
+            public EObject viewSubjectObject() {
+                return viewSubjectObject;
+            }
+
+            @Override
+            public Object value() {
+                return value;
             }
         };
     }

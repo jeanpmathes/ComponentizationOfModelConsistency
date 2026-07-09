@@ -12,10 +12,7 @@ import org.eclipse.emf.ecore.EStructuralFeature;
 import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.compmodelcons.change.ChangeSpecificationAwareViewType;
 import tools.vitruv.compmodelcons.generator.tools.NamingGenerator;
-import tools.vitruv.compmodelcons.views.operations.Operation;
-import tools.vitruv.compmodelcons.views.operations.Project;
-import tools.vitruv.compmodelcons.views.operations.Root;
-import tools.vitruv.compmodelcons.views.operations.Source;
+import tools.vitruv.compmodelcons.views.operations.*;
 import tools.vitruv.dsls.common.JavaFileGenerator;
 import tools.vitruv.dsls.common.JavaImportHelper;
 import tools.vitruv.neojoin.aqr.*;
@@ -64,11 +61,11 @@ public class ViewTypeSourceGenerator {
         importHelper.typeRef(EPackage.class);
 
         builder.append("    private static final List<EPackage> originMetamodels = List.of(\n");
-        for (int i = 0; i < originMetamodels.size(); i++) {
-            if (i > 0) {
+        for (int index = 0; index < originMetamodels.size(); index++) {
+            if (index > 0) {
                 builder.append(",\n");
             }
-            builder.append("        ").append(getQualifiedPackageInstanceAccessor(originMetamodels.get(i)));
+            builder.append("        ").append(getQualifiedPackageInstanceAccessor(originMetamodels.get(index)));
         }
         builder.append("    );\n");
         builder.append("    private static final EPackage viewtype = ").append(genViewtype.getImportedPackageInterfaceName()).append(".").append(genViewtype.getFactoryInstanceName()).append(";\n\n");
@@ -89,10 +86,10 @@ public class ViewTypeSourceGenerator {
         builder.append("        return MetamodelDescriptor.of(viewtype);\n");
         builder.append("    }\n\n");
 
-        importHelper.typeRef(Operation.class);
+        importHelper.typeRef(Root.class);
 
         builder.append("    @Override\n");
-        builder.append("    protected Operation createStructure() {\n");
+        builder.append("    protected Root createStructure() {\n");
         appendRootOperation(builder);
         builder.append("    }\n");
     }
@@ -146,6 +143,24 @@ public class ViewTypeSourceGenerator {
         builder.append(indent(level)).append("new Project(\n");
         builder.append(indent(level + 1)).append(targetClass.getQualifiedClassifierAccessor()).append(",\n");
         appendQueryOperations(builder, level + 1, Objects.requireNonNull(target.source()));
+
+        builder.append(",\n").append(indent(level)).append("List.of(");
+        boolean first = true;
+        for (AQRFeature feature : target.features()) {
+            if (feature.kind() instanceof AQRFeature.Kind.Generate) {
+                continue;
+            }
+
+            builder.append(first ? "\n" : ",\n");
+            first = false;
+
+            appendFeatureProjectOperation(builder, level + 1, targetClass, feature);
+        }
+        if (!first) {
+            builder.append("\n").append(indent(level));
+        }
+        builder.append(")\n");
+
         builder.append(indent(level)).append(")\n");
     }
 
@@ -156,7 +171,29 @@ public class ViewTypeSourceGenerator {
     private void appendSourceOperation(StringBuilder builder, int level, AQRFrom from) {
         importHelper.typeRef(Source.class);
 
-        builder.append(indent(level)).append("new Source(").append(getQualifiedClassInstanceAccessor(from.clazz())).append(")\n");
+        builder.append(indent(level)).append("new Source(").append(getQualifiedClassInstanceAccessor(from.clazz())).append(")");
+    }
+
+    private void appendFeatureProjectOperation(StringBuilder builder, int level, GenClass targetClass, AQRFeature feature) {
+        GenFeature createdFeature = getGenFeature(targetClass.getEcoreClass(), feature.name());
+
+        importHelper.typeRef(FeatureProject.class);
+
+        builder.append(indent(level)).append("new FeatureProject(\n");
+        builder.append(indent(level + 1)).append(createdFeature.getQualifiedFeatureAccessor()).append(",\n");
+        if (feature.kind() instanceof AQRFeature.Kind.Copy copy) {
+            appendFeatureSourceOperation(builder, level + 1, copy);
+            builder.append("\n");
+        } else {
+            throw new UnsupportedOperationException();
+        }
+        builder.append(indent(level)).append(")");
+    }
+
+    private void appendFeatureSourceOperation(StringBuilder builder, int level, AQRFeature.Kind.Copy copy) {
+        importHelper.typeRef(FeatureSource.class);
+
+        builder.append(indent(level)).append("new FeatureSource(").append(getQualifiedFeatureInstanceAccessor(copy.source())).append(")");
     }
 
     private String indent(int indent) {
@@ -193,7 +230,11 @@ public class ViewTypeSourceGenerator {
     private String getQualifiedClassInstanceAccessor(EClass eClass) {
         importHelper.typeRef(EClass.class);
 
-        return "(EClass)" + getQualifiedPackageInstanceAccessor(eClass.getEPackage()) + ".getEClassifier(\"" + eClass.getName() + "\")";
+        return "(EClass)" + getQualifiedPackageInstanceAccessor(eClass.getEPackage()) + ".getEClassifier(\"" + StringEscapeUtils.escapeJava(eClass.getName()) + "\")";
+    }
+
+    private String getQualifiedFeatureInstanceAccessor(EStructuralFeature eStructuralFeature) {
+        return "(" + getQualifiedClassInstanceAccessor(eStructuralFeature.getEContainingClass()) + ").getEStructuralFeature(\"" + StringEscapeUtils.escapeJava(eStructuralFeature.getName()) + "\")";
     }
 
     public String getFileName() {

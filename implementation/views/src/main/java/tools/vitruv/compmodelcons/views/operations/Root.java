@@ -27,7 +27,7 @@ public class Root implements Operation {
 
     public Root(EClass rootClass, Optional<Operation> root, List<Contained> contained) {
         this.rootClass = rootClass;
-        this.root = root.orElse(new Project(rootClass, new Empty()));
+        this.root = root.orElse(new Project(rootClass, new Empty(), List.of()));
         this.contained = contained;
 
         for (int index = 0; index < contained.size(); index++) {
@@ -37,14 +37,14 @@ public class Root implements Operation {
     }
 
     @Override
-    public List<ObjectBinding> get(GetContext context) {
-        return root.get(context).stream().map(rootBinding -> {
+    public List<ObjectBinding> GET(GetContext context) {
+        return root.GET(context).stream().map(rootBinding -> {
             context.getViewModel().getContents().add(rootBinding.viewObject());
 
             return (ObjectBinding) new RootObjectBindingImpl(rootBinding, contained.stream()
                     .map(entry -> {
                         Map<EObject, ObjectBinding> result = new HashMap<>();
-                        for (ObjectBinding containedBinding : entry.operation().get(context)) {
+                        for (ObjectBinding containedBinding : entry.operation().GET(context)) {
                             result.put(containedBinding.viewObject(), containedBinding);
                             DynamicModels.getList(rootBinding.viewObject(), entry.reference()).add(containedBinding.viewObject());
                         }
@@ -54,7 +54,7 @@ public class Root implements Operation {
     }
 
     @Override
-    public ObjectBinding put(EChange<EObject> change, ObjectBinding target, PutContext context) {
+    public ObjectBinding PUT(EChange<EObject> change, ObjectBinding target, PutContext context) {
         if (change instanceof InsertEReference<EObject> insertEReference && isContainmentRelevantChange(insertEReference)) {
             change = new InsertNonRootEObjectImpl<>(insertEReference.getNewValue());
         }
@@ -66,21 +66,21 @@ public class Root implements Operation {
 
         if (affectedViewObject.eClass().equals(rootClass)) {
             if (target.originObjects().isEmpty()) {
-                ObjectBinding rootBinding = root.put(change, ObjectBinding.ofViewObject(affectedViewObject), context);
+                ObjectBinding rootBinding = root.PUT(change, ObjectBinding.ofViewObject(affectedViewObject), context);
                 return new RootObjectBindingImpl(
                         rootBinding,
                         Stream.generate(() -> (Map<EObject, ObjectBinding>) new HashMap<EObject, ObjectBinding>()).limit(contained.size()).toList());
             } else {
                 RootObjectBindingImpl rootTarget = (RootObjectBindingImpl) target;
                 ObjectBinding peeledTarget = rootTarget.rootBinding;
-                ObjectBinding rootBinding = root.put(change, peeledTarget, context);
+                ObjectBinding rootBinding = root.PUT(change, peeledTarget, context);
                 return new RootObjectBindingImpl(rootBinding, rootTarget.containedBindings);
             }
         } else {
             RootObjectBindingImpl rootTarget = (RootObjectBindingImpl) target;
             int classIndex = containmentIndices.get(affectedViewObject.eClass());
             ObjectBinding peeledTarget = Optional.ofNullable(rootTarget.containedBindings.get(classIndex).get(affectedViewObject)).orElse(ObjectBinding.ofViewObject(affectedViewObject));
-            ObjectBinding containedBinding = contained.get(classIndex).operation().put(change, peeledTarget, context);
+            ObjectBinding containedBinding = contained.get(classIndex).operation().PUT(change, peeledTarget, context);
             if (containedBinding.originObjects().isEmpty()) {
                 rootTarget.containedBindings.get(classIndex).remove(affectedViewObject);
             } else {
@@ -95,7 +95,7 @@ public class Root implements Operation {
     }
 
     @Override
-    public Optional<EChange<EObject>> getChange(EChange<EObject> change) {
+    public Optional<EChange<EObject>> GET_CHANGE(EChange<EObject> change) {
         return Optional.empty();
     }
 
@@ -119,17 +119,17 @@ public class Root implements Operation {
 
     private static class Empty implements Operation {
         @Override
-        public List<ObjectBinding> get(GetContext context) {
+        public List<ObjectBinding> GET(GetContext context) {
             return List.of(ObjectBinding.empty());
         }
 
         @Override
-        public ObjectBinding put(EChange<EObject> change, ObjectBinding target, PutContext context) {
+        public ObjectBinding PUT(EChange<EObject> change, ObjectBinding target, PutContext context) {
             throw new UnsupportedOperationException("Modification of the default, uncorresponding root is not supported");
         }
 
         @Override
-        public Optional<EChange<EObject>> getChange(EChange<EObject> change) {
+        public Optional<EChange<EObject>> GET_CHANGE(EChange<EObject> change) {
             return Optional.empty();
         }
     }

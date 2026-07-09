@@ -70,12 +70,12 @@ public class Source implements Operation {
     }
 
     @Override
-    public List<ObjectBinding> get(@UnknownNullability GetContext context) {
+    public List<ObjectBinding> GET(@UnknownNullability GetContext context) {
         return context.getOriginObjects(sourceClass).stream().map(ObjectBinding::ofOriginObject).toList();
     }
 
     @Override
-    public ObjectBinding put(EChange<EObject> change, ObjectBinding target, PutContext context) {
+    public ObjectBinding PUT(EChange<EObject> change, ObjectBinding target, PutContext context) {
         if (change instanceof CreateEObject<EObject> createEObject) {
             if (!target.originObjects().isEmpty()) {
                 throw new IllegalArgumentException("Cannot create an origin object if there is already an origin object");
@@ -149,7 +149,7 @@ public class Source implements Operation {
     }
 
     @Override
-    public Optional<EChange<EObject>> getChange(EChange<EObject> change) {
+    public Optional<EChange<EObject>> GET_CHANGE(EChange<EObject> change) {
         return Optional.empty();
     }
 }

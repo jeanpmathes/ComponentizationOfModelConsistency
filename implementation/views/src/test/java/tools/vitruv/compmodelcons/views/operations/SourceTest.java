@@ -27,7 +27,7 @@ public class SourceTest extends AbstractOperationTest {
         Source source = new Source(restaurantClass);
 
         // Action
-        List<ObjectBinding> result = source.get(context);
+        List<ObjectBinding> result = source.GET(context);
 
         // Assertions
         assertEquals(restaurants.size(), result.size());
@@ -50,14 +50,14 @@ public class SourceTest extends AbstractOperationTest {
         Source operation = new Source(storeClass);
 
         // Pre-Action Get
-        operation.get(context);
+        operation.GET(context);
 
         // Pre-Action Change
         EObject created = DynamicModels.createEObject(emptyClass);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
 
         // Action
-        ObjectBinding result = operation.put(change, ObjectBinding.ofViewObject(created), context);
+        ObjectBinding result = operation.PUT(change, ObjectBinding.ofViewObject(created), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
@@ -80,7 +80,7 @@ public class SourceTest extends AbstractOperationTest {
         Source operation = new Source(storeClass);
 
         // Pre-Action Get
-        List<ObjectBinding> results = operation.get(context);
+        List<ObjectBinding> results = operation.GET(context);
 
         // Pre-Action Change
         EObject deleted = DynamicModels.createEObject(emptyClass);
@@ -88,7 +88,7 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(deleted);
 
         // Action
-        ObjectBinding result = operation.put(change, results.get(0), context);
+        ObjectBinding result = operation.PUT(change, results.get(0), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
@@ -112,7 +112,7 @@ public class SourceTest extends AbstractOperationTest {
         Source operation = new Source(storeClass);
 
         // Pre-Action Get
-        operation.get(context);
+        operation.GET(context);
 
         // Pre-Action Change
         EObject inserted = DynamicModels.createEObject(emptyClass);
@@ -121,7 +121,7 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertRootChange(inserted, context.getViewModel(), index);
 
         // Action
-        ObjectBinding result = operation.put(change, ObjectBinding.ofOriginObject(otherStore), context);
+        ObjectBinding result = operation.PUT(change, ObjectBinding.ofOriginObject(otherStore), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
@@ -152,7 +152,7 @@ public class SourceTest extends AbstractOperationTest {
         Source operation = new Source(storeClass);
 
         // Pre-Action Get
-        operation.get(context);
+        operation.GET(context);
 
         // Pre-Action Change
         EObject inserted = DynamicModels.createEObject(emptyClass);
@@ -160,7 +160,7 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = new InsertNonRootEObjectImpl<>(inserted);
 
         // Action
-        ObjectBinding result = operation.put(change, ObjectBinding.ofOriginObject(otherStore), context);
+        ObjectBinding result = operation.PUT(change, ObjectBinding.ofOriginObject(otherStore), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
@@ -185,7 +185,7 @@ public class SourceTest extends AbstractOperationTest {
         Source operation = new Source(storeClass);
 
         // Pre-Action Get
-        List<ObjectBinding> results = operation.get(context);
+        List<ObjectBinding> results = operation.GET(context);
 
         // Pre-Action Change
         EObject removed = DynamicModels.createEObject(emptyClass);
@@ -194,7 +194,7 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, context.getViewModel(), index);
 
         // Action
-        ObjectBinding result = operation.put(change, results.get(0), context);
+        ObjectBinding result = operation.PUT(change, results.get(0), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
@@ -225,7 +225,7 @@ public class SourceTest extends AbstractOperationTest {
         Source operation = new Source(storeClass);
 
         // Pre-Action Get
-        List<ObjectBinding> results = operation.get(context);
+        List<ObjectBinding> results = operation.GET(context);
 
         // Pre-Action Change
         EObject removed = DynamicModels.createEObject(emptyClass);
@@ -233,7 +233,7 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = new RemoveNonRootEObjectImpl<>(removed);
 
         // Action
-        ObjectBinding result = operation.put(change, results.get(0), context);
+        ObjectBinding result = operation.PUT(change, results.get(0), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
@@ -260,7 +260,7 @@ public class SourceTest extends AbstractOperationTest {
         Source operation = new Source(restaurantClass);
 
         // Pre-Action Get
-        operation.get(context);
+        operation.GET(context);
 
         // Pre-Action Change
         EObject inserted = DynamicModels.createEObject(emptyClass);
@@ -269,7 +269,7 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertRootChange(inserted, context.getViewModel(), index);
 
         // Action
-        ObjectBinding result = operation.put(change, ObjectBinding.ofOriginObject(restaurant), context);
+        ObjectBinding result = operation.PUT(change, ObjectBinding.ofOriginObject(restaurant), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
@@ -302,7 +302,7 @@ public class SourceTest extends AbstractOperationTest {
         Source operation = new Source(restaurantClass);
 
         // Pre-Action Get
-        operation.get(context);
+        operation.GET(context);
 
         // Pre-Action Change
         EObject inserted = DynamicModels.createEObject(emptyClass);
@@ -310,7 +310,7 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = new InsertNonRootEObjectImpl<>(inserted);
 
         // Action
-        ObjectBinding result = operation.put(change, ObjectBinding.ofOriginObject(restaurant), context);
+        ObjectBinding result = operation.PUT(change, ObjectBinding.ofOriginObject(restaurant), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
@@ -337,7 +337,7 @@ public class SourceTest extends AbstractOperationTest {
         Source operation = new Source(restaurantClass);
 
         // Pre-Action Get
-        List<ObjectBinding> results = operation.get(context);
+        List<ObjectBinding> results = operation.GET(context);
 
         // Pre-Action Change
         EObject removed = viewType.getEFactoryInstance().create(emptyClass);
@@ -346,7 +346,7 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, context.getViewModel(), index);
 
         // Action
-        ObjectBinding result = operation.put(change, results.get(0), context);
+        ObjectBinding result = operation.PUT(change, results.get(0), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
@@ -377,7 +377,7 @@ public class SourceTest extends AbstractOperationTest {
         Source operation = new Source(restaurantClass);
 
         // Pre-Action Get
-        List<ObjectBinding> results = operation.get(context);
+        List<ObjectBinding> results = operation.GET(context);
 
         // Pre-Action Change
         EObject removed = DynamicModels.createEObject(emptyClass);
@@ -385,7 +385,7 @@ public class SourceTest extends AbstractOperationTest {
         EChange<EObject> change = new RemoveNonRootEObjectImpl<>(removed);
 
         // Action
-        ObjectBinding result = operation.put(change, results.get(0), context);
+        ObjectBinding result = operation.PUT(change, results.get(0), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);

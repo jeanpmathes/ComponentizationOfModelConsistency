@@ -41,12 +41,28 @@ public class DynamicModels {
         return eReference;
     }
 
+    public static EAttribute createEAttribute(EClass eClass, String name, EDataType eDataType) {
+        EAttribute eAttribute = EcoreFactory.eINSTANCE.createEAttribute();
+        eAttribute.setName(name);
+        eAttribute.setEType(eDataType);
+        eClass.getEStructuralFeatures().add(eAttribute);
+        return eAttribute;
+    }
+
     public static EObject createEObject(EClass eClass) {
         return eClass.getEPackage().getEFactoryInstance().create(eClass);
     }
 
     public static EClass getEClass(EPackage ePackage, String name) {
         return (EClass) ePackage.getEClassifier(name);
+    }
+
+    public static EAttribute getEAttribute(EObject target, String name) {
+        return (EAttribute) target.eClass().getEStructuralFeature(name);
+    }
+
+    public static EReference getEReference(EObject target, String name) {
+        return (EReference) target.eClass().getEStructuralFeature(name);
     }
 
     public static EList<EObject> getList(EObject target, EReference reference) {
