@@ -6,6 +6,7 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.compmodelcons.views.EditableViewCorrespondences;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,7 @@ public class EditableViewCorrespondencesImpl implements EditableViewCorresponden
     @Override
     public void addCorrespondence(List<EObject> originObjects, EObject viewObject) {
         if (originObjects.isEmpty()) {
-            return;
+            return; // todo: check if this is still needed, if yes, add comment
         }
 
         var viewKey = new ViewKey(viewObject);
@@ -54,8 +55,32 @@ public class EditableViewCorrespondencesImpl implements EditableViewCorresponden
     }
 
     @Override
+    public void joinCorrespondence(List<EObject> currentOriginObjects, List<EObject> addedOriginObjects, EObject viewObject) {
+        removeCorrespondence(currentOriginObjects, viewObject);
+
+        List<EObject> newOriginObjects = new ArrayList<>(currentOriginObjects);
+        newOriginObjects.addAll(addedOriginObjects);
+
+        addCorrespondence(newOriginObjects, viewObject);
+    }
+
+    @Override
     public void removeCorrespondence(List<EObject> originObjects, EObject viewObject) {
         correspondences.remove(new OriginKey(originObjects, viewObject.eClass()), new ViewKey(viewObject));
+
+        for (var originObject : originObjects) {
+            partialCorrespondences.remove(new PartialOriginKey(originObject, viewObject.eClass()));
+        }
+    }
+
+    @Override
+    public void unjoinCorrespondence(List<EObject> currentOriginObjects, List<EObject> removedOriginObjects, EObject viewObject) {
+        removeCorrespondence(currentOriginObjects, viewObject);
+
+        List<EObject> newOriginObjects = new ArrayList<>(currentOriginObjects);
+        newOriginObjects.removeAll(removedOriginObjects);
+
+        addCorrespondence(newOriginObjects, viewObject);
     }
 
     private record OriginKey(List<EObject> originObjects, EClass viewClass) {

@@ -1,5 +1,6 @@
 package tools.vitruv.compmodelcons.generator.backend;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.text.StringEscapeUtils;
 import org.eclipse.emf.codegen.ecore.genmodel.GenClass;
 import org.eclipse.emf.codegen.ecore.genmodel.GenClassifier;
@@ -166,7 +167,26 @@ public class ViewTypeSourceGenerator {
     }
 
     private void appendQueryOperations(StringBuilder builder, int level, AQRSource source) {
-        appendSourceOperation(builder, level, source.from());
+        appendQueryOperations(builder, level, source, 0);
+    }
+
+    private void appendQueryOperations(StringBuilder builder, int level, AQRSource source, int joinIndex) {
+        if (joinIndex >= source.joins().size()) {
+            appendSourceOperation(builder, level, source.from());
+        } else {
+            importHelper.typeRef(Join.class);
+
+            AQRJoin join = source.joins().get(joinIndex);
+
+            if (join.type() != AQRJoin.Type.Inner || join.featureConditions().isEmpty() || join.expressionConditions().isEmpty()) {
+                throw new NotImplementedException();
+            }
+
+            builder.append(indent(level)).append("new Join(\n");
+            builder.append(indent(level + 1)).append(getQualifiedClassInstanceAccessor(join.from().clazz())).append(",\n");
+            appendQueryOperations(builder, level + 1, source, joinIndex + 1);
+            builder.append(indent(level)).append(")");
+        }
     }
 
     private void appendSourceOperation(StringBuilder builder, int level, AQRFrom from) {

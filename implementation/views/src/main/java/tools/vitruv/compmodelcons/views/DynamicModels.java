@@ -8,6 +8,9 @@ import tools.vitruv.change.atomic.eobject.EObjectExistenceEChange;
 import tools.vitruv.change.atomic.eobject.EObjectSubtractedEChange;
 import tools.vitruv.change.atomic.feature.FeatureEChange;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class DynamicModels {
     private DynamicModels() {
 
@@ -82,5 +85,41 @@ public class DynamicModels {
         } else {
             throw new IllegalArgumentException("Unknown change type: " + eChange.getClass().getSimpleName());
         }
+    }
+
+    public static boolean isRoot(EClass sourceClass) {
+        for (EClassifier eClassifier : sourceClass.getEPackage().getEClassifiers()) {
+            if (eClassifier instanceof EClass eClass) {
+                if (eClass.isSuperTypeOf(sourceClass)) {
+                    continue;
+                }
+                for (EReference eReference : eClass.getEReferences()) {
+                    if (eReference.isContainment() && eReference.getEReferenceType().isSuperTypeOf(sourceClass)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    public static EReference getUnambiguousContainer(EClass sourceClass) {
+        Set<EReference> containers = new HashSet<>();
+
+        for (EClassifier eClassifier : sourceClass.getEPackage().getEClassifiers()) {
+            if (eClassifier instanceof EClass eClass) {
+                for (EReference eReference : eClass.getEReferences()) {
+                    if (eReference.isContainment() && eReference.isMany() && eReference.getEReferenceType().isSuperTypeOf(sourceClass)) {
+                        containers.add(eReference);
+                    }
+                }
+            }
+        }
+
+        if (containers.size() != 1) {
+            return null;
+        }
+
+        return containers.iterator().next();
     }
 }
