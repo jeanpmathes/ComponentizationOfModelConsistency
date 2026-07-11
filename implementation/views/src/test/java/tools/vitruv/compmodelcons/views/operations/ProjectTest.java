@@ -30,14 +30,14 @@ public class ProjectTest extends AbstractOperationTest {
         Project operation = new Project(emptyClass, originOperation, List.of());
 
         // Action
-        when(originOperation.GET(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
+        when(originOperation.doGet(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
         List<ObjectBinding> result = operation.beginGetByCreatingViewObjects(context);
         for (ObjectBinding binding : result) {
             operation.completeGetByCallingGetOnFeatures(binding, context);
         }
 
         // Assertions
-        verify(originOperation, times(1)).GET(context);
+        verify(originOperation, times(1)).doGet(context);
         assertEquals(1, result.size());
         assertEquals(result.get(0).viewObject().eClass(), emptyClass);
         assertTrue(correspondences.correspond(List.of(store), result.get(0).viewObject()));
@@ -61,7 +61,7 @@ public class ProjectTest extends AbstractOperationTest {
         Project operation = new Project(simpleClass, originOperation, List.of(featureProject));
 
         // Action
-        when(originOperation.GET(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
+        when(originOperation.doGet(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
         when(featureProject.doGet(any(), any())).then(invocation -> {
             ObjectBinding binding = invocation.getArgument(0);
             binding.viewObject().eSet(number, 42);
@@ -93,7 +93,7 @@ public class ProjectTest extends AbstractOperationTest {
         Project operation = new Project(emptyClass, originOperation, List.of());
 
         // Pre-Action Get
-        when(originOperation.GET(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
+        when(originOperation.doGet(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
         for (ObjectBinding binding : operation.beginGetByCreatingViewObjects(context)) {
             operation.completeGetByCallingGetOnFeatures(binding, context);
         }
@@ -103,11 +103,11 @@ public class ProjectTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
 
         // Action
-        when(originOperation.PUT(any(), any(), any())).thenReturn(ObjectBinding.ofOriginObject(otherStore));
+        when(originOperation.doPut(any(), any(), any())).thenReturn(ObjectBinding.ofOriginObject(otherStore));
         ObjectBinding result = operation.doPut(change, ObjectBinding.ofViewObject(created), context);
 
         // Assertions
-        verify(originOperation, times(1)).PUT(eq(change), any(), eq(context));
+        verify(originOperation, times(1)).doPut(eq(change), any(), eq(context));
         assertEquals(created, result.viewObject());
         assertEquals(otherStore, result.originObjects().get(0));
     }
@@ -126,7 +126,7 @@ public class ProjectTest extends AbstractOperationTest {
         Project operation = new Project(emptyClass, originOperation, List.of());
 
         // Pre-Action Get
-        when(originOperation.GET(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
+        when(originOperation.doGet(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
         List<ObjectBinding> results = operation.beginGetByCreatingViewObjects(context);
         for (ObjectBinding binding : results) {
             operation.completeGetByCallingGetOnFeatures(binding, context);
@@ -136,11 +136,11 @@ public class ProjectTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(results.get(0).viewObject());
 
         // Action
-        when(originOperation.PUT(any(), any(), any())).thenReturn(ObjectBinding.ofOriginObject(results.get(0).originObjects().get(0)));
+        when(originOperation.doPut(any(), any(), any())).thenReturn(ObjectBinding.ofOriginObject(results.get(0).originObjects().get(0)));
         ObjectBinding result = operation.doPut(change, results.get(0), context);
 
         // Assertions
-        verify(originOperation, times(1)).PUT(eq(change), any(), eq(context));
+        verify(originOperation, times(1)).doPut(eq(change), any(), eq(context));
         assertEquals(results.get(0).viewObject(), result.viewObject());
         assertEquals(results.get(0).originObjects(), result.originObjects());
     }
@@ -162,7 +162,7 @@ public class ProjectTest extends AbstractOperationTest {
         Project operation = new Project(simpleClass, originOperation, List.of(featureProject));
 
         // Pre-Action Get
-        when(originOperation.GET(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
+        when(originOperation.doGet(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(store)));
         AtomicReference<FeatureBinding> createdFeatureBinding = new AtomicReference<>();
         when(featureProject.doGet(any(), any())).then(invocation -> {
             ObjectBinding binding = invocation.getArgument(0);
@@ -184,7 +184,7 @@ public class ProjectTest extends AbstractOperationTest {
         operation.doPut(change, results.get(0), context);
 
         // Assertions
-        verify(originOperation, never()).PUT(any(), any(), any());
+        verify(originOperation, never()).doPut(any(), any(), any());
         verify(featureProject, times(1)).doPut(change, createdFeatureBinding.get(), results.get(0), context);
     }
 }

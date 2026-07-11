@@ -43,7 +43,7 @@ public class RootTest extends AbstractOperationTest {
         // Action
         when(rootProject.beginGetByCreatingViewObjects(context)).thenReturn(List.of(root));
         when(emptyProject.beginGetByCreatingViewObjects(context)).thenReturn(empties);
-        List<ObjectBinding> results = operation.GET(context);
+        List<ObjectBinding> results = operation.doGet(context);
 
         // Assertions
         verify(rootProject, times(1)).beginGetByCreatingViewObjects(context);
@@ -76,7 +76,7 @@ public class RootTest extends AbstractOperationTest {
 
         // Action
         when(emptyProject.beginGetByCreatingViewObjects(context)).thenReturn(empties);
-        List<ObjectBinding> results = operation.GET(context);
+        List<ObjectBinding> results = operation.doGet(context);
 
         // Assertions
         verify(emptyProject, times(1)).beginGetByCreatingViewObjects(context);
@@ -112,7 +112,7 @@ public class RootTest extends AbstractOperationTest {
         // Pre-Action Get
         when(rootProject.beginGetByCreatingViewObjects(context)).thenReturn(List.of(root));
         when(emptyProject.beginGetByCreatingViewObjects(context)).thenReturn(empties);
-        List<ObjectBinding> results = operation.GET(context);
+        List<ObjectBinding> results = operation.doGet(context);
 
         // Pre-Action Change
         EObject removed = root.viewObject();
@@ -122,7 +122,7 @@ public class RootTest extends AbstractOperationTest {
 
         // Action
         when(rootProject.doPut(any(), any(), any())).thenReturn(root);
-        operation.PUT(change, results.get(0), context);
+        operation.doPut(change, results.get(0), context);
 
         // Assertions
         verify(rootProject, never()).doPut(eq(change), any(), eq(context));
@@ -139,7 +139,7 @@ public class RootTest extends AbstractOperationTest {
         Root operation = new Root(rootClass, Optional.empty(), List.of());
 
         // Pre-Action Get
-        List<ObjectBinding> results = operation.GET(context);
+        List<ObjectBinding> results = operation.doGet(context);
 
         // Pre-Action Change
         EObject removed = results.get(0).viewObject();
@@ -148,7 +148,7 @@ public class RootTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, context.getViewModel(), index);
 
         // Action & Assertions
-        assertThrows(IllegalArgumentException.class, () -> operation.PUT(change, results.get(0), context));
+        assertThrows(IllegalArgumentException.class, () -> operation.doPut(change, results.get(0), context));
     }
 
     @Test
@@ -176,7 +176,7 @@ public class RootTest extends AbstractOperationTest {
         // Pre-Action Get
         when(rootOperation.beginGetByCreatingViewObjects(context)).thenReturn(List.of(root));
         when(emptyContainedOperation.beginGetByCreatingViewObjects(context)).thenReturn(empties);
-        List<ObjectBinding> results = operation.GET(context);
+        List<ObjectBinding> results = operation.doGet(context);
 
         // Pre-Action Change
         EObject inserted = DynamicModels.createEObject(emptyClass);
@@ -187,7 +187,7 @@ public class RootTest extends AbstractOperationTest {
 
         // Action
         when(emptyContainedOperation.doPut(any(), any(), any())).thenReturn(createBinding(insertedCorrespondence, inserted));
-        ObjectBinding result = operation.PUT(change, results.get(0), context);
+        ObjectBinding result = operation.doPut(change, results.get(0), context);
 
         // Assertions
         verify(rootOperation, never()).doPut(any(), any(), eq(context));
@@ -218,7 +218,7 @@ public class RootTest extends AbstractOperationTest {
         // Pre-Action Get
         when(rootOperation.beginGetByCreatingViewObjects(context)).thenReturn(List.of(root));
         when(emptyContainedOperation.beginGetByCreatingViewObjects(context)).thenReturn(empties);
-        List<ObjectBinding> results = operation.GET(context);
+        List<ObjectBinding> results = operation.doGet(context);
 
         // Pre-Action Change
         EObject removed = empties.get(0).viewObject();
@@ -228,7 +228,7 @@ public class RootTest extends AbstractOperationTest {
 
         // Action
         when(emptyContainedOperation.doPut(any(), any(), any())).thenReturn(empties.get(0));
-        ObjectBinding result = operation.PUT(change, results.get(0), context);
+        ObjectBinding result = operation.doPut(change, results.get(0), context);
 
         // Assertions
         verify(rootOperation, never()).doPut(any(), any(), eq(context));
@@ -259,7 +259,7 @@ public class RootTest extends AbstractOperationTest {
         // Pre-Action Get
         when(rootProject.beginGetByCreatingViewObjects(context)).thenReturn(List.of(root));
         when(emptyProject.beginGetByCreatingViewObjects(context)).thenReturn(empties);
-        List<ObjectBinding> results = operation.GET(context);
+        List<ObjectBinding> results = operation.doGet(context);
 
         // Pre-Action Change
         EObject deleted = root.viewObject();
@@ -267,7 +267,7 @@ public class RootTest extends AbstractOperationTest {
 
         // Action
         when(rootProject.doPut(any(), any(), any())).thenReturn(root);
-        ObjectBinding result = operation.PUT(change, results.get(0), context);
+        ObjectBinding result = operation.doPut(change, results.get(0), context);
 
         // Assertions
         verify(rootProject, times(1)).doPut(eq(change), any(), eq(context));
@@ -299,7 +299,7 @@ public class RootTest extends AbstractOperationTest {
         // Pre-Action Get
         when(rootOperation.beginGetByCreatingViewObjects(context)).thenReturn(List.of(root));
         when(emptyContainedOperation.beginGetByCreatingViewObjects(context)).thenReturn(empties);
-        List<ObjectBinding> results = operation.GET(context);
+        List<ObjectBinding> results = operation.doGet(context);
 
         // Pre-Action Change
         EObject deleted = empties.get(0).viewObject();
@@ -307,7 +307,7 @@ public class RootTest extends AbstractOperationTest {
 
         // Action
         when(emptyContainedOperation.doPut(any(), any(), any())).thenReturn(ObjectBinding.empty());
-        ObjectBinding result = operation.PUT(change, results.get(0), context);
+        ObjectBinding result = operation.doPut(change, results.get(0), context);
 
         // Assertions
         verify(rootOperation, never()).doPut(any(), any(), eq(context));

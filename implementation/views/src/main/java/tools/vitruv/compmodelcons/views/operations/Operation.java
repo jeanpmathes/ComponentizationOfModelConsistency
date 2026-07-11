@@ -19,7 +19,7 @@ public interface Operation {
      * @param context the context of the operation
      * @return a list of object bindings
      */
-    List<ObjectBinding> GET(GetContext context);
+    List<ObjectBinding> doGet(GetContext context);
 
     /**
      * Apply a change of the view towards the origin.
@@ -29,7 +29,7 @@ public interface Operation {
      * @param context the context of the operation
      * @return the new object binding of the changed object
      */
-    ObjectBinding PUT(EChange<EObject> change, ObjectBinding target, PutContext context);
+    ObjectBinding doPut(EChange<EObject> change, ObjectBinding target, PutContext context);
 
-    Optional<EChange<EObject>> GET_CHANGE(EChange<EObject> change);
+    Optional<EChange<EObject>> doGetChange(EChange<EObject> change);
 }

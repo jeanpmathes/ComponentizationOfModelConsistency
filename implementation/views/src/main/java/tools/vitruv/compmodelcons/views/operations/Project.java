@@ -33,7 +33,7 @@ public class Project {
     }
 
     public List<ObjectBinding> beginGetByCreatingViewObjects(GetContext context) {
-        return origin.GET(context).stream().map(originBinding -> {
+        return origin.doGet(context).stream().map(originBinding -> {
             EObject result = createdClass.getEPackage().getEFactoryInstance().create(createdClass);
 
             context.getCorrespondences().addCorrespondence(originBinding.originObjects(), result);
@@ -70,7 +70,7 @@ public class Project {
             featureBindings.set(featureIndex, features.get(featureIndex).doPut(change, featureBindings.get(featureIndex), target, context));
             return new ProjectObjectBindingImpl(peeledTarget, viewObject, featureBindings);
         } else {
-            ObjectBinding originBinding = origin.PUT(change, peeledTarget, context);
+            ObjectBinding originBinding = origin.doPut(change, peeledTarget, context);
 
             ProjectObjectBindingImpl projected = new ProjectObjectBindingImpl(originBinding, viewObject, featureBindings);
 

@@ -36,11 +36,11 @@ public class FeatureSource implements FeatureOperation {
     }
 
     @Override
-    public FeatureBinding GET(ObjectBinding subjectBinding, GetContext context) {
+    public FeatureBinding doGet(ObjectBinding subjectBinding, GetContext context) {
         return getSource(subjectBinding).map(subject -> FeatureBinding.ofOriginObject(subject, ValueBinding.ofFeature(subject, sourceFeature))).orElseThrow();
     }
 
-    public FeatureBinding PUT(EChange<EObject> change, FeatureBinding feature, ObjectBinding subjectBinding, ValueUpdateBinding value, PutContext context) {
+    public FeatureBinding doPut(EChange<EObject> change, FeatureBinding feature, ObjectBinding subjectBinding, ValueUpdateBinding value, PutContext context) {
         return getSource(subjectBinding).map(subject -> {
             if (value instanceof ValueUpdateBinding.Unset) {
                 subject.eUnset(sourceFeature);
@@ -65,7 +65,7 @@ public class FeatureSource implements FeatureOperation {
     }
 
     @Override
-    public Optional<EChange<EObject>> GET_CHANGE(EChange<EObject> change) {
+    public Optional<EChange<EObject>> doGetChange(EChange<EObject> change) {
         return Optional.empty();
     }
 }

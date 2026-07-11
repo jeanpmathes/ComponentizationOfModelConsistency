@@ -38,7 +38,7 @@ public class Root implements Operation {
     }
 
     @Override
-    public List<ObjectBinding> GET(GetContext context) {
+    public List<ObjectBinding> doGet(GetContext context) {
         List<RootObjectBindingImpl> roots = root.beginGetByCreatingViewObjects(context).stream()
                 .map(rootBinding -> {
                     context.getViewModel().getContents().add(rootBinding.viewObject());
@@ -66,7 +66,7 @@ public class Root implements Operation {
     }
 
     @Override
-    public ObjectBinding PUT(EChange<EObject> change, ObjectBinding target, PutContext context) {
+    public ObjectBinding doPut(EChange<EObject> change, ObjectBinding target, PutContext context) {
         if (change instanceof RootEChange<EObject>) {
             if (isRootImplicit) {
                 throw new IllegalArgumentException("Cannot insert or remove the implicit root");
@@ -115,7 +115,7 @@ public class Root implements Operation {
     }
 
     @Override
-    public Optional<EChange<EObject>> GET_CHANGE(EChange<EObject> change) {
+    public Optional<EChange<EObject>> doGetChange(EChange<EObject> change) {
         return Optional.empty();
     }
 
@@ -139,17 +139,17 @@ public class Root implements Operation {
 
     private static class Empty implements Operation {
         @Override
-        public List<ObjectBinding> GET(GetContext context) {
+        public List<ObjectBinding> doGet(GetContext context) {
             return List.of(ObjectBinding.empty());
         }
 
         @Override
-        public ObjectBinding PUT(EChange<EObject> change, ObjectBinding target, PutContext context) {
+        public ObjectBinding doPut(EChange<EObject> change, ObjectBinding target, PutContext context) {
             throw new UnsupportedOperationException("Modification of the default, uncorresponding root is not supported");
         }
 
         @Override
-        public Optional<EChange<EObject>> GET_CHANGE(EChange<EObject> change) {
+        public Optional<EChange<EObject>> doGetChange(EChange<EObject> change) {
             return Optional.empty();
         }
     }

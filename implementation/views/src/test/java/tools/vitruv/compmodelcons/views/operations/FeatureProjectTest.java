@@ -47,11 +47,11 @@ class FeatureProjectTest extends AbstractOperationTest {
         FeatureProject operation = new FeatureProject(Optional.empty(), numberAttribute, originOperation);
 
         // Action
-        when(originOperation.GET(simpleBinding, context)).thenReturn(FeatureBinding.ofOriginObject(store, ValueBinding.of(42)));
+        when(originOperation.doGet(simpleBinding, context)).thenReturn(FeatureBinding.ofOriginObject(store, ValueBinding.of(42)));
         FeatureBinding result = operation.doGet(simpleBinding, context);
 
         // Assertions
-        verify(originOperation, times(1)).GET(simpleBinding, context);
+        verify(originOperation, times(1)).doGet(simpleBinding, context);
         assertEquals(new ValueBinding.Single(42), result.value());
         assertEquals(42, simple.eGet(numberAttribute));
         assertEquals(simple, result.viewSubjectObject());
@@ -81,7 +81,7 @@ class FeatureProjectTest extends AbstractOperationTest {
         FeatureProject operation = new FeatureProject(Optional.of(numEmployees), numberAttribute, originOperation);
 
         // Pre-Action Get
-        when(originOperation.GET(simpleBinding, context)).thenReturn(FeatureBinding.ofOriginObject(restaurant, ValueBinding.of(42)));
+        when(originOperation.doGet(simpleBinding, context)).thenReturn(FeatureBinding.ofOriginObject(restaurant, ValueBinding.of(42)));
         FeatureBinding result = operation.doGet(simpleBinding, context);
 
         // Pre-Action Change
@@ -89,11 +89,11 @@ class FeatureProjectTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createUnsetFeatureChange(simple, numberAttribute);
 
         // Action
-        when(originOperation.PUT(any(), any(), any(), any(), any())).thenReturn(FeatureBinding.ofOriginObject(restaurant, ValueBinding.of(0)));
+        when(originOperation.doPut(any(), any(), any(), any(), any())).thenReturn(FeatureBinding.ofOriginObject(restaurant, ValueBinding.of(0)));
         result = operation.doPut(change, result, simpleBinding, context);
 
         // Assertions
-        verify(originOperation, times(1)).PUT(eq(change), any(), eq(simpleBinding), eq(new ValueUpdateBinding.Unset()), eq(context));
+        verify(originOperation, times(1)).doPut(eq(change), any(), eq(simpleBinding), eq(new ValueUpdateBinding.Unset()), eq(context));
         assertEquals(new ValueBinding.Unset(), result.value());
     }
 }

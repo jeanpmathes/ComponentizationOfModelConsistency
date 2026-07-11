@@ -202,7 +202,7 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
             viewResourceSet.getResources().clear();
 
             viewModel = viewResourceSet.createResource(URI.createURI(String.format("view:/%s.view", getName())));
-            viewRoot = unwrap(getStructure().GET(new GetContextImpl()));
+            viewRoot = unwrap(getStructure().doGet(new GetContextImpl()));
 
             viewChanged = false;
             addChangeListeners(viewResourceSet);
@@ -214,7 +214,7 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
             VitruviusChange<EObject> change = changeRecorder.endRecording();
 
             var context = new PutContextImpl();
-            reorderChanges(change.getEChanges()).forEach(eChange -> viewRoot = getStructure().PUT(eChange, viewRoot, context));
+            reorderChanges(change.getEChanges()).forEach(eChange -> viewRoot = getStructure().doPut(eChange, viewRoot, context));
 
             context.validateAttachmentState();
 

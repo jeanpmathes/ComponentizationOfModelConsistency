@@ -22,7 +22,7 @@ public interface FeatureOperation {
      * @param context the context of the operation
      * @return the feature binding
      */
-    FeatureBinding GET(ObjectBinding subjectBinding, GetContext context);
+    FeatureBinding doGet(ObjectBinding subjectBinding, GetContext context);
 
     /**
      * Apply a change of the view towards the origin.
@@ -34,7 +34,7 @@ public interface FeatureOperation {
      * @param context the context of the operation
      * @return the new feature binding of the changed feature
      */
-    FeatureBinding PUT(EChange<EObject> change, FeatureBinding feature, ObjectBinding subjectBinding, ValueUpdateBinding value, PutContext context);
+    FeatureBinding doPut(EChange<EObject> change, FeatureBinding feature, ObjectBinding subjectBinding, ValueUpdateBinding value, PutContext context);
 
-    Optional<EChange<EObject>> GET_CHANGE(EChange<EObject> change);
+    Optional<EChange<EObject>> doGetChange(EChange<EObject> change);
 }

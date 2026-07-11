@@ -43,7 +43,7 @@ public class FeatureProject {
     }
 
     public FeatureBinding doGet(ObjectBinding subject, GetContext context) {
-        FeatureBinding originFeature = origin.GET(subject, context);
+        FeatureBinding originFeature = origin.doGet(subject, context);
 
         if (originFeature.value() instanceof ValueBinding.Unset) {
             subject.viewObject().eUnset(createdFeature);
@@ -84,7 +84,7 @@ public class FeatureProject {
             throw new IllegalArgumentException("Unsupported change type: " + change.getClass().getSimpleName());
         }
 
-        FeatureBinding originBinding = origin.PUT(change, binding.originBinding(), subject, value, context);
+        FeatureBinding originBinding = origin.doPut(change, binding.originBinding(), subject, value, context);
 
         return new FeatureProjectBindingImpl(originBinding, subject.viewObject(), ValueBinding.ofFeature(subject.viewObject(), createdFeature));
     }

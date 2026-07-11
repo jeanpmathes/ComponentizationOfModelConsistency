@@ -36,7 +36,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         FeatureOperation operation = new FeatureSource(numEmployees);
 
         // Action
-        FeatureBinding result = operation.GET(simpleBinding, context);
+        FeatureBinding result = operation.doGet(simpleBinding, context);
 
         // Assertions
         assertEquals(new ValueBinding.Single(numEmployeesValue), result.value());
@@ -67,14 +67,14 @@ class FeatureSourceTest extends AbstractOperationTest {
         FeatureOperation operation = new FeatureSource(numEmployees);
 
         // Pre-Action Get
-        FeatureBinding result = operation.GET(simpleBinding, context);
+        FeatureBinding result = operation.doGet(simpleBinding, context);
 
         // Pre-Action Change
         simple.eSet(numberAttribute, numEmployeesValue + 3);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createReplaceSingleAttributeChange(simple, numberAttribute, numEmployeesValue, numEmployeesValue + 3);
 
         // Action
-        result = operation.PUT(change, result, simpleBinding, new ValueUpdateBinding.Replace(numEmployeesValue + 3), context);
+        result = operation.doPut(change, result, simpleBinding, new ValueUpdateBinding.Replace(numEmployeesValue + 3), context);
 
         // Assertions
         assertEquals(new ValueBinding.Single(numEmployeesValue + 3), result.value());
@@ -103,14 +103,14 @@ class FeatureSourceTest extends AbstractOperationTest {
         FeatureOperation operation = new FeatureSource(numEmployees);
 
         // Pre-Action Get
-        FeatureBinding result = operation.GET(simpleBinding, context);
+        FeatureBinding result = operation.doGet(simpleBinding, context);
 
         // Pre-Action Change
         simple.eUnset(numberAttribute);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createUnsetFeatureChange(simple, numberAttribute);
 
         // Action
-        result = operation.PUT(change, result, simpleBinding, new ValueUpdateBinding.Unset(), context);
+        result = operation.doPut(change, result, simpleBinding, new ValueUpdateBinding.Unset(), context);
 
         // Assertions
         assertEquals(new ValueBinding.Unset(), result.value());

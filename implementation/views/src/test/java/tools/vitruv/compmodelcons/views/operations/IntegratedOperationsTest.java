@@ -32,7 +32,7 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         Root operation = new Root(emptyClass, Optional.of(new Project(emptyClass, new Source(restaurantClass), List.of())), List.of());
 
         // Action: Get the view.
-        List<ObjectBinding> results = new ArrayList<>(operation.GET(context));
+        List<ObjectBinding> results = new ArrayList<>(operation.doGet(context));
 
         // Action: Remove and delete one of the restaurants by removing and deleting an empty.
         EObject removed = context.getViewModel().getContents().get(0);
@@ -71,7 +71,7 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         Root operation = new Root(rootClass, Optional.empty(), List.of(new Root.Target(simpleContainment, new Project(simpleClass, new Source(restaurantClass), List.of(new FeatureProject(Optional.of(numEmployees), employeeCount, new FeatureSource(numEmployees)))))));
 
         // Action: Get the view.
-        List<ObjectBinding> results = new ArrayList<>(operation.GET(context));
+        List<ObjectBinding> results = new ArrayList<>(operation.doGet(context));
 
         // Action: Unset the number of employees.
         for (EObject simple : DynamicModels.getList(context.getViewModel().getContents().get(0), simpleContainment)) {
@@ -90,14 +90,14 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
     private EObject doCreate(EClass eClass, Operation operation, List<ObjectBinding> roots) {
         EObject created = DynamicModels.createEObject(eClass);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
-        ObjectBinding result = operation.PUT(change, roots.get(0), context);
+        ObjectBinding result = operation.doPut(change, roots.get(0), context);
         roots.set(0, result);
         return created;
     }
 
     private void doDelete(EObject removed, Operation operation, List<ObjectBinding> roots) {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(removed);
-        ObjectBinding result = operation.PUT(change, roots.get(0), context);
+        ObjectBinding result = operation.doPut(change, roots.get(0), context);
         roots.set(0, result);
     }
 
@@ -105,7 +105,7 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         context.getViewModel().getContents().add(inserted);
         int index = context.getViewModel().getContents().indexOf(inserted);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertRootChange(inserted, context.getViewModel(), index);
-        ObjectBinding result = operation.PUT(change, roots.get(0), context);
+        ObjectBinding result = operation.doPut(change, roots.get(0), context);
         roots.set(0, result);
     }
 
@@ -113,14 +113,14 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         int index = context.getViewModel().getContents().indexOf(removed);
         context.getViewModel().getContents().remove(removed);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, context.getViewModel(), index);
-        ObjectBinding result = operation.PUT(change, roots.get(0), context);
+        ObjectBinding result = operation.doPut(change, roots.get(0), context);
         roots.set(0, result);
     }
 
     private void doUnset(EObject target, EStructuralFeature feature, Operation operation, List<ObjectBinding> roots) {
         target.eUnset(feature);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createUnsetFeatureChange(target, feature);
-        ObjectBinding result = operation.PUT(change, roots.get(0), context);
+        ObjectBinding result = operation.doPut(change, roots.get(0), context);
         roots.set(0, result);
     }
 
@@ -128,7 +128,7 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         Object oldValue = target.eGet(attribute);
         target.eSet(attribute, newValue);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createReplaceSingleAttributeChange(target, attribute, oldValue, newValue);
-        ObjectBinding result = operation.PUT(change, roots.get(0), context);
+        ObjectBinding result = operation.doPut(change, roots.get(0), context);
         roots.set(0, result);
     }
 }
