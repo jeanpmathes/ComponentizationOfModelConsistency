@@ -7,6 +7,8 @@ import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
 import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.bindings.FeatureBinding;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
+import tools.vitruv.compmodelcons.views.bindings.ValueBinding;
+import tools.vitruv.compmodelcons.views.bindings.ValueUpdateBinding;
 
 import java.util.Optional;
 
@@ -21,7 +23,7 @@ class FeatureProjectTest extends AbstractOperationTest {
         EAttribute numberAttribute = DynamicModels.createEAttribute(simpleClass, "number", EcorePackage.eINSTANCE.getEInt());
 
         FeatureOperation originOperation = mock(FeatureOperation.class);
-        FeatureProject operation = new FeatureProject(numberAttribute, originOperation);
+        FeatureProject operation = new FeatureProject(Optional.empty(), numberAttribute, originOperation);
 
         assertEquals(numberAttribute, operation.getCreatedFeature());
     }
@@ -42,15 +44,15 @@ class FeatureProjectTest extends AbstractOperationTest {
 
         // Operation Setup
         FeatureOperation originOperation = mock(FeatureOperation.class);
-        FeatureOperation operation = new FeatureProject(numberAttribute, originOperation);
+        FeatureProject operation = new FeatureProject(Optional.empty(), numberAttribute, originOperation);
 
         // Action
-        when(originOperation.GET(simpleBinding, context)).thenReturn(FeatureBinding.ofOriginObject(store, 42));
-        FeatureBinding result = operation.GET(simpleBinding, context);
+        when(originOperation.GET(simpleBinding, context)).thenReturn(FeatureBinding.ofOriginObject(store, ValueBinding.of(42)));
+        FeatureBinding result = operation.doGet(simpleBinding, context);
 
         // Assertions
         verify(originOperation, times(1)).GET(simpleBinding, context);
-        assertEquals(42, result.value());
+        assertEquals(new ValueBinding.Single(42), result.value());
         assertEquals(42, simple.eGet(numberAttribute));
         assertEquals(simple, result.viewSubjectObject());
         assertEquals(1, result.originSubjectObjects().size());
@@ -58,9 +60,12 @@ class FeatureProjectTest extends AbstractOperationTest {
     }
 
     @Test
-    public void testPutOfUnsetShouldPassEmptyOptionalToInnerOperation() {
+    public void testPutOfUnsetShouldPassUnsetUpdateBindingToInnerOperation() {
         // Origin Setup
-        EObject store = models.getRoot(Model.RESTAURANT);
+        EPackage metamodel = models.getPackage(Model.RESTAURANT);
+        EClass restaurantClass = DynamicModels.getEClass(metamodel, "Restaurant");
+        EObject restaurant = context.getOriginObjects(restaurantClass).get(0);
+        EStructuralFeature numEmployees = restaurantClass.getEStructuralFeature("numEmployees");
 
         // ViewType Setup
         EPackage viewType = DynamicModels.createEPackage();
@@ -69,61 +74,26 @@ class FeatureProjectTest extends AbstractOperationTest {
 
         // View Setup
         EObject simple = DynamicModels.createEObject(simpleClass);
-        ObjectBinding simpleBinding = createBinding(store, simple);
+        ObjectBinding simpleBinding = createBinding(restaurant, simple);
 
         // Operation Setup
         FeatureOperation originOperation = mock(FeatureOperation.class);
-        FeatureOperation operation = new FeatureProject(numberAttribute, originOperation);
+        FeatureProject operation = new FeatureProject(Optional.of(numEmployees), numberAttribute, originOperation);
 
         // Pre-Action Get
-        when(originOperation.GET(simpleBinding, context)).thenReturn(FeatureBinding.ofOriginObject(store, 42));
-        FeatureBinding result = operation.GET(simpleBinding, context);
+        when(originOperation.GET(simpleBinding, context)).thenReturn(FeatureBinding.ofOriginObject(restaurant, ValueBinding.of(42)));
+        FeatureBinding result = operation.doGet(simpleBinding, context);
 
         // Pre-Action Change
         simple.eUnset(numberAttribute);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createUnsetFeatureChange(simple, numberAttribute);
 
         // Action
-        when(originOperation.PUT(any(), any(), any(), any(), any())).thenReturn(FeatureBinding.ofOriginObject(store, 0));
-        result = operation.PUT(change, result, simpleBinding, Optional.empty(), context);
+        when(originOperation.PUT(any(), any(), any(), any(), any())).thenReturn(FeatureBinding.ofOriginObject(restaurant, ValueBinding.of(0)));
+        result = operation.doPut(change, result, simpleBinding, context);
 
         // Assertions
-        verify(originOperation, times(1)).PUT(eq(change), any(), eq(simpleBinding), eq(Optional.empty()), eq(context));
-        assertEquals(0, result.value());
-    }
-
-    @Test
-    public void testPutOfSetShouldPassEmptyOptionalToInnerOperation() {
-        // Origin Setup
-        EObject store = models.getRoot(Model.RESTAURANT);
-
-        // ViewType Setup
-        EPackage viewType = DynamicModels.createEPackage();
-        EClass simpleClass = DynamicModels.createEClass(viewType);
-        EAttribute numberAttribute = DynamicModels.createEAttribute(simpleClass, "number", EcorePackage.eINSTANCE.getEInt());
-
-        // View Setup
-        EObject simple = DynamicModels.createEObject(simpleClass);
-        ObjectBinding simpleBinding = createBinding(store, simple);
-
-        // Operation Setup
-        FeatureOperation originOperation = mock(FeatureOperation.class);
-        FeatureOperation operation = new FeatureProject(numberAttribute, originOperation);
-
-        // Pre-Action Get
-        when(originOperation.GET(simpleBinding, context)).thenReturn(FeatureBinding.ofOriginObject(store, 42));
-        FeatureBinding result = operation.GET(simpleBinding, context);
-
-        // Pre-Action Change
-        simple.eSet(numberAttribute, 67);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createReplaceSingleAttributeChange(simple, numberAttribute, 42, 67);
-
-        // Action
-        when(originOperation.PUT(any(), any(), any(), any(), any())).thenReturn(FeatureBinding.ofOriginObject(store, 0));
-        result = operation.PUT(change, result, simpleBinding, Optional.empty(), context);
-
-        // Assertions
-        verify(originOperation, times(1)).PUT(eq(change), any(), eq(simpleBinding), eq(Optional.of(67)), eq(context));
-        assertEquals(67, result.value());
+        verify(originOperation, times(1)).PUT(eq(change), any(), eq(simpleBinding), eq(new ValueUpdateBinding.Unset()), eq(context));
+        assertEquals(new ValueBinding.Unset(), result.value());
     }
 }

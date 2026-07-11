@@ -1,5 +1,6 @@
 package tools.vitruv.compmodelcons.views.operations;
 
+import com.google.common.collect.Sets;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
@@ -9,22 +10,22 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.impl.EcoreResourceFactoryImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import tools.vitruv.compmodelcons.views.EditableViewCorrespondences;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.FeatureBinding;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
+import tools.vitruv.compmodelcons.views.bindings.ValueBinding;
 import tools.vitruv.compmodelcons.views.impl.EditableViewCorrespondencesImpl;
 
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Predicate;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AbstractOperationTest {
@@ -95,7 +96,7 @@ class AbstractOperationTest {
         };
     }
 
-    protected static FeatureBinding createBinding(EObject originSubjectObject, EObject viewSubjectObject, Object value) {
+    protected static FeatureBinding createBinding(EObject originSubjectObject, EObject viewSubjectObject, ValueBinding value) {
         return new FeatureBinding() {
             @Override
             public List<EObject> originSubjectObjects() {
@@ -108,7 +109,7 @@ class AbstractOperationTest {
             }
 
             @Override
-            public Object value() {
+            public ValueBinding value() {
                 return value;
             }
         };
@@ -118,6 +119,12 @@ class AbstractOperationTest {
         assertTrue(collection.stream().allMatch(predicate));
     }
 
+    protected static <T> T assertOneAdded(Collection<T> original, Collection<T> modified) {
+        Collection<T> difference = Sets.difference(new HashSet<>(modified), new HashSet<>(original));
+        assertEquals(1, difference.size());
+        return difference.iterator().next();
+    }
+
     @BeforeEach
     public void setUp() throws URISyntaxException {
         models = loadModels();
@@ -125,8 +132,18 @@ class AbstractOperationTest {
         context = new TestContext();
     }
 
+    @AfterEach
+    public void tearDown() {
+        if (!context.isAttachmentStateOk()) {
+            throw new IllegalStateException("Attachment state is not ok");
+        }
+    }
+
     public class TestContext implements GetContext, PutContext {
         private final Resource viewModel = models.createViewModel();
+
+        private final Set<EObject> unattachedCreatedOriginObjects = new HashSet<>();
+        private final Set<EObject> undetachedDeletedOriginObjects = new HashSet<>();
 
         @Override
         public Resource getViewModel() {
@@ -141,6 +158,43 @@ class AbstractOperationTest {
         @Override
         public void removeRootFromOriginModel(EPackage originPackage, EObject originObject) {
             models.getModel(originPackage).getContents().remove(originObject);
+        }
+
+        @Override
+        public void trackUnattachedCreatedOriginObject(EObject createdOriginObject) {
+            if (isAttached(createdOriginObject)) {
+                throw new IllegalArgumentException();
+            }
+
+            unattachedCreatedOriginObjects.add(createdOriginObject);
+            undetachedDeletedOriginObjects.remove(createdOriginObject);
+        }
+
+        @Override
+        public void trackUndetachedDeletedOriginObject(EObject originObject) {
+            if (!isAttached(originObject)) {
+                throw new IllegalArgumentException();
+            }
+
+            undetachedDeletedOriginObjects.add(originObject);
+            unattachedCreatedOriginObjects.remove(originObject);
+        }
+
+        @Override
+        public void trackOriginObjectAttachmentChange(EObject originObject) {
+            if (isAttached(originObject)) {
+                unattachedCreatedOriginObjects.remove(originObject);
+            } else {
+                undetachedDeletedOriginObjects.remove(originObject);
+            }
+        }
+
+        public boolean isAttachmentStateOk() {
+            return unattachedCreatedOriginObjects.isEmpty() && undetachedDeletedOriginObjects.isEmpty();
+        }
+
+        private boolean isAttached(EObject originObject) {
+            return originObject.eResource() != null;
         }
 
         @Override

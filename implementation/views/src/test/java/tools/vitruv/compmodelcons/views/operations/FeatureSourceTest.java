@@ -7,8 +7,8 @@ import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
 import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.bindings.FeatureBinding;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
-
-import java.util.Optional;
+import tools.vitruv.compmodelcons.views.bindings.ValueBinding;
+import tools.vitruv.compmodelcons.views.bindings.ValueUpdateBinding;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -39,7 +39,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         FeatureBinding result = operation.GET(simpleBinding, context);
 
         // Assertions
-        assertEquals(numEmployeesValue, result.value());
+        assertEquals(new ValueBinding.Single(numEmployeesValue), result.value());
         assertThrows(UnsupportedOperationException.class, result::viewSubjectObject);
         assertEquals(1, result.originSubjectObjects().size());
         assertEquals(restaurant, result.originSubjectObjects().get(0));
@@ -74,10 +74,10 @@ class FeatureSourceTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createReplaceSingleAttributeChange(simple, numberAttribute, numEmployeesValue, numEmployeesValue + 3);
 
         // Action
-        result = operation.PUT(change, result, simpleBinding, Optional.of(numEmployeesValue + 3), context);
+        result = operation.PUT(change, result, simpleBinding, new ValueUpdateBinding.Replace(numEmployeesValue + 3), context);
 
         // Assertions
-        assertEquals(numEmployeesValue + 3, result.value());
+        assertEquals(new ValueBinding.Single(numEmployeesValue + 3), result.value());
         assertEquals(numEmployeesValue + 3, restaurant.eGet(numEmployees));
     }
 
@@ -110,10 +110,10 @@ class FeatureSourceTest extends AbstractOperationTest {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createUnsetFeatureChange(simple, numberAttribute);
 
         // Action
-        result = operation.PUT(change, result, simpleBinding, Optional.empty(), context);
+        result = operation.PUT(change, result, simpleBinding, new ValueUpdateBinding.Unset(), context);
 
         // Assertions
-        assertEquals(0, result.value());
+        assertEquals(new ValueBinding.Unset(), result.value());
         assertEquals(0, restaurant.eGet(numEmployees));
     }
 }

@@ -68,7 +68,7 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         EAttribute employeeCount = DynamicModels.createEAttribute(simpleClass, "employeeCount", EcorePackage.eINSTANCE.getEInt());
 
         // Operation Setup
-        Root operation = new Root(rootClass, Optional.empty(), List.of(new Root.Contained(simpleContainment, new Project(simpleClass, new Source(restaurantClass), List.of(new FeatureProject(employeeCount, new FeatureSource(numEmployees)))))));
+        Root operation = new Root(rootClass, Optional.empty(), List.of(new Root.Target(simpleContainment, new Project(simpleClass, new Source(restaurantClass), List.of(new FeatureProject(Optional.of(numEmployees), employeeCount, new FeatureSource(numEmployees)))))));
 
         // Action: Get the view.
         List<ObjectBinding> results = new ArrayList<>(operation.GET(context));

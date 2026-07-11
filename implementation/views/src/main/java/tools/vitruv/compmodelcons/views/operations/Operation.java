@@ -24,7 +24,7 @@ public interface Operation {
     /**
      * Apply a change of the view towards the origin.
      *
-     * @param change  the change of the view, using an extended change model
+     * @param change  the change of the view
      * @param target  the object binding of the changed object; must be a binding previously produced by this operation
      * @param context the context of the operation
      * @return the new object binding of the changed object

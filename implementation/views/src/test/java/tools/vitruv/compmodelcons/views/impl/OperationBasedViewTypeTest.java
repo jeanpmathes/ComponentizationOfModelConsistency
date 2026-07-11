@@ -96,7 +96,7 @@ class OperationBasedViewTypeTest {
                                         new Source(Pcm_mockupPackage.eINSTANCE.getRepository()),
                                         List.of())),
                         List.of(
-                                new Root.Contained(
+                                new Root.Target(
                                 nonRootContainment,
                                         new Project(
                                                 viewNonRootClass,
@@ -144,13 +144,13 @@ class OperationBasedViewTypeTest {
                                         List.of()
                                 )),
                         List.of(
-                                new Root.Contained(
+                                new Root.Target(
                                         nonRootContainment,
                                         new Project(
                                                 viewNonRootClass,
                                                 new Source(Pcm_mockupPackage.eINSTANCE.getComponent()),
                                                 List.of(
-                                                        new FeatureProject(nonRootIdAttribute, new FeatureSource(Pcm_mockupPackage.eINSTANCE.getIdentified_Id()))
+                                                        new FeatureProject(Optional.of(Pcm_mockupPackage.eINSTANCE.getIdentified_Id()), nonRootIdAttribute, new FeatureSource(Pcm_mockupPackage.eINSTANCE.getIdentified_Id()))
                                                 )))));
             }
         }

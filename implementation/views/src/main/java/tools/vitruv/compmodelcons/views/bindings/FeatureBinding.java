@@ -5,7 +5,7 @@ import org.eclipse.emf.ecore.EObject;
 import java.util.List;
 
 public interface FeatureBinding {
-    static FeatureBinding ofOriginObject(EObject eObject, Object value) {
+    static FeatureBinding ofOriginObject(EObject eObject, ValueBinding value) {
         return new FeatureBinding() {
             @Override
             public List<EObject> originSubjectObjects() {
@@ -18,7 +18,7 @@ public interface FeatureBinding {
             }
 
             @Override
-            public Object value() {
+            public ValueBinding value() {
                 return value;
             }
         };
@@ -28,5 +28,5 @@ public interface FeatureBinding {
 
     EObject viewSubjectObject();
 
-    Object value();
+    ValueBinding value();
 }

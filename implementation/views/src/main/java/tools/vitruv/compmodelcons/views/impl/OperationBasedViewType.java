@@ -11,6 +11,10 @@ import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.change.atomic.EChangeUtil;
+import tools.vitruv.change.atomic.eobject.DeleteEObject;
+import tools.vitruv.change.atomic.eobject.EObjectSubtractedEChange;
 import tools.vitruv.change.atomic.hid.HierarchicalId;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.change.composite.recording.ChangeRecorder;
@@ -26,9 +30,7 @@ import tools.vitruv.framework.views.impl.AbstractViewType;
 import tools.vitruv.framework.views.impl.IdentityMappingViewType;
 import tools.vitruv.framework.views.impl.ModifiableView;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 public abstract class OperationBasedViewType extends AbstractViewType<AllSelector, HierarchicalId> {
@@ -211,11 +213,71 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
         public void commit() {
             VitruviusChange<EObject> change = changeRecorder.endRecording();
 
-            PutContext context = new PutContextImpl();
-            change.getEChanges().forEach(eChange -> viewRoot = getStructure().PUT(eChange, viewRoot, context));
+            var context = new PutContextImpl();
+            reorderChanges(change.getEChanges()).forEach(eChange -> viewRoot = getStructure().PUT(eChange, viewRoot, context));
+
+            context.validateAttachmentState();
 
             viewChanged = false;
             changeRecorder.beginRecording();
+        }
+
+        private List<EChange<EObject>> reorderChanges(List<EChange<EObject>> changes) {
+            // While the documentation of ChangeRecorder.endRecording() states that the deletions are inserted
+            // right after the change causing the removal, that is not the case.
+            // See ChangeRecorder.postprocessRemovals() and its documentation.
+            // However, I would really like it to be the case.
+
+            List<EChange<EObject>> reorderedChanges = new ArrayList<>(changes);
+
+            int numberOfDeletionsToReorder = 0;
+            for (int index = reorderedChanges.size() - 1; index >= 0; index--) {
+                if (reorderedChanges.get(index) instanceof DeleteEObject<EObject>) {
+                    numberOfDeletionsToReorder += 1;
+                } else {
+                    break;
+                }
+            }
+
+            while (numberOfDeletionsToReorder > 0) {
+                DeleteEObject<EObject> deletion = (DeleteEObject<EObject>) reorderedChanges.get(reorderedChanges.size() - 1);
+                reorderedChanges.remove(reorderedChanges.size() - 1);
+
+                List<EChange<EObject>> associatedDeletions = new ArrayList<>();
+                for (int index = reorderedChanges.size() - 1; index >= 0; index--) {
+                    EChange<EObject> eChange = reorderedChanges.get(index);
+                    if (eChange instanceof DeleteEObject<EObject> subtractedEChange
+                            && EChangeUtil.isContainmentRemoval(subtractedEChange)
+                            && subtractedEChange.getAffectedElement() == deletion.getAffectedElement()) {
+                        associatedDeletions.add(0, eChange);
+                        reorderedChanges.remove(index);
+                    } else {
+                        break;
+                    }
+                }
+
+                int indexOfCause = -1;
+
+                for (int index = reorderedChanges.size() - 1; index >= 0; index--) {
+                    EChange<EObject> eChange = reorderedChanges.get(index);
+                    if (eChange instanceof EObjectSubtractedEChange<EObject> subtractedEChange && EChangeUtil.isContainmentRemoval(subtractedEChange) && subtractedEChange.getOldValue() == deletion.getAffectedElement()) {
+                        indexOfCause = index;
+                        break;
+                    }
+                }
+
+                if (indexOfCause == -1) {
+                    throw new IllegalStateException("Could not find the cause of the deletion");
+                }
+
+                int indexRightAfterCause = indexOfCause + 1;
+                reorderedChanges.add(indexRightAfterCause, deletion);
+                reorderedChanges.addAll(indexRightAfterCause, associatedDeletions);
+
+                numberOfDeletionsToReorder -= associatedDeletions.size() + 1;
+            }
+
+            return reorderedChanges;
         }
 
         @Override
@@ -378,6 +440,9 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
         }
 
         private final class PutContextImpl extends AbstractContext implements PutContext {
+            private final Set<EObject> unattachedCreatedOriginObjects = new HashSet<>();
+            private final Set<EObject> undetachedDeletedOriginObjects = new HashSet<>();
+
             @Override
             public Resource getViewModel() {
                 return viewModel;
@@ -393,6 +458,36 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
             public void removeRootFromOriginModel(EPackage originPackage, EObject originObject) {
                 // The main reason for this is that the View interface does not offer the methods to do so.
                 throw new UnsupportedOperationException("Removing roots from origin models through views not supported");
+            }
+
+            @Override
+            public void trackUnattachedCreatedOriginObject(EObject createdOriginObject) {
+                unattachedCreatedOriginObjects.add(createdOriginObject);
+                undetachedDeletedOriginObjects.remove(createdOriginObject);
+            }
+
+            @Override
+            public void trackUndetachedDeletedOriginObject(EObject originObject) {
+                undetachedDeletedOriginObjects.add(originObject);
+                unattachedCreatedOriginObjects.remove(originObject);
+            }
+
+            @Override
+            public void trackOriginObjectAttachmentChange(EObject originObject) {
+                if (originObject.eResource() != null) {
+                    unattachedCreatedOriginObjects.remove(originObject);
+                } else {
+                    undetachedDeletedOriginObjects.remove(originObject);
+                }
+            }
+
+            public void validateAttachmentState() {
+                if (!unattachedCreatedOriginObjects.isEmpty()) {
+                    throw new IllegalStateException("Failed to attach all created objects in the origin models, possibly because of ambiguous containment");
+                }
+                if (!undetachedDeletedOriginObjects.isEmpty()) {
+                    throw new IllegalStateException("Failed to detach all deleted objects in the origin models, possibly because of ambiguous containment");
+                }
             }
         }
     }

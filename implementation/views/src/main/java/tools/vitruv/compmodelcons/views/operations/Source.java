@@ -8,9 +8,9 @@ import org.jetbrains.annotations.UnknownNullability;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.eobject.CreateEObject;
 import tools.vitruv.change.atomic.eobject.DeleteEObject;
-import tools.vitruv.change.atomic.root.InsertRootEObject;
-import tools.vitruv.change.atomic.root.RemoveRootEObject;
-import tools.vitruv.compmodelcons.views.*;
+import tools.vitruv.compmodelcons.views.DynamicModels;
+import tools.vitruv.compmodelcons.views.GetContext;
+import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 
 import java.util.HashSet;
@@ -58,12 +58,8 @@ public class Source implements Operation {
             }
         }
 
-        if (containers.isEmpty()) {
-            throw new IllegalArgumentException("No container found for " + sourceClass);
-        }
-
-        if (containers.size() > 1) {
-            throw new IllegalArgumentException("Multiple containers found for " + sourceClass);
+        if (containers.size() != 1) {
+            return null;
         }
 
         return containers.iterator().next();
@@ -82,8 +78,25 @@ public class Source implements Operation {
             }
 
             EObject created = sourceClass.getEPackage().getEFactoryInstance().create(sourceClass);
-
             context.getCorrespondences().addCorrespondence(List.of(created), createEObject.getAffectedElement());
+
+            if (isRoot) {
+                context.addRootToOriginModel(sourceClass.getEPackage(), created);
+            } else if (container != null) {
+                List<EObject> candidates = context.getOriginObjects(container.getEContainingClass());
+
+                if (candidates.size() == 1) {
+                    if (container.isMany()) {
+                        DynamicModels.getList(candidates.get(0), container).add(created);
+                    } else {
+                        candidates.get(0).eSet(container, created);
+                    }
+                } else {
+                    context.trackUnattachedCreatedOriginObject(createEObject);
+                }
+            } else {
+                context.trackUnattachedCreatedOriginObject(createEObject);
+            }
 
             return ObjectBinding.ofOriginObject(created);
         }
@@ -96,53 +109,23 @@ public class Source implements Operation {
             EObject deleted = target.originObjects().get(0);
             context.getCorrespondences().removeCorrespondence(List.of(deleted), deleteEObject.getAffectedElement());
 
+            if (isRoot) {
+                if (deleted.eResource() != null) {
+                    context.removeRootFromOriginModel(sourceClass.getEPackage(), deleted);
+                }
+            } else if (container != null) {
+                if (deleted.eContainer() != null) {
+                    if (container.isMany()) {
+                        DynamicModels.getList(deleted.eContainer(), container).remove(deleted);
+                    } else {
+                        deleted.eContainer().eUnset(container);
+                    }
+                }
+            } else {
+                context.trackUndetachedDeletedOriginObject(deleteEObject);
+            }
+
             return ObjectBinding.empty();
-        }
-
-        if (change instanceof InsertRootEObject<EObject> || change instanceof InsertNonRootEObject<EObject>) {
-            if (target.originObjects().size() != 1) {
-                throw new IllegalArgumentException("Cannot insert an origin object if that object is not singular");
-            }
-
-            EObject inserted = target.originObjects().get(0);
-
-            if (isRoot) {
-                context.addRootToOriginModel(sourceClass.getEPackage(), inserted);
-            } else {
-                List<EObject> candidates = context.getOriginObjects(container.getEContainingClass());
-
-                if (candidates.size() != 1) {
-                    throw new IllegalArgumentException("Could not find a singular container for insertion");
-                }
-
-                if (container.isMany()) {
-                    DynamicModels.getList(candidates.get(0), container).add(inserted);
-                } else {
-                    candidates.get(0).eSet(container, inserted);
-                }
-            }
-
-            return ObjectBinding.ofOriginObject(inserted);
-        }
-
-        if (change instanceof RemoveRootEObject<EObject> || change instanceof RemoveNonRootEObject<EObject>) {
-            if (target.originObjects().size() != 1) {
-                throw new IllegalArgumentException("Cannot remove an origin object if that object is not singular");
-            }
-
-            EObject removed = target.originObjects().get(0);
-
-            if (isRoot) {
-                context.removeRootFromOriginModel(sourceClass.getEPackage(), removed);
-            } else {
-                if (container.isMany()) {
-                    DynamicModels.getList(removed.eContainer(), container).remove(removed);
-                } else {
-                    removed.eContainer().eUnset(container);
-                }
-            }
-
-            return ObjectBinding.ofOriginObject(removed);
         }
 
         throw new IllegalArgumentException("Inappropriate change type: " + change.getClass());

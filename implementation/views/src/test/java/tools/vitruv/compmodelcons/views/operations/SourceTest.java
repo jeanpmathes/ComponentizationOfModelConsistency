@@ -9,8 +9,6 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
 import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
-import tools.vitruv.compmodelcons.views.impl.InsertNonRootEObjectImpl;
-import tools.vitruv.compmodelcons.views.impl.RemoveNonRootEObjectImpl;
 
 import java.util.List;
 
@@ -97,12 +95,11 @@ public class SourceTest extends AbstractOperationTest {
     }
 
     @Test
-    public void testPufOfRootInsertionShouldInsertRootElementIntoOriginModel() {
+    public void testPufOfRootCreationShouldInsertRootElementIntoOriginModel() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
         EClass storeClass = store.eClass();
         List<EObject> stores = context.getOriginObjects(storeClass);
-        EObject otherStore = storeClass.getEPackage().getEFactoryInstance().create(storeClass);
 
         // ViewType Setup
         EPackage viewType = DynamicModels.createEPackage();
@@ -115,16 +112,16 @@ public class SourceTest extends AbstractOperationTest {
         operation.GET(context);
 
         // Pre-Action Change
-        EObject inserted = DynamicModels.createEObject(emptyClass);
-        context.getViewModel().getContents().add(inserted);
-        int index = context.getViewModel().getContents().indexOf(inserted);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertRootChange(inserted, context.getViewModel(), index);
+        EObject created = DynamicModels.createEObject(emptyClass);
+        context.getViewModel().getContents().add(created);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
 
         // Action
-        ObjectBinding result = operation.PUT(change, ObjectBinding.ofOriginObject(otherStore), context);
+        ObjectBinding result = operation.PUT(change, ObjectBinding.ofViewObject(created), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
+        EObject otherStore = assertOneAdded(stores, context.getOriginObjects(storeClass));
         assertEquals(1, result.originObjects().size());
         assertEquals(otherStore, result.originObjects().get(0));
         assertEquals(stores.size() + 1, context.getOriginObjects(storeClass).size());
@@ -132,12 +129,11 @@ public class SourceTest extends AbstractOperationTest {
     }
 
     @Test
-    public void testPufOfNonRootInsertionShouldInsertRootElementIntoOriginModel() {
+    public void testPufOfNonRootCreationShouldInsertRootElementIntoOriginModel() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
         EClass storeClass = store.eClass();
         List<EObject> stores = context.getOriginObjects(storeClass);
-        EObject otherStore = storeClass.getEPackage().getEFactoryInstance().create(storeClass);
 
         // ViewType Setup
         EPackage viewType = DynamicModels.createEPackage();
@@ -155,15 +151,16 @@ public class SourceTest extends AbstractOperationTest {
         operation.GET(context);
 
         // Pre-Action Change
-        EObject inserted = DynamicModels.createEObject(emptyClass);
-        DynamicModels.getList(root, emptyContainment).add(inserted);
-        EChange<EObject> change = new InsertNonRootEObjectImpl<>(inserted);
+        EObject created = DynamicModels.createEObject(emptyClass);
+        DynamicModels.getList(root, emptyContainment).add(created);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
 
         // Action
-        ObjectBinding result = operation.PUT(change, ObjectBinding.ofOriginObject(otherStore), context);
+        ObjectBinding result = operation.PUT(change, ObjectBinding.ofViewObject(created), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
+        EObject otherStore = assertOneAdded(stores, context.getOriginObjects(storeClass));
         assertEquals(1, result.originObjects().size());
         assertEquals(otherStore, result.originObjects().get(0));
         assertEquals(stores.size() + 1, context.getOriginObjects(storeClass).size());
@@ -171,7 +168,7 @@ public class SourceTest extends AbstractOperationTest {
     }
 
     @Test
-    public void testPutOfRootRemovalShouldRemoveRootElementFromOriginModel() {
+    public void testPutOfRootDeletionShouldRemoveRootElementFromOriginModel() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
         EClass storeClass = store.eClass();
@@ -188,25 +185,22 @@ public class SourceTest extends AbstractOperationTest {
         List<ObjectBinding> results = operation.GET(context);
 
         // Pre-Action Change
-        EObject removed = DynamicModels.createEObject(emptyClass);
-        context.getViewModel().getContents().add(removed);
-        int index = context.getViewModel().getContents().indexOf(removed);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, context.getViewModel(), index);
+        EObject deleted = DynamicModels.createEObject(emptyClass);
+        context.getViewModel().getContents().add(deleted);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(deleted);
 
         // Action
         ObjectBinding result = operation.PUT(change, results.get(0), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
-        assertEquals(1, result.originObjects().size());
-        assertEquals(store, result.originObjects().get(0));
-        assertEquals(results.get(0).originObjects().get(0), result.originObjects().get(0));
+        assertEquals(0, result.originObjects().size());
         assertEquals(stores.size() - 1, context.getOriginObjects(storeClass).size());
         assertFalse(context.getOriginObjects(storeClass).contains(store));
     }
 
     @Test
-    public void testPutOfNonRootRemovalShouldRemoveRootElementFromOriginModel() {
+    public void testPutOfNonRootDeleteShouldRemoveRootElementFromOriginModel() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
         EClass storeClass = store.eClass();
@@ -228,29 +222,26 @@ public class SourceTest extends AbstractOperationTest {
         List<ObjectBinding> results = operation.GET(context);
 
         // Pre-Action Change
-        EObject removed = DynamicModels.createEObject(emptyClass);
-        DynamicModels.getList(root, emptyContainment).add(removed);
-        EChange<EObject> change = new RemoveNonRootEObjectImpl<>(removed);
+        EObject deleted = DynamicModels.createEObject(emptyClass);
+        DynamicModels.getList(root, emptyContainment).add(deleted);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(deleted);
 
         // Action
         ObjectBinding result = operation.PUT(change, results.get(0), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
-        assertEquals(1, result.originObjects().size());
-        assertEquals(store, result.originObjects().get(0));
-        assertEquals(results.get(0).originObjects().get(0), result.originObjects().get(0));
+        assertEquals(0, result.originObjects().size());
         assertEquals(stores.size() - 1, context.getOriginObjects(storeClass).size());
         assertFalse(context.getOriginObjects(storeClass).contains(store));
     }
 
     @Test
-    public void testPufOfRootInsertionShouldInsertNonRootElementIntoOriginContainer() {
+    public void testPufOfRootCreationShouldInsertNonRootElementIntoOriginContainer() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
         EClass restaurantClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
-        EObject restaurant = DynamicModels.createEObject(restaurantClass);
 
         // ViewType Setup
         EPackage viewType = DynamicModels.createEPackage();
@@ -263,16 +254,16 @@ public class SourceTest extends AbstractOperationTest {
         operation.GET(context);
 
         // Pre-Action Change
-        EObject inserted = DynamicModels.createEObject(emptyClass);
-        context.getViewModel().getContents().add(inserted);
-        int index = context.getViewModel().getContents().indexOf(inserted);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertRootChange(inserted, context.getViewModel(), index);
+        EObject created = DynamicModels.createEObject(emptyClass);
+        context.getViewModel().getContents().add(created);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
 
         // Action
-        ObjectBinding result = operation.PUT(change, ObjectBinding.ofOriginObject(restaurant), context);
+        ObjectBinding result = operation.PUT(change, ObjectBinding.ofViewObject(created), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
+        EObject restaurant = assertOneAdded(restaurants, context.getOriginObjects(restaurantClass));
         assertEquals(1, result.originObjects().size());
         assertEquals(restaurant, result.originObjects().get(0));
         assertEquals(restaurants.size() + 1, context.getOriginObjects(restaurantClass).size());
@@ -282,12 +273,11 @@ public class SourceTest extends AbstractOperationTest {
     }
 
     @Test
-    public void testPufOfNonRootInsertionShouldInsertNonRootElementIntoOriginContainer() {
+    public void testPufOfNonRootCreationShouldInsertNonRootElementIntoOriginContainer() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
         EClass restaurantClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
-        EObject restaurant = DynamicModels.createEObject(restaurantClass);
 
         // ViewType Setup
         EPackage viewType = DynamicModels.createEPackage();
@@ -305,15 +295,16 @@ public class SourceTest extends AbstractOperationTest {
         operation.GET(context);
 
         // Pre-Action Change
-        EObject inserted = DynamicModels.createEObject(emptyClass);
-        DynamicModels.getList(root, emptyContainment).add(inserted);
-        EChange<EObject> change = new InsertNonRootEObjectImpl<>(inserted);
+        EObject created = DynamicModels.createEObject(emptyClass);
+        DynamicModels.getList(root, emptyContainment).add(created);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
 
         // Action
-        ObjectBinding result = operation.PUT(change, ObjectBinding.ofOriginObject(restaurant), context);
+        ObjectBinding result = operation.PUT(change, ObjectBinding.ofViewObject(created), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
+        EObject restaurant = assertOneAdded(restaurants, context.getOriginObjects(restaurantClass));
         assertEquals(1, result.originObjects().size());
         assertEquals(restaurant, result.originObjects().get(0));
         assertEquals(restaurants.size() + 1, context.getOriginObjects(restaurantClass).size());
@@ -323,7 +314,7 @@ public class SourceTest extends AbstractOperationTest {
     }
 
     @Test
-    public void testPutOfRootRemovalShouldRemoveNonRootElementFromOriginContainer() {
+    public void testPutOfRootDeletionShouldRemoveNonRootElementFromOriginContainer() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
         EClass restaurantClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
@@ -340,25 +331,23 @@ public class SourceTest extends AbstractOperationTest {
         List<ObjectBinding> results = operation.GET(context);
 
         // Pre-Action Change
-        EObject removed = viewType.getEFactoryInstance().create(emptyClass);
-        context.getViewModel().getContents().add(removed);
-        int index = context.getViewModel().getContents().indexOf(removed);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, context.getViewModel(), index);
+        EObject deleted = viewType.getEFactoryInstance().create(emptyClass);
+        context.getViewModel().getContents().add(deleted);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(deleted);
 
         // Action
         ObjectBinding result = operation.PUT(change, results.get(0), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
-        assertEquals(1, result.originObjects().size());
-        assertEquals(results.get(0).originObjects().get(0), result.originObjects().get(0));
+        assertEquals(0, result.originObjects().size());
         assertEquals(restaurants.size() - 1, context.getOriginObjects(restaurantClass).size());
-        assertFalse(context.getOriginObjects(restaurantClass).contains(result.originObjects().get(0)));
-        assertFalse(store.eContents().contains(result.originObjects().get(0)));
+        assertFalse(context.getOriginObjects(restaurantClass).contains(results.get(0).originObjects().get(0)));
+        assertFalse(store.eContents().contains(results.get(0).originObjects().get(0)));
     }
 
     @Test
-    public void testPutOfNonRootRemovalShouldRemoveNonRootElementFromOriginContainer() {
+    public void testPutOfNonRootDeletionShouldRemoveNonRootElementFromOriginContainer() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
         EClass restaurantClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
@@ -380,19 +369,18 @@ public class SourceTest extends AbstractOperationTest {
         List<ObjectBinding> results = operation.GET(context);
 
         // Pre-Action Change
-        EObject removed = DynamicModels.createEObject(emptyClass);
-        DynamicModels.getList(root, emptyContainment).add(removed);
-        EChange<EObject> change = new RemoveNonRootEObjectImpl<>(removed);
+        EObject deleted = DynamicModels.createEObject(emptyClass);
+        DynamicModels.getList(root, emptyContainment).add(deleted);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(deleted);
 
         // Action
         ObjectBinding result = operation.PUT(change, results.get(0), context);
 
         // Assertions
         assertThrows(UnsupportedOperationException.class, result::viewObject);
-        assertEquals(1, result.originObjects().size());
-        assertEquals(results.get(0).originObjects().get(0), result.originObjects().get(0));
+        assertEquals(0, result.originObjects().size());
         assertEquals(restaurants.size() - 1, context.getOriginObjects(restaurantClass).size());
-        assertFalse(context.getOriginObjects(restaurantClass).contains(result.originObjects().get(0)));
-        assertFalse(store.eContents().contains(result.originObjects().get(0)));
+        assertFalse(context.getOriginObjects(restaurantClass).contains(results.get(0).originObjects().get(0)));
+        assertFalse(store.eContents().contains(results.get(0).originObjects().get(0)));
     }
 }

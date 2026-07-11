@@ -15,10 +15,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class Project implements Operation {
+public class Project {
     private final EClass createdClass;
     private final Operation origin;
-    private final List<FeatureOperation> features;
+    private final List<FeatureProject> features;
 
     private final Map<EStructuralFeature, Integer> featureIndices = new java.util.HashMap<>();
 
@@ -32,22 +32,23 @@ public class Project implements Operation {
         }
     }
 
-    @Override
-    public List<ObjectBinding> GET(GetContext context) {
+    public List<ObjectBinding> beginGetByCreatingViewObjects(GetContext context) {
         return origin.GET(context).stream().map(originBinding -> {
             EObject result = createdClass.getEPackage().getEFactoryInstance().create(createdClass);
 
             context.getCorrespondences().addCorrespondence(originBinding.originObjects(), result);
 
-            ProjectObjectBindingImpl projected = new ProjectObjectBindingImpl(originBinding, result, createUninitializedFeatureBindings());
-
-            initializeFeatureBindings(projected.featureBindings, projected, context);
-
-            return (ObjectBinding) projected;
+            return (ObjectBinding) new ProjectObjectBindingImpl(originBinding, result, createUninitializedFeatureBindings());
         }).toList();
     }
 
-    public ObjectBinding PUT(EChange<EObject> change, ObjectBinding target, PutContext context) {
+    public void completeGetByCallingGetOnFeatures(ObjectBinding subject, GetContext context) {
+        ProjectObjectBindingImpl projected = (ProjectObjectBindingImpl) subject;
+
+        initializeFeatureBindings(projected.featureBindings, projected, context);
+    }
+
+    public ObjectBinding doPut(EChange<EObject> change, ObjectBinding target, PutContext context) {
         if (!target.viewObject().eClass().equals(createdClass)) {
             throw new IllegalArgumentException("Cannot put a change on an object that is not of the created class");
         }
@@ -66,8 +67,7 @@ public class Project implements Operation {
 
         if (change instanceof FeatureEChange<EObject, ?> featureEChange) {
             int featureIndex = featureIndices.get(featureEChange.getAffectedFeature());
-            //noinspection OptionalAssignedToNull
-            featureBindings.set(featureIndex, features.get(featureIndex).PUT(change, featureBindings.get(featureIndex), target, null, context));
+            featureBindings.set(featureIndex, features.get(featureIndex).doPut(change, featureBindings.get(featureIndex), target, context));
             return new ProjectObjectBindingImpl(peeledTarget, viewObject, featureBindings);
         } else {
             ObjectBinding originBinding = origin.PUT(change, peeledTarget, context);
@@ -83,7 +83,7 @@ public class Project implements Operation {
     }
 
 
-    public Optional<EChange<EObject>> GET_CHANGE(EChange<EObject> change) {
+    public Optional<EChange<EObject>> doGetChange(EChange<EObject> change) {
         return Optional.empty();
     }
 
@@ -99,7 +99,7 @@ public class Project implements Operation {
 
     private void initializeFeatureBindings(List<FeatureBinding> featureBindings, ObjectBinding subject, GetContext context) {
         for (int index = 0; index < featureBindings.size(); index++) {
-            featureBindings.set(index, features.get(index).GET(subject, context));
+            featureBindings.set(index, features.get(index).doGet(subject, context));
         }
     }
 

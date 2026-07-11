@@ -1,5 +1,6 @@
 package tools.vitruv.compmodelcons.views;
 
+import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 
 import java.util.List;
@@ -16,10 +17,12 @@ import java.util.List;
  *     </li>
  * </ol>
  */
-public interface ViewCorrespondences { // todo: evaluate whether correspondences are actually needed
-    List<EObject> getCorrespondingViewObjectsForOriginObjects(List<EObject> originObjects);
+public interface ViewCorrespondences {
+    EObject getCorrespondingViewObjectForOriginObjects(List<EObject> originObjects, EClass viewClass);
 
-    List<EObject> getCorrespondingOriginObjectsForViewObjects(List<EObject> viewObjects);
+    List<EObject> getCorrespondingOriginObjectsForViewObject(EObject viewObject);
 
-    boolean correspond(List<EObject> originObjects, EObject viewObjects);
+    EObject getCorrespondingViewObjectForPartialOriginObjects(EObject originObject, EClass viewClass);
+
+    boolean correspond(List<EObject> originObjects, EObject viewObject);
 }

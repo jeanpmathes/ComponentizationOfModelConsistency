@@ -6,6 +6,7 @@ import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.FeatureBinding;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
+import tools.vitruv.compmodelcons.views.bindings.ValueUpdateBinding;
 
 import java.util.Optional;
 
@@ -17,23 +18,23 @@ public interface FeatureOperation {
     /**
      * Produce a feature binding, performing a step from origin to view.
      *
-     * @param subject the object binding of the subject that contains the relevant feature; must have a view object
+     * @param subjectBinding the object binding of the subject that contains the relevant feature; must have a view object
      * @param context the context of the operation
      * @return the feature binding
      */
-    FeatureBinding GET(ObjectBinding subject, GetContext context);
+    FeatureBinding GET(ObjectBinding subjectBinding, GetContext context);
 
     /**
      * Apply a change of the view towards the origin.
      *
-     * @param change  the change of the view, using an extended change model
+     * @param change  the change of the view
      * @param feature the feature binding of the changed feature; must be a binding previously produced by this operation
-     * @param subject the object binding of the subject that contains the relevant feature; must have a view object
-     * @param value   the value of the view feature; is empty when unset
+     * @param subjectBinding the object binding of the subject that contains the relevant feature; must have a view object
+     * @param value   the value update of the view feature
      * @param context the context of the operation
      * @return the new feature binding of the changed feature
      */
-    FeatureBinding PUT(EChange<EObject> change, FeatureBinding feature, ObjectBinding subject, Optional<Object> value, PutContext context);
+    FeatureBinding PUT(EChange<EObject> change, FeatureBinding feature, ObjectBinding subjectBinding, ValueUpdateBinding value, PutContext context);
 
     Optional<EChange<EObject>> GET_CHANGE(EChange<EObject> change);
 }

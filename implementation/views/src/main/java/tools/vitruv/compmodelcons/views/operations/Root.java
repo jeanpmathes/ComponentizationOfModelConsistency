@@ -7,91 +7,111 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.feature.FeatureEChange;
 import tools.vitruv.change.atomic.feature.reference.InsertEReference;
 import tools.vitruv.change.atomic.feature.reference.RemoveEReference;
+import tools.vitruv.change.atomic.root.RootEChange;
 import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
-import tools.vitruv.compmodelcons.views.impl.InsertNonRootEObjectImpl;
-import tools.vitruv.compmodelcons.views.impl.RemoveNonRootEObjectImpl;
 
 import java.util.*;
 import java.util.stream.Stream;
 
 public class Root implements Operation {
     private final EClass rootClass;
-    private final Operation root;
-    private final List<Contained> contained;
+    private final boolean isRootImplicit;
+    private final Project root;
+    private final List<Target> targets;
 
-    private final Map<EClass, Integer> containmentIndices = new HashMap<>();
-    private final Set<EReference> containmentReferences = new HashSet<>();
+    private final Map<EClass, Integer> targetIndices = new HashMap<>();
+    private final Set<EReference> targetContainmentReferences = new HashSet<>();
 
-    public Root(EClass rootClass, Optional<Operation> root, List<Contained> contained) {
+    public Root(EClass rootClass, Optional<Project> root, List<Target> targets) {
         this.rootClass = rootClass;
+        this.isRootImplicit = root.isEmpty();
         this.root = root.orElse(new Project(rootClass, new Empty(), List.of()));
-        this.contained = contained;
+        this.targets = targets;
 
-        for (int index = 0; index < contained.size(); index++) {
-            containmentIndices.put(contained.get(index).reference().getEReferenceType(), index);
-            containmentReferences.add(contained.get(index).reference());
+        for (int index = 0; index < targets.size(); index++) {
+            targetIndices.put(targets.get(index).reference().getEReferenceType(), index);
+            targetContainmentReferences.add(targets.get(index).reference());
         }
     }
 
     @Override
     public List<ObjectBinding> GET(GetContext context) {
-        return root.GET(context).stream().map(rootBinding -> {
-            context.getViewModel().getContents().add(rootBinding.viewObject());
+        List<RootObjectBindingImpl> roots = root.beginGetByCreatingViewObjects(context).stream()
+                .map(rootBinding -> {
+                    context.getViewModel().getContents().add(rootBinding.viewObject());
+                    return new RootObjectBindingImpl(rootBinding, targets.stream()
+                            .map(entry -> {
+                                Map<EObject, ObjectBinding> result = new HashMap<>();
+                                for (ObjectBinding targetBinding : entry.operation().beginGetByCreatingViewObjects(context)) {
+                                    result.put(targetBinding.viewObject(), targetBinding);
+                                    DynamicModels.getList(rootBinding.viewObject(), entry.reference()).add(targetBinding.viewObject());
+                                }
+                                return result;
+                            }).toList());
+                }).toList();
 
-            return (ObjectBinding) new RootObjectBindingImpl(rootBinding, contained.stream()
-                    .map(entry -> {
-                        Map<EObject, ObjectBinding> result = new HashMap<>();
-                        for (ObjectBinding containedBinding : entry.operation().GET(context)) {
-                            result.put(containedBinding.viewObject(), containedBinding);
-                            DynamicModels.getList(rootBinding.viewObject(), entry.reference()).add(containedBinding.viewObject());
-                        }
-                        return result;
-                    }).toList());
-        }).toList();
+        for (RootObjectBindingImpl rootBinding : roots) {
+            root.completeGetByCallingGetOnFeatures(rootBinding.rootBinding, context);
+            for (int targetIndex = 0; targetIndex < targets.size(); targetIndex++) {
+                for (var targetBinding : rootBinding.targetBindings.get(targetIndex).values()) {
+                    targets.get(targetIndex).operation().completeGetByCallingGetOnFeatures(targetBinding, context);
+                }
+            }
+        }
+
+        return roots.stream().map(rootBinding -> (ObjectBinding) rootBinding).toList();
     }
 
     @Override
     public ObjectBinding PUT(EChange<EObject> change, ObjectBinding target, PutContext context) {
+        if (change instanceof RootEChange<EObject>) {
+            if (isRootImplicit) {
+                throw new IllegalArgumentException("Cannot insert or remove the implicit root");
+            }
+            // The actual insertion / removal is handled by the associated creation / deletion changes.
+            return target;
+        }
+
         if (change instanceof InsertEReference<EObject> insertEReference && isContainmentRelevantChange(insertEReference)) {
-            change = new InsertNonRootEObjectImpl<>(insertEReference.getNewValue());
+            return target;
         }
         if (change instanceof RemoveEReference<EObject> removeEReference && isContainmentRelevantChange(removeEReference)) {
-            change = new RemoveNonRootEObjectImpl<>(removeEReference.getOldValue());
+            return target;
         }
 
         EObject affectedViewObject = DynamicModels.getAffectedEObject(change);
 
         if (affectedViewObject.eClass().equals(rootClass)) {
             if (target.originObjects().isEmpty()) {
-                ObjectBinding rootBinding = root.PUT(change, ObjectBinding.ofViewObject(affectedViewObject), context);
+                ObjectBinding rootBinding = root.doPut(change, ObjectBinding.ofViewObject(affectedViewObject), context);
                 return new RootObjectBindingImpl(
                         rootBinding,
-                        Stream.generate(() -> (Map<EObject, ObjectBinding>) new HashMap<EObject, ObjectBinding>()).limit(contained.size()).toList());
+                        Stream.generate(() -> (Map<EObject, ObjectBinding>) new HashMap<EObject, ObjectBinding>()).limit(targets.size()).toList());
             } else {
                 RootObjectBindingImpl rootTarget = (RootObjectBindingImpl) target;
                 ObjectBinding peeledTarget = rootTarget.rootBinding;
-                ObjectBinding rootBinding = root.PUT(change, peeledTarget, context);
-                return new RootObjectBindingImpl(rootBinding, rootTarget.containedBindings);
+                ObjectBinding rootBinding = root.doPut(change, peeledTarget, context);
+                return new RootObjectBindingImpl(rootBinding, rootTarget.targetBindings);
             }
         } else {
             RootObjectBindingImpl rootTarget = (RootObjectBindingImpl) target;
-            int classIndex = containmentIndices.get(affectedViewObject.eClass());
-            ObjectBinding peeledTarget = Optional.ofNullable(rootTarget.containedBindings.get(classIndex).get(affectedViewObject)).orElse(ObjectBinding.ofViewObject(affectedViewObject));
-            ObjectBinding containedBinding = contained.get(classIndex).operation().PUT(change, peeledTarget, context);
-            if (containedBinding.originObjects().isEmpty()) {
-                rootTarget.containedBindings.get(classIndex).remove(affectedViewObject);
+            int classIndex = targetIndices.get(affectedViewObject.eClass());
+            ObjectBinding peeledTarget = Optional.ofNullable(rootTarget.targetBindings.get(classIndex).get(affectedViewObject)).orElse(ObjectBinding.ofViewObject(affectedViewObject));
+            ObjectBinding targetBinding = targets.get(classIndex).operation().doPut(change, peeledTarget, context);
+            if (targetBinding.originObjects().isEmpty()) {
+                rootTarget.targetBindings.get(classIndex).remove(affectedViewObject);
             } else {
-                rootTarget.containedBindings.get(classIndex).put(affectedViewObject, containedBinding);
+                rootTarget.targetBindings.get(classIndex).put(affectedViewObject, targetBinding);
             }
-            return new RootObjectBindingImpl(rootTarget.rootBinding, rootTarget.containedBindings);
+            return new RootObjectBindingImpl(rootTarget.rootBinding, rootTarget.targetBindings);
         }
     }
 
     private boolean isContainmentRelevantChange(FeatureEChange<EObject, EReference> featureEChange) {
-        return featureEChange.getAffectedElement().eClass().equals(rootClass) && containmentReferences.contains(featureEChange.getAffectedFeature());
+        return featureEChange.getAffectedElement().eClass().equals(rootClass) && targetContainmentReferences.contains(featureEChange.getAffectedFeature());
     }
 
     @Override
@@ -99,12 +119,12 @@ public class Root implements Operation {
         return Optional.empty();
     }
 
-    public record Contained(EReference reference, Operation operation) {
+    public record Target(EReference reference, Project operation) {
 
     }
 
     private record RootObjectBindingImpl(ObjectBinding rootBinding,
-                                         List<Map<EObject, ObjectBinding>> containedBindings) implements ObjectBinding {
+                                         List<Map<EObject, ObjectBinding>> targetBindings) implements ObjectBinding {
 
         @Override
         public List<EObject> originObjects() {

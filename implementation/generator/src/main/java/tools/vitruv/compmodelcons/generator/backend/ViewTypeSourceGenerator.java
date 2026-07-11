@@ -122,7 +122,7 @@ public class ViewTypeSourceGenerator {
 
                 GenFeature containment = getGenFeature(rootClass.getEcoreClass(), reference.name());
 
-                builder.append("                ").append("new Root.Contained(\n");
+                builder.append("                ").append("new Root.Target(\n");
                 builder.append("                    ").append(containment.getQualifiedFeatureAccessor()).append(",\n");
                 appendProjectOperation(builder, 2, reference.type());
                 builder.append("                )");
@@ -145,7 +145,7 @@ public class ViewTypeSourceGenerator {
         builder.append(indent(level + 1)).append(targetClass.getQualifiedClassifierAccessor()).append(",\n");
         appendQueryOperations(builder, level + 1, Objects.requireNonNull(target.source()));
 
-        builder.append(",\n").append(indent(level)).append("List.of(");
+        builder.append(",\n").append(indent(level + 1)).append("List.of(");
         boolean first = true;
         for (AQRFeature feature : target.features()) {
             if (feature.kind() instanceof AQRFeature.Kind.Generate) {
@@ -155,10 +155,10 @@ public class ViewTypeSourceGenerator {
             builder.append(first ? "\n" : ",\n");
             first = false;
 
-            appendFeatureProjectOperation(builder, level + 1, targetClass, feature);
+            appendFeatureProjectOperation(builder, level + 2, targetClass, feature);
         }
         if (!first) {
-            builder.append("\n").append(indent(level));
+            builder.append("\n").append(indent(level + 1));
         }
         builder.append(")\n");
 
@@ -179,8 +179,14 @@ public class ViewTypeSourceGenerator {
         GenFeature createdFeature = getGenFeature(targetClass.getEcoreClass(), feature.name());
 
         importHelper.typeRef(FeatureProject.class);
+        importHelper.typeRef(Optional.class);
 
         builder.append(indent(level)).append("new FeatureProject(\n");
+        if (feature.kind() instanceof AQRFeature.Kind.Copy copy) {
+            builder.append(indent(level + 1)).append("Optional.of(").append(getQualifiedFeatureInstanceAccessor(copy.source())).append("),\n");
+        } else {
+            builder.append(indent(level + 1)).append("Optional.of()").append(",\n");
+        }
         builder.append(indent(level + 1)).append(createdFeature.getQualifiedFeatureAccessor()).append(",\n");
         if (feature.kind() instanceof AQRFeature.Kind.Copy copy) {
             appendFeatureSourceOperation(builder, level + 1, copy);
