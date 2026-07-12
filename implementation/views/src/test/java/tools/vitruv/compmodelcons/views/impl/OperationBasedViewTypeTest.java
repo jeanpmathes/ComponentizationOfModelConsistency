@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import pcm_mockup.Component;
+import pcm_mockup.PInterface;
 import pcm_mockup.Pcm_mockupPackage;
 import pcm_mockup.Repository;
 import tools.vitruv.change.atomic.eobject.*;
@@ -81,7 +82,7 @@ class OperationBasedViewTypeTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass viewRootClass = DynamicModels.createEClass(viewType);
         EClass viewNonRootClass = DynamicModels.createEClass(viewType);
-        EReference nonRootContainment = DynamicModels.createContainmentEReference(viewRootClass, "containment", viewNonRootClass);
+        EReference nonRootContainment = DynamicModels.createManyContainmentEReference(viewRootClass, "containment", viewNonRootClass);
 
         class TestViewType extends OperationBasedViewType {
             public TestViewType() {
@@ -127,7 +128,7 @@ class OperationBasedViewTypeTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass viewRootClass = DynamicModels.createEClass(viewType, "Root");
         EClass viewNonRootClass = DynamicModels.createEClass(viewType, "NonRoot");
-        EReference nonRootContainment = DynamicModels.createContainmentEReference(viewRootClass, "containment", viewNonRootClass);
+        EReference nonRootContainment = DynamicModels.createManyContainmentEReference(viewRootClass, "containment", viewNonRootClass);
         EAttribute nonRootIdAttribute = DynamicModels.createEAttribute(viewNonRootClass, "id", EcorePackage.eINSTANCE.getEString());
 
         class TestViewType extends OperationBasedViewType {
@@ -163,6 +164,86 @@ class OperationBasedViewTypeTest {
             EObject root = view.getRootObjects().iterator().next();
             EObject nonRoot1 = DynamicModels.getList(root, nonRootContainment).get(0);
             nonRoot1.eSet(nonRootIdAttribute, "NewID");
+        });
+    }
+
+    @Test
+    public void testInsertionAndRemovalOfInterfaces() {
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass viewRootClass = DynamicModels.createEClass(viewType, "Root");
+        EClass viewComponentClass = DynamicModels.createEClass(viewType, "Component");
+        EReference viewComponentContainment = DynamicModels.createManyContainmentEReference(viewRootClass, "allComponents", viewComponentClass);
+        EClass viewInterfaceClass = DynamicModels.createEClass(viewType, "Interface");
+        EReference viewInterfaceContainment = DynamicModels.createManyContainmentEReference(viewRootClass, "allInterfaces", viewInterfaceClass);
+        EReference viewComponent2InterfaceReference = DynamicModels.createEReference(viewComponentClass, "interface", viewInterfaceClass);
+
+        class TestViewType extends OperationBasedViewType {
+            public TestViewType() {
+                super("Test", List.of(Pcm_mockupPackage.eINSTANCE), viewType);
+            }
+
+            @Override
+            protected Root createStructure() {
+                return new Root(viewRootClass,
+                        Optional.of(
+                                new Project(viewRootClass,
+                                        new Source(Pcm_mockupPackage.eINSTANCE.getRepository()),
+                                        List.of()
+                                )),
+                        List.of(
+                                new Root.Target(
+                                        viewComponentContainment,
+                                        new Project(
+                                                viewComponentClass,
+                                                new Source(Pcm_mockupPackage.eINSTANCE.getComponent()),
+                                                List.of(
+                                                        new FeatureProject(Optional.of(Pcm_mockupPackage.eINSTANCE.getComponent_ProvidedInterface()), viewComponent2InterfaceReference, new FeatureSource(Pcm_mockupPackage.eINSTANCE.getComponent_ProvidedInterface()))
+                                                ))),
+                                new Root.Target(
+                                        viewInterfaceContainment,
+                                        new Project(
+                                                viewInterfaceClass,
+                                                new Source(Pcm_mockupPackage.eINSTANCE.getPInterface()),
+                                                List.of()
+                                        )
+                                )));
+            }
+        }
+
+        test(new TestViewType(), view -> {
+            Repository repository = view.getRootObjects(Repository.class).iterator().next();
+
+            PInterface interface1 = pcm.Interface();
+            repository.getInterfaces().add(interface1);
+            PInterface interface2 = pcm.Interface();
+            repository.getInterfaces().add(interface2);
+            PInterface interface3 = pcm.Interface();
+            repository.getInterfaces().add(interface3);
+
+            Component component1 = repository.getComponents().get(0);
+            component1.setProvidedInterface(interface1);
+
+            Component component2 = repository.getComponents().get(1);
+            component2.setProvidedInterface(interface2);
+
+            component1.setProvidedInterface(interface3);
+        }, view -> {
+            EObject root = view.getRootObjects().iterator().next();
+
+            EObject interface1 = DynamicModels.createEObject(viewInterfaceClass);
+            DynamicModels.getList(root, viewInterfaceContainment).add(interface1);
+            EObject interface2 = DynamicModels.createEObject(viewInterfaceClass);
+            DynamicModels.getList(root, viewInterfaceContainment).add(interface2);
+            EObject interface3 = DynamicModels.createEObject(viewInterfaceClass);
+            DynamicModels.getList(root, viewInterfaceContainment).add(interface3);
+
+            EObject component1 = DynamicModels.getList(root, viewComponentContainment).get(0);
+            component1.eSet(viewComponent2InterfaceReference, interface1);
+
+            EObject component2 = DynamicModels.getList(root, viewComponentContainment).get(1);
+            component2.eSet(viewComponent2InterfaceReference, interface2);
+
+            component1.eSet(viewComponent2InterfaceReference, interface3);
         });
     }
 

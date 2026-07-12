@@ -65,7 +65,7 @@ public class FeatureProject {
 
     public FeatureBinding doPut(EChange<EObject> change, FeatureBinding feature, ObjectBinding subject, PutContext context) {
         if (!hasKnownSource) {
-            throw new IllegalArgumentException("Cannot put changes on a feature that has no known source");
+            throw new UnsupportedOperationException("Cannot put changes on a feature that has no known source");
         }
 
         FeatureProjectBindingImpl binding = (FeatureProjectBindingImpl) feature;

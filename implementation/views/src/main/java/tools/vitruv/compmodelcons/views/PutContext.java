@@ -8,7 +8,7 @@ public interface PutContext extends GetContext {
 
     void removeRootFromOriginModel(EPackage originPackage, EObject originObject);
 
-    void trackUnattachedCreatedOriginObject(EObject createdOriginObject);
+    void trackUnattachedCreatedOriginObject(EObject originObject);
 
     void trackUndetachedDeletedOriginObject(EObject originObject);
 

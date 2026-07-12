@@ -42,22 +42,27 @@ public class FeatureSource implements FeatureOperation {
 
     public FeatureBinding doPut(EChange<EObject> change, FeatureBinding feature, ObjectBinding subjectBinding, ValueUpdateBinding value, PutContext context) {
         return getSource(subjectBinding).map(subject -> {
+            Object object = null;
+
             if (value instanceof ValueUpdateBinding.Unset) {
                 subject.eUnset(sourceFeature);
             } else if (value instanceof ValueUpdateBinding.Replace replace) {
                 subject.eSet(sourceFeature, replace.newValue());
+                object = replace.newValue();
             } else if (value instanceof ValueUpdateBinding.Insert insert) {
                 //noinspection unchecked
                 ((List<Object>) subject.eGet(sourceFeature)).add(insert.inserted());
+                object = insert.inserted();
             } else if (value instanceof ValueUpdateBinding.Remove remove) {
                 //noinspection unchecked
                 ((List<Object>) subject.eGet(sourceFeature)).remove(remove.removed());
+                object = remove.removed();
             } else {
                 throw new IllegalArgumentException("Unsupported value update type: " + value.getClass().getSimpleName());
             }
 
-            if (isSourceFeatureAContainmentFeature) {
-                context.trackOriginObjectAttachmentChange(subject);
+            if (isSourceFeatureAContainmentFeature && object instanceof EObject eObject) {
+                context.trackOriginObjectAttachmentChange(eObject);
             }
 
             return FeatureBinding.ofOriginObject(subject, ValueBinding.ofFeature(subject, sourceFeature));

@@ -139,7 +139,7 @@ public class SourceTest extends AbstractOperationTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass rootClass = DynamicModels.createEClass(viewType);
         EClass emptyClass = DynamicModels.createEClass(viewType);
-        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
+        EReference emptyContainment = DynamicModels.createManyContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
         EObject root = DynamicModels.createEObject(rootClass);
@@ -210,7 +210,7 @@ public class SourceTest extends AbstractOperationTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass rootClass = DynamicModels.createEClass(viewType);
         EClass emptyClass = DynamicModels.createEClass(viewType);
-        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
+        EReference emptyContainment = DynamicModels.createManyContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
         EObject root = DynamicModels.createEObject(rootClass);
@@ -283,7 +283,7 @@ public class SourceTest extends AbstractOperationTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass rootClass = DynamicModels.createEClass(viewType);
         EClass emptyClass = DynamicModels.createEClass(viewType);
-        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
+        EReference emptyContainment = DynamicModels.createManyContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
         EObject root = DynamicModels.createEObject(rootClass);
@@ -357,7 +357,7 @@ public class SourceTest extends AbstractOperationTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass rootClass = DynamicModels.createEClass(viewType);
         EClass emptyClass = DynamicModels.createEClass(viewType);
-        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
+        EReference emptyContainment = DynamicModels.createManyContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
         EObject root = DynamicModels.createEObject(rootClass);

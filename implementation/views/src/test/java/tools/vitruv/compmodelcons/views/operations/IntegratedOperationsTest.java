@@ -64,7 +64,7 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass rootClass = DynamicModels.createEClass(viewType, "Root");
         EClass simpleClass = DynamicModels.createEClass(viewType, "Simple");
-        EReference simpleContainment = DynamicModels.createContainmentEReference(rootClass, "simples", simpleClass);
+        EReference simpleContainment = DynamicModels.createManyContainmentEReference(rootClass, "simples", simpleClass);
         EAttribute employeeCount = DynamicModels.createEAttribute(simpleClass, "employeeCount", EcorePackage.eINSTANCE.getEInt());
 
         // Operation Setup

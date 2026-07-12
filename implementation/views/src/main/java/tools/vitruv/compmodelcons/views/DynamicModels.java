@@ -32,15 +32,18 @@ public class DynamicModels {
         return eClass;
     }
 
-    public static EReference createContainmentEReference(EClass eClass, String name, EClass eReferenceType) {
+    public static EReference createManyContainmentEReference(EClass eClass, String name, EClass eReferenceType) {
+        EReference eReference = createEReference(eClass, name, eReferenceType);
+        eReference.setUpperBound(-1);
+        eReference.setContainment(true);
+        return eReference;
+    }
+
+    public static EReference createEReference(EClass eClass, String name, EClass eReferenceType) {
         EReference eReference = EcoreFactory.eINSTANCE.createEReference();
         eReference.setName(name);
-        eReference.setContainment(true);
-        eReference.setUpperBound(-1);
         eReference.setEType(eReferenceType);
-
         eClass.getEStructuralFeatures().add(eReference);
-
         return eReference;
     }
 
@@ -60,12 +63,12 @@ public class DynamicModels {
         return (EClass) ePackage.getEClassifier(name);
     }
 
-    public static EAttribute getEAttribute(EObject target, String name) {
-        return (EAttribute) target.eClass().getEStructuralFeature(name);
+    public static EAttribute getEAttribute(EClass target, String name) {
+        return (EAttribute) target.getEStructuralFeature(name);
     }
 
-    public static EReference getEReference(EObject target, String name) {
-        return (EReference) target.eClass().getEStructuralFeature(name);
+    public static EReference getEReference(EClass target, String name) {
+        return (EReference) target.getEStructuralFeature(name);
     }
 
     public static EList<EObject> getList(EObject target, EReference reference) {

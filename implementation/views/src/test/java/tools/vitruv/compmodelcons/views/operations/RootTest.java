@@ -29,7 +29,7 @@ public class RootTest extends AbstractOperationTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass rootClass = DynamicModels.createEClass(viewType);
         EClass emptyClass = DynamicModels.createEClass(viewType);
-        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
+        EReference emptyContainment = DynamicModels.createManyContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
         ObjectBinding root = createBinding(store, DynamicModels.createEObject(rootClass));
@@ -65,7 +65,7 @@ public class RootTest extends AbstractOperationTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass rootClass = DynamicModels.createEClass(viewType);
         EClass emptyClass = DynamicModels.createEClass(viewType);
-        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
+        EReference emptyContainment = DynamicModels.createManyContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
         List<ObjectBinding> empties = restaurants.stream().map(r -> createBinding(r, DynamicModels.createEObject(emptyClass))).toList();
@@ -98,7 +98,7 @@ public class RootTest extends AbstractOperationTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass rootClass = DynamicModels.createEClass(viewType);
         EClass emptyClass = DynamicModels.createEClass(viewType);
-        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
+        EReference emptyContainment = DynamicModels.createManyContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
         ObjectBinding root = createBinding(store, DynamicModels.createEObject(rootClass));
@@ -162,7 +162,7 @@ public class RootTest extends AbstractOperationTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass rootClass = DynamicModels.createEClass(viewType);
         EClass emptyClass = DynamicModels.createEClass(viewType);
-        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
+        EReference emptyContainment = DynamicModels.createManyContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
         ObjectBinding root = createBinding(store, DynamicModels.createEObject(rootClass));
@@ -204,7 +204,7 @@ public class RootTest extends AbstractOperationTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass rootClass = DynamicModels.createEClass(viewType);
         EClass emptyClass = DynamicModels.createEClass(viewType);
-        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
+        EReference emptyContainment = DynamicModels.createManyContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
         ObjectBinding root = createBinding(store, DynamicModels.createEObject(rootClass));
@@ -245,7 +245,7 @@ public class RootTest extends AbstractOperationTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass rootClass = DynamicModels.createEClass(viewType);
         EClass emptyClass = DynamicModels.createEClass(viewType);
-        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
+        EReference emptyContainment = DynamicModels.createManyContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
         ObjectBinding root = createBinding(store, DynamicModels.createEObject(rootClass));
@@ -285,7 +285,7 @@ public class RootTest extends AbstractOperationTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass rootClass = DynamicModels.createEClass(viewType);
         EClass emptyClass = DynamicModels.createEClass(viewType);
-        EReference emptyContainment = DynamicModels.createContainmentEReference(rootClass, "containment", emptyClass);
+        EReference emptyContainment = DynamicModels.createManyContainmentEReference(rootClass, "containment", emptyClass);
 
         // View Setup
         ObjectBinding root = createBinding(store, DynamicModels.createEObject(rootClass));

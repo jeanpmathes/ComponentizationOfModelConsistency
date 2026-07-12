@@ -20,7 +20,7 @@ class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
         EClass root = DynamicModels.createEClass(viewType, "Root");
         EClass restaurant = DynamicModels.createEClass(viewType, "Restaurant");
 
-        DynamicModels.createContainmentEReference(root, "allRestaurants", restaurant);
+        DynamicModels.createManyContainmentEReference(root, "allRestaurants", restaurant);
 
         ViewTypeSourceGenerator generator = createGenerator(viewType, "my_example", """
                 from Restaurant r
@@ -41,7 +41,7 @@ class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
         EClass root = DynamicModels.createEClass(viewType, "Root");
         EClass restaurant = DynamicModels.createEClass(viewType, "Restaurant");
 
-        DynamicModels.createContainmentEReference(root, "allRestaurants", restaurant);
+        DynamicModels.createManyContainmentEReference(root, "allRestaurants", restaurant);
 
         ViewTypeSourceGenerator generator = createGenerator(viewType, "test", """
                 from Restaurant r
@@ -106,7 +106,7 @@ class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
         EClass root = DynamicModels.createEClass(viewType, "Root");
         EClass restaurant = DynamicModels.createEClass(viewType, "Restaurant");
 
-        DynamicModels.createContainmentEReference(root, "allRestaurants", restaurant);
+        DynamicModels.createManyContainmentEReference(root, "allRestaurants", restaurant);
         DynamicModels.createEAttribute(restaurant, "numEmployees", EcorePackage.eINSTANCE.getEInt());
 
         ViewTypeSourceGenerator generator = createGenerator(viewType, "test", """

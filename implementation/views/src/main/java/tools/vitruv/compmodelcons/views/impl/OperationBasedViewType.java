@@ -461,9 +461,9 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
             }
 
             @Override
-            public void trackUnattachedCreatedOriginObject(EObject createdOriginObject) {
-                unattachedCreatedOriginObjects.add(createdOriginObject);
-                undetachedDeletedOriginObjects.remove(createdOriginObject);
+            public void trackUnattachedCreatedOriginObject(EObject originObject) {
+                unattachedCreatedOriginObjects.add(originObject);
+                undetachedDeletedOriginObjects.remove(originObject);
             }
 
             @Override

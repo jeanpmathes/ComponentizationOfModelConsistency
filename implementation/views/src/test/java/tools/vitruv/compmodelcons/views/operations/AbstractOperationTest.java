@@ -161,13 +161,13 @@ class AbstractOperationTest {
         }
 
         @Override
-        public void trackUnattachedCreatedOriginObject(EObject createdOriginObject) {
-            if (isAttached(createdOriginObject)) {
+        public void trackUnattachedCreatedOriginObject(EObject originObject) {
+            if (isAttached(originObject)) {
                 throw new IllegalArgumentException();
             }
 
-            unattachedCreatedOriginObjects.add(createdOriginObject);
-            undetachedDeletedOriginObjects.remove(createdOriginObject);
+            unattachedCreatedOriginObjects.add(originObject);
+            undetachedDeletedOriginObjects.remove(originObject);
         }
 
         @Override

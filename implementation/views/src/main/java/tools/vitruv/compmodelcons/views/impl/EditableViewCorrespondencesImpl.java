@@ -42,7 +42,7 @@ public class EditableViewCorrespondencesImpl implements EditableViewCorresponden
     @Override
     public void addCorrespondence(List<EObject> originObjects, EObject viewObject) {
         if (originObjects.isEmpty()) {
-            return; // todo: check if this is still needed, if yes, add comment
+            return; // todo: check if this is still needed, if yes, add comment (probably needed for implicit root)
         }
 
         var viewKey = new ViewKey(viewObject);
