@@ -48,20 +48,23 @@ public class NeoJoinVitruvGenerator implements IGenerator {
             String name = input.getURI().trimFileExtension().lastSegment();
             AQR aqr = success.aqr();
 
-            MetaModel metaModel;
+            Metamodel metamodel;
             try {
-                metaModel = generateMetaModel(input, name, aqr, fsa);
+                metamodel = generateMetamodel(input, name, aqr, fsa);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
 
-            List<EPackage> originMetaModels = aqr.imports().stream().map(AQRImport::pack).toList();
+            List<Metamodel> originMetaModels = aqr.imports().stream()
+                    .map(AQRImport::pack)
+                    .map(ePackage -> Metamodel.load(ePackage, input.getResourceSet()))
+                    .toList();
 
-            generateSource(name, originMetaModels, metaModel, aqr, fsa);
+            generateSource(name, originMetaModels, metamodel, aqr, fsa);
         }
     }
 
-    private MetaModel generateMetaModel(Resource input, String name, AQR aqr, IFileSystemAccess fsa) throws IOException {
+    private Metamodel generateMetamodel(Resource input, String name, AQR aqr, IFileSystemAccess fsa) throws IOException {
         ResourceSet resourceSet = input.getResourceSet();
         String baseFileName = String.format("ecore/%s/%s", aqr.export().name(), name);
 
@@ -73,7 +76,7 @@ public class NeoJoinVitruvGenerator implements IGenerator {
         GenModel genModel = createGenModel(input, name, aqr, metaModel);
         fsa.generateFile(baseFileName + GENMODEL_EXTENSION, getContentsForFile(resourceSet, name, GENMODEL_EXTENSION, genModel));
 
-        return new MetaModel(metaModel, genModel.getGenPackages().get(0));
+        return new Metamodel(metaModel, genModel.getGenPackages().get(0));
     }
 
     private GenModel createGenModel(Resource input, String name, AQR aqr, EPackage ePackage) {
@@ -104,8 +107,8 @@ public class NeoJoinVitruvGenerator implements IGenerator {
         return genModel;
     }
 
-    private void generateSource(String name, List<EPackage> originMetaModels, MetaModel viewtypeMetaModel, AQR aqr, IFileSystemAccess fsa) {
-        ViewTypeSourceGenerator sourceGenerator = new ViewTypeSourceGenerator(name, originMetaModels, viewtypeMetaModel.ePackage(), viewtypeMetaModel.genPackage(), aqr);
+    private void generateSource(String name, List<Metamodel> originMetaModels, Metamodel viewtypeMetaModel, AQR aqr, IFileSystemAccess fsa) {
+        ViewTypeSourceGenerator sourceGenerator = new ViewTypeSourceGenerator(name, originMetaModels, viewtypeMetaModel, aqr);
         fsa.generateFile(sourceGenerator.getFileName(), sourceGenerator.generate());
     }
 
@@ -143,8 +146,5 @@ public class NeoJoinVitruvGenerator implements IGenerator {
         genModelResource.save(output, Map.of(XMLResource.OPTION_ENCODING, "UTF-8"));
 
         return output.toString();
-    }
-
-    private record MetaModel(EPackage ePackage, GenPackage genPackage) {
     }
 }
