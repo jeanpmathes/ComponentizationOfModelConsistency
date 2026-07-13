@@ -2,7 +2,7 @@ package tools.vitruv.compmodelcons.change;
 
 import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.framework.views.View;
-import tools.vitruv.framework.vsum.VirtualModel;
+import tools.vitruv.framework.views.ViewProvider;
 
 import java.util.List;
 
@@ -11,5 +11,5 @@ public interface ViewChangePropagationSpecification {
 
     MetamodelDescriptor getViewTypeMetamodelDescriptor();
 
-    View getView(VirtualModel vsum);
+    View getView(ViewProvider viewProvider);
 }

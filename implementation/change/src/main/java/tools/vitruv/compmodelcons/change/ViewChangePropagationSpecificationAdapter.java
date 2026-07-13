@@ -32,11 +32,13 @@ public class ViewChangePropagationSpecificationAdapter extends AbstractChangePro
 
     @Override
     public boolean doesHandleChange(EChange<EObject> eChange, EditableCorrespondenceModelView<Correspondence> editableCorrespondenceModelView) {
-        return true; // todo: look more into this
+        return true;
     }
 
     @Override
     public void propagateChange(EChange<EObject> eChange, EditableCorrespondenceModelView<Correspondence> editableCorrespondenceModelView, ResourceAccess resourceAccess) {
+        // todo: before doing much, let specification directly work with this, intercept how it calls correspondences and resource access
+
         VirtualModel vsum = null; // todo: get the virtual model
 
         var sourceView = sourceViewType.getView(vsum); // todo: better handling of null view type

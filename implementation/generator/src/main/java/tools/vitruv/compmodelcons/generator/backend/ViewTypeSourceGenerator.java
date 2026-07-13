@@ -172,7 +172,7 @@ public class ViewTypeSourceGenerator {
 
             AQRJoin join = source.joins().get(joinIndex);
 
-            if (join.type() != AQRJoin.Type.Inner || join.featureConditions().isEmpty() || join.expressionConditions().isEmpty()) {
+            if (join.type() != AQRJoin.Type.Inner || !join.featureConditions().isEmpty() || !join.expressionConditions().isEmpty()) {
                 throw new NotImplementedException();
             }
 

@@ -124,8 +124,8 @@ class FeatureSourceTest extends AbstractOperationTest {
 
         // Assertions
         verify(spyContext, times(1)).trackOriginObjectAttachmentChange(insertedRestaurant);
-        assertEquals(new ValueBinding.Many(Streams.concat(restaurants.stream(), Stream.of(insertedRestaurant)).toList()), result.value());
-        assertEquals(Streams.concat(restaurants.stream(), Stream.of(insertedRestaurant)).toList(), store.eGet(restaurantsReference));
+        assertEquals(new ValueBinding.Many(Streams.concat(Stream.of(insertedRestaurant), restaurants.stream()).toList()), result.value());
+        assertEquals(Streams.concat(Stream.of(insertedRestaurant), restaurants.stream()).toList(), store.eGet(restaurantsReference));
     }
 
     @Test

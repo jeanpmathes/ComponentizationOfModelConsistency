@@ -3,7 +3,7 @@ package tools.vitruv.compmodelcons.change.impl;
 import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.compmodelcons.change.ViewChangePropagationSpecification;
 import tools.vitruv.framework.views.View;
-import tools.vitruv.framework.vsum.VirtualModel;
+import tools.vitruv.framework.views.ViewProvider;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ public class NullViewChangePropagationSpecificationImpl implements ViewChangePro
     }
 
     @Override
-    public View getView(VirtualModel vsum) {
+    public View getView(ViewProvider viewProvider) {
         return null;
     }
 }

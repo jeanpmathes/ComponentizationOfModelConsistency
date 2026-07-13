@@ -55,7 +55,7 @@ public class Join implements Operation {
         if (change instanceof DeleteEObject<EObject> deleteEObject) {
             JoinObjectBindingImpl binding = (JoinObjectBindingImpl) target;
 
-            EObject deleted = target.originObjects().get(0);
+            EObject deleted = binding.originObject();
             context.getCorrespondences().unjoinCorrespondence(binding.originObjects(), List.of(deleted), deleteEObject.getAffectedElement());
             Source.detachDeletedOriginObject(deleted, sourceClass, isRoot, container, context);
 

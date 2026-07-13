@@ -87,6 +87,37 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         assertForAll(context.getOriginObjects(restaurantClass), restaurant -> restaurant.eGet(numEmployees).equals(52));
     }
 
+    @Test
+    public void testTripleJoinedViewShouldCreateElementInEachSource() {
+        // Origin Setup
+        EClass restaurantClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
+        EClass foodClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Food");
+        EClass reviewClass = DynamicModels.getEClass(models.getPackage(Model.REVIEWPAGE), "Review");
+        List<EObject> restaurants = context.getOriginObjects(restaurantClass);
+        List<EObject> foods = context.getOriginObjects(foodClass);
+        List<EObject> reviews = context.getOriginObjects(reviewClass);
+
+        // ViewType Setup
+        EPackage viewType = DynamicModels.createEPackage();
+        EClass rootClass = DynamicModels.createEClass(viewType, "Root");
+        EClass joinedClass = DynamicModels.createEClass(viewType, "Joined");
+        EReference joinedContainment = DynamicModels.createManyContainmentEReference(rootClass, "allJoined", joinedClass);
+
+        // Operation Setup
+        Root operation = new Root(rootClass, Optional.empty(), List.of(new Root.Target(joinedContainment, new Project(joinedClass, new Join(reviewClass, new Join(foodClass, new Source(restaurantClass))), List.of()))));
+
+        // Action: Get the view.
+        List<ObjectBinding> results = new ArrayList<>(operation.doGet(context));
+
+        // Action: Create a new joined element.
+        doCreate(joinedClass, operation, results);
+
+        // Assertions
+        assertEquals(restaurants.size() + 1, context.getOriginObjects(restaurantClass).size());
+        assertEquals(foods.size() + 1, context.getOriginObjects(foodClass).size());
+        assertEquals(reviews.size() + 1, context.getOriginObjects(reviewClass).size());
+    }
+
     private EObject doCreate(EClass eClass, Operation operation, List<ObjectBinding> roots) {
         EObject created = DynamicModels.createEObject(eClass);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);

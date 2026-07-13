@@ -51,11 +51,21 @@ public class FeatureSource implements FeatureOperation {
                 object = replace.newValue();
             } else if (value instanceof ValueUpdateBinding.Insert insert) {
                 //noinspection unchecked
-                ((List<Object>) subject.eGet(sourceFeature)).add(insert.inserted());
+                var list = ((List<Object>) subject.eGet(sourceFeature));
+                if (insert.index() != -1) {
+                    list.add(insert.index(), insert.inserted());
+                } else {
+                    list.add(insert.inserted());
+                }
                 object = insert.inserted();
             } else if (value instanceof ValueUpdateBinding.Remove remove) {
                 //noinspection unchecked
-                ((List<Object>) subject.eGet(sourceFeature)).remove(remove.removed());
+                var list = ((List<Object>) subject.eGet(sourceFeature));
+                if (remove.index() != -1 && list.get(remove.index()) == remove.removed()) {
+                    list.remove(remove.index());
+                } else {
+                    list.remove(remove.removed());
+                }
                 object = remove.removed();
             } else {
                 throw new IllegalArgumentException("Unsupported value update type: " + value.getClass().getSimpleName());
