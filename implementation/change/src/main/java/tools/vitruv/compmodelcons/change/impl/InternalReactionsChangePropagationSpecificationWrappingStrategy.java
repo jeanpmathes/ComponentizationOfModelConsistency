@@ -4,7 +4,7 @@ import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.view.CorrespondenceModelView;
 import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
-import tools.vitruv.compmodelcons.change.CorrespondenceHandlingStrategy;
+import tools.vitruv.compmodelcons.change.AbstractChangePropagationSpecificationWrappingStrategy;
 import tools.vitruv.dsls.reactions.runtime.correspondence.CorrespondenceFactory;
 import tools.vitruv.dsls.reactions.runtime.correspondence.ReactionsCorrespondence;
 import tools.vitruv.dsls.reactions.runtime.reactions.AbstractReactionsChangePropagationSpecification;
@@ -13,15 +13,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
-public class InternalReactionsCorrespondenceHandlingStrategyImpl implements CorrespondenceHandlingStrategy {
-    private final AbstractReactionsChangePropagationSpecification specification;
-
-    public InternalReactionsCorrespondenceHandlingStrategyImpl(AbstractReactionsChangePropagationSpecification specification) {
-        this.specification = specification;
+public class InternalReactionsChangePropagationSpecificationWrappingStrategy extends AbstractChangePropagationSpecificationWrappingStrategy {
+    public InternalReactionsChangePropagationSpecificationWrappingStrategy(AbstractReactionsChangePropagationSpecification specification) {
+        super(specification);
     }
 
     @Override
-    public EditableCorrespondenceModelView<Correspondence> getLiftedCorrespondenceModel(EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
+    public EditableCorrespondenceModelView<Correspondence> wrapCorrespondenceModel(EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
         var baseView = correspondenceModel.getEditableView(ReactionsCorrespondence.class, CorrespondenceFactory.eINSTANCE::createReactionsCorrespondence);
         // todo: potentially use baseView and ViewChangePropagationParticipationSpecification::getCorrespondingObjects
 

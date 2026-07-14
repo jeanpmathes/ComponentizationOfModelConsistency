@@ -44,31 +44,36 @@ public class FeatureSource implements FeatureOperation {
         return getSource(subjectBinding).map(subject -> {
             Object object = null;
 
-            if (value instanceof ValueUpdateBinding.Unset) {
-                subject.eUnset(sourceFeature);
-            } else if (value instanceof ValueUpdateBinding.Replace replace) {
-                subject.eSet(sourceFeature, replace.newValue());
-                object = replace.newValue();
-            } else if (value instanceof ValueUpdateBinding.Insert insert) {
-                //noinspection unchecked
-                var list = ((List<Object>) subject.eGet(sourceFeature));
-                if (insert.index() != -1) {
-                    list.add(insert.index(), insert.inserted());
-                } else {
-                    list.add(insert.inserted());
+            switch (value) {
+                case ValueUpdateBinding.Unset ignored -> subject.eUnset(sourceFeature);
+                case ValueUpdateBinding.Replace(Object newValue) -> {
+                    subject.eSet(sourceFeature, newValue);
+                    object = newValue;
                 }
-                object = insert.inserted();
-            } else if (value instanceof ValueUpdateBinding.Remove remove) {
-                //noinspection unchecked
-                var list = ((List<Object>) subject.eGet(sourceFeature));
-                if (remove.index() != -1 && list.get(remove.index()) == remove.removed()) {
-                    list.remove(remove.index());
-                } else {
-                    list.remove(remove.removed());
+                case ValueUpdateBinding.Insert(Object inserted, int index) -> {
+                    //noinspection unchecked
+                    var list = ((List<Object>) subject.eGet(sourceFeature));
+                    if (index != -1) {
+                        if (index >= list.size() || list.get(index) != inserted) {
+                            list.add(index, inserted);
+                        }
+                    } else {
+                        list.add(inserted);
+                    }
+                    object = inserted;
                 }
-                object = remove.removed();
-            } else {
-                throw new IllegalArgumentException("Unsupported value update type: " + value.getClass().getSimpleName());
+                case ValueUpdateBinding.Remove(Object removed, int index) -> {
+                    //noinspection unchecked
+                    var list = ((List<Object>) subject.eGet(sourceFeature));
+                    if (index != -1 && list.get(index) == removed) {
+                        list.remove(index);
+                    } else {
+                        list.remove(removed);
+                    }
+                    object = removed;
+                }
+                default ->
+                        throw new IllegalArgumentException("Unsupported value update type: " + value.getClass().getSimpleName());
             }
 
             if (isSourceFeatureAContainmentFeature && object instanceof EObject eObject) {

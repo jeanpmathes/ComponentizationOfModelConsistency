@@ -33,7 +33,7 @@
         <dependency>
             <groupId>tools.vitruv</groupId>
             <artifactId>tools.vitruv.framework.views</artifactId>
-            <version>3.2.4-compmodelcons-SNAPSHOT</version>
+            <version>${vitruv.version}</version>
         </dependency>
         <dependency>
             <groupId>tools.vitruv</groupId>
@@ -117,11 +117,6 @@
         </dependency>
 
         <!-- p2 compile dependencies -->
-        <dependency>
-            <groupId>tools.vitruv</groupId>
-            <artifactId>tools.vitruv.framework.p2wrappers.activextendannotations</artifactId>
-            <version>${vitruv.version}</version>
-        </dependency>
         <dependency>
             <groupId>tools.vitruv</groupId>
             <artifactId>tools.vitruv.framework.p2wrappers.emfcompare</artifactId>

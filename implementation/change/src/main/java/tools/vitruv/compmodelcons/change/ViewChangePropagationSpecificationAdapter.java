@@ -7,14 +7,15 @@ import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
 import tools.vitruv.change.propagation.ChangePropagationSpecification;
 import tools.vitruv.change.propagation.impl.AbstractChangePropagationSpecification;
 import tools.vitruv.change.utils.ResourceAccess;
-import tools.vitruv.framework.vsum.VirtualModel;
+
+import java.util.List;
 
 public class ViewChangePropagationSpecificationAdapter extends AbstractChangePropagationSpecification implements ChangePropagationSpecification {
-    private final ViewChangePropagationSpecification sourceViewType;
-    private final ChangePropagationSpecificationWrapper specification;
-    private final ViewChangePropagationSpecification targetViewType;
+    private final ChangePropagationViewTypeSpecification sourceViewType;
+    private final ChangePropagationSpecificationWrappingStrategy specification;
+    private final ChangePropagationViewTypeSpecification targetViewType;
 
-    public ViewChangePropagationSpecificationAdapter(ViewChangePropagationSpecification sourceViewType, int sourceViewTypeMetamodelIndex, ChangePropagationSpecificationWrapper specification, ViewChangePropagationSpecification targetViewType, int targetViewTypeMetamodelIndex) {
+    public ViewChangePropagationSpecificationAdapter(ChangePropagationViewTypeSpecification sourceViewType, int sourceViewTypeMetamodelIndex, ChangePropagationSpecificationWrappingStrategy specification, ChangePropagationViewTypeSpecification targetViewType, int targetViewTypeMetamodelIndex) {
         super(sourceViewType.getOriginMetamodelDescriptors().get(sourceViewTypeMetamodelIndex), targetViewType.getOriginMetamodelDescriptors().get(targetViewTypeMetamodelIndex));
 
         if (!sourceViewType.getViewTypeMetamodelDescriptor().equals(specification.getSourceMetamodelDescriptor())) {
@@ -31,23 +32,25 @@ public class ViewChangePropagationSpecificationAdapter extends AbstractChangePro
     }
 
     @Override
-    public boolean doesHandleChange(EChange<EObject> eChange, EditableCorrespondenceModelView<Correspondence> editableCorrespondenceModelView) {
-        return true;
+    public boolean doesHandleChange(EChange<EObject> eChange, EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
+        return specification.doesHandleChange(eChange, correspondenceModel);
+    }
+
+    @Override
+    public void propagateChanges(List<EChange<EObject>> originChanges, EditableCorrespondenceModelView<Correspondence> correspondenceModel, ResourceAccess resourceAccess) {
+        ChangePropagationView sourceView = sourceViewType.createView(resourceAccess);
+        ChangePropagationView targetView = targetViewType.createView(resourceAccess);
+        var context = new ViewChangePropagationContext(sourceView, sourceViewType, targetView, targetViewType);
+
+        List<EChange<EObject>> viewChanges = sourceView.doGetChange(originChanges);
+
+        targetView.beginChangeRecording();
+        specification.propagateChanges(viewChanges, correspondenceModel, context);
+        targetView.commitRecordedChanges();
     }
 
     @Override
     public void propagateChange(EChange<EObject> eChange, EditableCorrespondenceModelView<Correspondence> editableCorrespondenceModelView, ResourceAccess resourceAccess) {
-        // todo: before doing much, let specification directly work with this, intercept how it calls correspondences and resource access
-
-        VirtualModel vsum = null; // todo: get the virtual model
-
-        var sourceView = sourceViewType.getView(vsum); // todo: better handling of null view type
-        var targetView = targetViewType.getView(vsum).withChangeDerivingTrait(); // todo: better handling of null view type
-
-        var context = new ViewChangePropagationContext(sourceView, sourceViewType, targetView, targetViewType);
-
-        specification.propagateChange(eChange, editableCorrespondenceModelView, resourceAccess, context);
-
-        targetView.commitChanges();
+        throw new UnsupportedOperationException("This method should not be called, use propagateChanges instead");
     }
 }

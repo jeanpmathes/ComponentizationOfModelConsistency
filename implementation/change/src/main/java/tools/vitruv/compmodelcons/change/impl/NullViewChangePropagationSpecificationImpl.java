@@ -1,31 +1,55 @@
 package tools.vitruv.compmodelcons.change.impl;
 
+import org.eclipse.emf.ecore.EObject;
+import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.composite.MetamodelDescriptor;
-import tools.vitruv.compmodelcons.change.ViewChangePropagationSpecification;
-import tools.vitruv.framework.views.View;
-import tools.vitruv.framework.views.ViewProvider;
+import tools.vitruv.change.utils.ResourceAccess;
+import tools.vitruv.compmodelcons.change.ChangePropagationView;
+import tools.vitruv.compmodelcons.change.ChangePropagationViewTypeSpecification;
 
 import java.util.List;
 
-public class NullViewChangePropagationSpecificationImpl implements ViewChangePropagationSpecification {
-    private final List<MetamodelDescriptor> metamodelDescriptors;
+public class NullViewChangePropagationSpecificationImpl implements ChangePropagationViewTypeSpecification {
+    private final MetamodelDescriptor metamodelDescriptor;
 
     public NullViewChangePropagationSpecificationImpl(MetamodelDescriptor metamodelDescriptor) {
-        this.metamodelDescriptors = List.of(metamodelDescriptor);
+        this.metamodelDescriptor = metamodelDescriptor;
     }
 
     @Override
     public List<MetamodelDescriptor> getOriginMetamodelDescriptors() {
-        return metamodelDescriptors;
+        return List.of(metamodelDescriptor);
     }
 
     @Override
     public MetamodelDescriptor getViewTypeMetamodelDescriptor() {
-        return metamodelDescriptors.get(0);
+        return metamodelDescriptor;
     }
 
     @Override
-    public View getView(ViewProvider viewProvider) {
-        return null;
+    public ChangePropagationView createView(ResourceAccess resourceAccess) {
+        return new DirectModelAccessView(resourceAccess);
+    }
+
+    private record DirectModelAccessView(ResourceAccess resourceAccess) implements ChangePropagationView {
+        @Override
+        public ResourceAccess getViewResourceAccess() {
+            return resourceAccess;
+        }
+
+        @Override
+        public List<EChange<EObject>> doGetChange(EChange<EObject> originChange) {
+            return List.of(originChange);
+        }
+
+        @Override
+        public void beginChangeRecording() {
+
+        }
+
+        @Override
+        public void commitRecordedChanges() {
+
+        }
     }
 }

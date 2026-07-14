@@ -1,15 +1,14 @@
 package tools.vitruv.compmodelcons.change;
 
 import tools.vitruv.change.composite.MetamodelDescriptor;
-import tools.vitruv.framework.views.View;
-import tools.vitruv.framework.views.ViewProvider;
+import tools.vitruv.change.utils.ResourceAccess;
 
 import java.util.List;
 
-public interface ViewChangePropagationSpecification {
+public interface ChangePropagationViewTypeSpecification {
     List<MetamodelDescriptor> getOriginMetamodelDescriptors();
 
     MetamodelDescriptor getViewTypeMetamodelDescriptor();
 
-    View getView(ViewProvider viewProvider);
+    ChangePropagationView createView(ResourceAccess resourceAccess);
 }
