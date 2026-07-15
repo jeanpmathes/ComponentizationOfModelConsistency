@@ -6,9 +6,7 @@ import org.junit.jupiter.api.Test;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
 import tools.vitruv.compmodelcons.views.DynamicModels;
-import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +14,10 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class IntegratedOperationsTest extends AbstractOperationTest {
+    private Root.ViewBinding[] wrap(Root.ViewBinding view) {
+        return new Root.ViewBinding[]{view};
+    }
+
     @Test
     public void testSimpleEmptyViewOfRestaurantsAsRootShouldSupportBothRemovingAndInsertingRestaurants() {
         // Origin Setup
@@ -32,20 +34,20 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         Root operation = new Root(emptyClass, Optional.of(new Project(emptyClass, new Source(restaurantClass), List.of())), List.of());
 
         // Action: Get the view.
-        List<ObjectBinding> results = new ArrayList<>(operation.doGet(context));
+        var view = wrap(operation.doGet(context));
 
         // Action: Remove and delete one of the restaurants by removing and deleting an empty.
-        EObject removed = context.getViewModel().getContents().get(0);
-        doRemoveRoot(removed, operation, results);
-        doDelete(removed, operation, results);
+        EObject removed = models.getViewModel().getContents().getFirst();
+        doRemoveRoot(removed, operation, view);
+        doDelete(removed, operation, view);
 
         // Action: Create and insert a new restaurant by creating and inserting an empty.
-        EObject created = doCreate(emptyClass, operation, results);
-        doInsertRoot(created, operation, results);
+        EObject created = doCreate(emptyClass, operation, view);
+        doInsertRoot(created, operation, view);
 
         // Assertions
-        assertTrue(context.getViewModel().getContents().contains(created));
-        assertFalse(context.getViewModel().getContents().contains(removed));
+        assertTrue(models.getViewModel().getContents().contains(created));
+        assertFalse(models.getViewModel().getContents().contains(removed));
         assertEquals(restaurants.size(), context.getOriginObjects(restaurantClass).size());
         assertEquals(1, Sets.difference(new HashSet<>(restaurants), new HashSet<>(context.getOriginObjects(restaurantClass))).size());
         assertEquals(1, Sets.difference(new HashSet<>(context.getOriginObjects(restaurantClass)), new HashSet<>(restaurants)).size());
@@ -71,16 +73,16 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         Root operation = new Root(rootClass, Optional.empty(), List.of(new Root.Target(simpleContainment, new Project(simpleClass, new Source(restaurantClass), List.of(new FeatureProject(Optional.of(numEmployees), employeeCount, new FeatureSource(numEmployees)))))));
 
         // Action: Get the view.
-        List<ObjectBinding> results = new ArrayList<>(operation.doGet(context));
+        var view = wrap(operation.doGet(context));
 
         // Action: Unset the number of employees.
-        for (EObject simple : DynamicModels.getList(context.getViewModel().getContents().get(0), simpleContainment)) {
-            doUnset(simple, employeeCount, operation, results);
+        for (EObject simple : DynamicModels.getList(models.getViewModel().getContents().getFirst(), simpleContainment)) {
+            doUnset(simple, employeeCount, operation, view);
         }
 
         // Action: Set a new number of employees.
-        for (EObject simple : DynamicModels.getList(context.getViewModel().getContents().get(0), simpleContainment)) {
-            doReplaceAttribute(simple, employeeCount, 52, operation, results);
+        for (EObject simple : DynamicModels.getList(models.getViewModel().getContents().getFirst(), simpleContainment)) {
+            doReplaceAttribute(simple, employeeCount, 52, operation, view);
         }
 
         // Assertions
@@ -107,10 +109,10 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         Root operation = new Root(rootClass, Optional.empty(), List.of(new Root.Target(joinedContainment, new Project(joinedClass, new Join(reviewClass, new Join(foodClass, new Source(restaurantClass))), List.of()))));
 
         // Action: Get the view.
-        List<ObjectBinding> results = new ArrayList<>(operation.doGet(context));
+        var view = wrap(operation.doGet(context));
 
         // Action: Create a new joined element.
-        doCreate(joinedClass, operation, results);
+        doCreate(joinedClass, operation, view);
 
         // Assertions
         assertEquals(restaurants.size() + 1, context.getOriginObjects(restaurantClass).size());
@@ -118,48 +120,42 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         assertEquals(reviews.size() + 1, context.getOriginObjects(reviewClass).size());
     }
 
-    private EObject doCreate(EClass eClass, Operation operation, List<ObjectBinding> roots) {
+    private EObject doCreate(EClass eClass, Root root, Root.ViewBinding[] view) {
         EObject created = DynamicModels.createEObject(eClass);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
-        ObjectBinding result = operation.doPut(change, roots.get(0), context);
-        roots.set(0, result);
+        view[0] = root.doPut(change, view[0], context);
         return created;
     }
 
-    private void doDelete(EObject removed, Operation operation, List<ObjectBinding> roots) {
+    private void doDelete(EObject removed, Root root, Root.ViewBinding[] view) {
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(removed);
-        ObjectBinding result = operation.doPut(change, roots.get(0), context);
-        roots.set(0, result);
+        view[0] = root.doPut(change, view[0], context);
     }
 
-    private void doInsertRoot(EObject inserted, Operation operation, List<ObjectBinding> roots) {
-        context.getViewModel().getContents().add(inserted);
-        int index = context.getViewModel().getContents().indexOf(inserted);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertRootChange(inserted, context.getViewModel(), index);
-        ObjectBinding result = operation.doPut(change, roots.get(0), context);
-        roots.set(0, result);
+    private void doInsertRoot(EObject inserted, Root root, Root.ViewBinding[] view) {
+        models.getViewModel().getContents().add(inserted);
+        int index = models.getViewModel().getContents().indexOf(inserted);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertRootChange(inserted, models.getViewModel(), index);
+        view[0] = root.doPut(change, view[0], context);
     }
 
-    private void doRemoveRoot(EObject removed, Operation operation, List<ObjectBinding> roots) {
-        int index = context.getViewModel().getContents().indexOf(removed);
-        context.getViewModel().getContents().remove(removed);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, context.getViewModel(), index);
-        ObjectBinding result = operation.doPut(change, roots.get(0), context);
-        roots.set(0, result);
+    private void doRemoveRoot(EObject removed, Root root, Root.ViewBinding[] view) {
+        int index = models.getViewModel().getContents().indexOf(removed);
+        models.getViewModel().getContents().remove(removed);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, models.getViewModel(), index);
+        view[0] = root.doPut(change, view[0], context);
     }
 
-    private void doUnset(EObject target, EStructuralFeature feature, Operation operation, List<ObjectBinding> roots) {
+    private void doUnset(EObject target, EStructuralFeature feature, Root root, Root.ViewBinding[] view) {
         target.eUnset(feature);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createUnsetFeatureChange(target, feature);
-        ObjectBinding result = operation.doPut(change, roots.get(0), context);
-        roots.set(0, result);
+        view[0] = root.doPut(change, view[0], context);
     }
 
-    private void doReplaceAttribute(EObject target, EAttribute attribute, Object newValue, Operation operation, List<ObjectBinding> roots) {
+    private void doReplaceAttribute(EObject target, EAttribute attribute, Object newValue, Root root, Root.ViewBinding[] view) {
         Object oldValue = target.eGet(attribute);
         target.eSet(attribute, newValue);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createReplaceSingleAttributeChange(target, attribute, oldValue, newValue);
-        ObjectBinding result = operation.doPut(change, roots.get(0), context);
-        roots.set(0, result);
+        view[0] = root.doPut(change, view[0], context);
     }
 }

@@ -38,7 +38,7 @@
 
   <properties>
       <vitruv.version>4.0.1-SNAPSHOT</vitruv.version>
-      <vitruv-change.version>4.0.1-SNAPSHOT</vitruv-change.version>
+      <vitruv-change.version>4.0.1-compmodelcons-SNAPSHOT</vitruv-change.version>
   </properties>
 
   <!-- Dependency Management -->

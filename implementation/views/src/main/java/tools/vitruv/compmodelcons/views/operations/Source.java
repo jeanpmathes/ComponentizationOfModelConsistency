@@ -6,6 +6,8 @@ import org.eclipse.emf.ecore.EReference;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.eobject.CreateEObject;
 import tools.vitruv.change.atomic.eobject.DeleteEObject;
+import tools.vitruv.change.atomic.root.InsertRootEObject;
+import tools.vitruv.change.atomic.root.RemoveRootEObject;
 import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
@@ -27,15 +29,15 @@ public class Source implements Operation {
 
     public static void attachedCreatedOriginObject(EObject created, EClass sourceClass, boolean isRoot, EReference container, PutContext context) {
         if (isRoot) {
-            context.addRootToOriginModel(sourceClass.getEPackage(), created);
+            context.addRootToDefaultOriginModel(sourceClass.getEPackage(), created);
         } else if (container != null) {
             List<EObject> candidates = context.getOriginObjects(container.getEContainingClass());
 
             if (candidates.size() == 1) {
                 if (container.isMany()) {
-                    DynamicModels.getList(candidates.get(0), container).add(created);
+                    DynamicModels.getList(candidates.getFirst(), container).add(created);
                 } else {
-                    candidates.get(0).eSet(container, created);
+                    candidates.getFirst().eSet(container, created);
                 }
             } else {
                 context.trackUnattachedCreatedOriginObject(created);
@@ -48,7 +50,7 @@ public class Source implements Operation {
     public static void detachDeletedOriginObject(EObject deleted, EClass sourceClass, boolean isRoot, EReference container, PutContext context) {
         if (isRoot) {
             if (deleted.eResource() != null) {
-                context.removeRootFromOriginModel(sourceClass.getEPackage(), deleted);
+                context.removeRootFromDefaultOriginModel(sourceClass.getEPackage(), deleted);
             }
         } else if (container != null) {
             if (deleted.eContainer() != null) {
@@ -84,16 +86,32 @@ public class Source implements Operation {
         }
 
         if (change instanceof DeleteEObject<EObject> deleteEObject) {
-            if (target.originObjects().size() != 1) {
-                throw new IllegalArgumentException("Cannot delete an origin object if that object is not singular");
-            }
-
-            EObject deleted = target.originObjects().get(0);
+            EObject deleted = target.originObjects().getFirst();
             context.getCorrespondences().removeCorrespondence(List.of(deleted), deleteEObject.getAffectedElement());
 
             detachDeletedOriginObject(deleted, sourceClass, isRoot, container, context);
 
             return ObjectBinding.empty();
+        }
+
+        if (change instanceof InsertRootEObject<EObject> insertRootEObject) {
+            EObject inserted = target.originObjects().getFirst();
+
+            if (isRoot) {
+                context.moveRootToOtherOriginModel(sourceClass.getEPackage(), inserted, insertRootEObject.getResource().getURI());
+            }
+
+            return ObjectBinding.ofOriginObject(inserted);
+        }
+
+        if (change instanceof RemoveRootEObject<EObject>) {
+            EObject removed = target.originObjects().getFirst();
+
+            if (isRoot) {
+                context.moveRootToDefaultOriginModel(sourceClass.getEPackage(), removed);
+            }
+
+            return ObjectBinding.ofOriginObject(removed);
         }
 
         throw new IllegalArgumentException("Inappropriate change type: " + change.getClass());

@@ -1,8 +1,8 @@
 package tools.vitruv.compmodelcons.views.operations;
 
 import com.google.common.collect.Sets;
+import com.google.common.collect.Streams;
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -13,17 +13,19 @@ import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import tools.vitruv.compmodelcons.views.EditableViewCorrespondences;
-import tools.vitruv.compmodelcons.views.GetContext;
-import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.FeatureBinding;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.bindings.ValueBinding;
 import tools.vitruv.compmodelcons.views.impl.EditableViewCorrespondencesImpl;
+import tools.vitruv.compmodelcons.views.impl.PutContextImpl;
+import tools.vitruv.compmodelcons.views.internal.OriginResourceAccess;
+import tools.vitruv.compmodelcons.views.internal.ViewResourceAccess;
 
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -134,125 +136,111 @@ class AbstractOperationTest {
 
     @AfterEach
     public void tearDown() {
-        if (!context.isAttachmentStateOk()) {
-            throw new IllegalStateException("Attachment state is not ok");
-        }
-    }
-
-    public class TestContext implements GetContext, PutContext {
-        private final Resource viewModel = models.createViewModel();
-
-        private final Set<EObject> unattachedCreatedOriginObjects = new HashSet<>();
-        private final Set<EObject> undetachedDeletedOriginObjects = new HashSet<>();
-
-        @Override
-        public Resource getViewModel() {
-            return viewModel;
-        }
-
-        @Override
-        public void addRootToOriginModel(EPackage originPackage, EObject originObject) {
-            models.getModel(originPackage).getContents().add(originObject);
-        }
-
-        @Override
-        public void removeRootFromOriginModel(EPackage originPackage, EObject originObject) {
-            models.getModel(originPackage).getContents().remove(originObject);
-        }
-
-        @Override
-        public void trackUnattachedCreatedOriginObject(EObject originObject) {
-            if (isAttached(originObject)) {
-                throw new IllegalArgumentException();
-            }
-
-            unattachedCreatedOriginObjects.add(originObject);
-            undetachedDeletedOriginObjects.remove(originObject);
-        }
-
-        @Override
-        public void trackUndetachedDeletedOriginObject(EObject originObject) {
-            if (!isAttached(originObject)) {
-                throw new IllegalArgumentException();
-            }
-
-            undetachedDeletedOriginObjects.add(originObject);
-            unattachedCreatedOriginObjects.remove(originObject);
-        }
-
-        @Override
-        public void trackOriginObjectAttachmentChange(EObject originObject) {
-            if (isAttached(originObject)) {
-                unattachedCreatedOriginObjects.remove(originObject);
-            } else {
-                undetachedDeletedOriginObjects.remove(originObject);
-            }
-        }
-
-        public boolean isAttachmentStateOk() {
-            return unattachedCreatedOriginObjects.isEmpty() && undetachedDeletedOriginObjects.isEmpty();
-        }
-
-        private boolean isAttached(EObject originObject) {
-            return originObject.eResource() != null;
-        }
-
-        @Override
-        public List<EObject> getOriginObjects(EClass eClass) {
-            List<EObject> result = new ArrayList<>();
-            for (Model model : Model.values()) {
-                var iterator = models.getModel(model).getAllContents();
-                while (iterator.hasNext()) {
-                    EObject eObject = iterator.next();
-                    if (eClass.isSuperTypeOf(eObject.eClass())) {
-                        result.add(eObject);
-                    }
-                }
-            }
-            return result;
-        }
-
-        @Override
-        public EditableViewCorrespondences getCorrespondences() {
-            return correspondences;
-        }
+        context.validateAttachmentState();
     }
 
     protected static class Models {
         private final ResourceSet resourceSet;
-        private final Resource[] models;
+        private final Resource[] originModels;
+        private final EPackage[] originPackages;
+        private final List<Resource> viewModels;
 
-        private int viewCounter = 0;
-
-        public Models(ResourceSet resourceSet, Resource[] models) {
+        public Models(ResourceSet resourceSet, Resource[] originModels) {
             this.resourceSet = resourceSet;
-            this.models = models;
+            this.originModels = originModels;
+            this.originPackages = Arrays.stream(originModels).map(resource -> resource.getContents().getFirst().eClass().getEPackage()).toArray(EPackage[]::new);
+            this.viewModels = new ArrayList<>();
+
+            viewModels.add(resourceSet.createResource(URI.createURI("view.xmi")));
         }
 
         public EPackage getPackage(Model model) {
-            return getRoot(model).eClass().getEPackage();
+            return originPackages[model.getIndex()];
         }
 
         public EObject getRoot(Model model) {
-            return getModel(model).getContents().get(0);
+            return getModel(model).getContents().getFirst();
         }
 
         public Resource getModel(Model model) {
-            return models[model.getIndex()];
+            return originModels[model.getIndex()];
         }
 
-        public Resource getModel(EPackage ePackage) {
+        public Collection<Resource> getOtherModels(Model model) {
+            return resourceSet.getResources().stream()
+                    .filter(resource -> !resource.getContents().isEmpty() && resource.getContents().getFirst().eClass().getEPackage().equals(getPackage(model)))
+                    .filter(resource -> resource != getModel(model))
+                    .toList();
+        }
+
+        public Model getModelIdentifier(EPackage ePackage) {
             for (Model model : Model.values()) {
                 if (getPackage(model).equals(ePackage)) {
-                    return getModel(model);
+                    return model;
                 }
             }
 
             throw new IllegalArgumentException("No model found for " + ePackage);
         }
 
-        public Resource createViewModel() {
-            return resourceSet.createResource(URI.createURI(String.format("view_%d.xmi", viewCounter++)));
+        public Resource getViewModel() {
+            return viewModels.getFirst();
+        }
+
+        public Resource createViewModel(URI uri) {
+            Resource resource = resourceSet.createResource(uri);
+            viewModels.add(resource);
+            return resource;
+        }
+
+        public List<Resource> getViewModels() {
+            return viewModels;
+        }
+
+        public Resource createOriginModel(EPackage ePackage, URI uri) {
+            return resourceSet.createResource(uri.appendFileExtension(".origin").appendFileExtension(ePackage.getNsPrefix()));
+        }
+    }
+
+    public class TestContext extends PutContextImpl {
+        protected TestContext() {
+            super(new OriginResourceAccess() {
+                @Override
+                public Optional<Resource> getDefaultResource(EPackage ePackage) {
+                    return Optional.of(models.getModel(models.getModelIdentifier(ePackage)));
+                }
+
+                @Override
+                public void createResourceWithRoot(URI uriHint, EObject root) {
+                    models.createOriginModel(root.eClass().getEPackage(), uriHint).getContents().add(root);
+                }
+
+                @Override
+                public Collection<Resource> getResources(EPackage ePackage) {
+                    Model model = models.getModelIdentifier(ePackage);
+                    return Streams.concat(Stream.of(models.getModel(model)), models.getOtherModels(model).stream()).toList();
+                }
+            }, new ViewResourceAccess() {
+                @Override
+                public void insertRoot(EObject root) {
+                    models.getViewModel().getContents().add(root);
+                }
+
+                @Override
+                public void registerRoot(EObject root, URI uri) {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public void moveRoot(EObject root, URI uri) {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public Collection<EObject> getRoots() {
+                    return models.getViewModels().stream().flatMap(resource -> resource.getContents().stream()).toList();
+                }
+            }, correspondences);
         }
     }
 }

@@ -1,7 +1,7 @@
 package tools.vitruv.compmodelcons.views;
 
-import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.EObject;
 
 public interface GetContext extends Context {
-    Resource getViewModel();
+    void insertViewRoot(EObject root);
 }

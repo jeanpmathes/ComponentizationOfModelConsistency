@@ -1,16 +1,13 @@
 package tools.vitruv.compmodelcons.views.impl;
 
-import edu.kit.ipd.sdq.commons.util.org.eclipse.emf.ecore.resource.ResourceSetUtil;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.common.notify.impl.AdapterImpl;
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.EChangeUtil;
 import tools.vitruv.change.atomic.eobject.DeleteEObject;
@@ -18,11 +15,7 @@ import tools.vitruv.change.atomic.eobject.EObjectSubtractedEChange;
 import tools.vitruv.change.atomic.hid.HierarchicalId;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.change.composite.recording.ChangeRecorder;
-import tools.vitruv.compmodelcons.views.Context;
 import tools.vitruv.compmodelcons.views.EditableViewCorrespondences;
-import tools.vitruv.compmodelcons.views.GetContext;
-import tools.vitruv.compmodelcons.views.PutContext;
-import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.operations.Root;
 import tools.vitruv.framework.views.*;
 import tools.vitruv.framework.views.changederivation.StateBasedChangeResolutionStrategy;
@@ -30,7 +23,9 @@ import tools.vitruv.framework.views.impl.AbstractViewType;
 import tools.vitruv.framework.views.impl.IdentityMappingViewType;
 import tools.vitruv.framework.views.impl.ModifiableView;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 
 public abstract class OperationBasedViewType extends AbstractViewType<AllSelector, HierarchicalId> {
@@ -80,104 +75,102 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
      */
     private record CommittableOperationBasedView(OperationBasedView view, CommittableView sourceView,
                                                  CommittableOperationBasedView closingChain) implements CommittableView {
-            private CommittableOperationBasedView(OperationBasedView view, CommittableView sourceView) {
-                this(view, sourceView, null);
-            }
+        private CommittableOperationBasedView(OperationBasedView view, CommittableView sourceView) {
+            this(view, sourceView, null);
+        }
 
         @Override
-            public void update() {
-                view.update();
-            }
+        public void update() {
+            view.update();
+        }
 
-            @Override
-            public void commitChanges() {
-                view.commit();
-                sourceView.commitChanges();
-            }
+        @Override
+        public void commitChanges() {
+            view.commit();
+            sourceView.commitChanges();
+        }
 
-            @Override
-            public Collection<EObject> getRootObjects() {
-                return view.getRootObjects();
-            }
+        @Override
+        public Collection<EObject> getRootObjects() {
+            return view.getRootObjects();
+        }
 
-            @Override
-            public boolean isModified() {
-                return view.isModified();
-            }
+        @Override
+        public boolean isModified() {
+            return view.isModified();
+        }
 
-            @Override
-            public boolean isOutdated() {
-                return sourceView.isOutdated();
-            }
+        @Override
+        public boolean isOutdated() {
+            return sourceView.isOutdated();
+        }
 
-            @Override
-            public boolean isClosed() {
-                return false;
-            }
+        @Override
+        public boolean isClosed() {
+            return false;
+        }
 
-            @Override
-            public void registerRoot(EObject eObject, URI uri) {
-                view.registerRoot(eObject, uri);
-            }
+        @Override
+        public void registerRoot(EObject eObject, URI uri) {
+            view.registerRoot(eObject, uri);
+        }
 
-            @Override
-            public void moveRoot(EObject eObject, URI uri) {
-                view.moveRoot(eObject, uri);
-            }
+        @Override
+        public void moveRoot(EObject eObject, URI uri) {
+            view.moveRoot(eObject, uri);
+        }
 
-            @Override
-            public ViewSelection getSelection() {
-                return view.getSelection();
-            }
+        @Override
+        public ViewSelection getSelection() {
+            return view.getSelection();
+        }
 
-            @Override
-            public ViewType<? extends ViewSelector> getViewType() {
-                return view.getViewType();
-            }
+        @Override
+        public ViewType<? extends ViewSelector> getViewType() {
+            return view.getViewType();
+        }
 
-            @Override
-            public CommittableView withChangeRecordingTrait() {
-                return null;
-            }
+        @Override
+        public CommittableView withChangeRecordingTrait() {
+            return null;
+        }
 
-            @Override
-            public CommittableView withChangeDerivingTrait(StateBasedChangeResolutionStrategy stateBasedChangeResolutionStrategy) {
-                return null;
-            }
+        @Override
+        public CommittableView withChangeDerivingTrait(StateBasedChangeResolutionStrategy stateBasedChangeResolutionStrategy) {
+            return null;
+        }
 
-            @Override
-            public void close() throws Exception {
-                sourceView.close();
-                if (closingChain != null) {
-                    closingChain.close();
-                } else {
-                    view.close();
-                }
+        @Override
+        public void close() throws Exception {
+            sourceView.close();
+            if (closingChain != null) {
+                closingChain.close();
+            } else {
+                view.close();
             }
         }
+    }
 
     private class OperationBasedView implements ModifiableView {
         private final AllSelector selector;
-        private final ResourceSet viewResourceSet;
-
-        private final View sourceView;
 
         private final EditableViewCorrespondences correspondences = new EditableViewCorrespondencesImpl();
+
+        private final ViewResourceAccessImpl viewResourceAccess;
+        private final ViewWrappingOriginResourceAccessImpl originResourceAccess;
+
+        private Root.ViewBinding viewBinding;
 
         private ChangeRecorder changeRecorder;
 
         private boolean viewChanged = false;
-
-        private Resource viewModel;
-        private ObjectBinding viewRoot = ObjectBinding.empty();
-
         private boolean closed = false;
 
         public OperationBasedView(AllSelector selector) {
             this.selector = selector;
 
-            sourceView = createSourceModelsView();
-            viewResourceSet = ResourceSetUtil.withGlobalFactories(new ResourceSetImpl());
+            originResourceAccess = new ViewWrappingOriginResourceAccessImpl(createSourceModelsView());
+            viewResourceAccess = new ViewResourceAccessImpl(getName());
 
             setupChangeRecorderAndBeginRecording();
 
@@ -194,18 +187,15 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
 
         @Override
         public void update() {
-            sourceView.update();
+            originResourceAccess.update();
 
             endRecordingAndClose();
 
-            viewResourceSet.getResources().forEach(Resource::unload);
-            viewResourceSet.getResources().clear();
-
-            viewModel = viewResourceSet.createResource(URI.createURI(String.format("view:/%s.view", getName())));
-            viewRoot = unwrap(getStructure().doGet(new GetContextImpl()));
-
+            viewResourceAccess.reset();
+            viewBinding = getStructure().doGet(new GetContextImpl(originResourceAccess, viewResourceAccess, correspondences));
             viewChanged = false;
-            addChangeListeners(viewResourceSet);
+
+            addChangeListeners(viewResourceAccess.getResourceSet());
 
             setupChangeRecorderAndBeginRecording();
         }
@@ -213,8 +203,8 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
         public void commit() {
             VitruviusChange<EObject> change = changeRecorder.endRecording();
 
-            var context = new PutContextImpl();
-            reorderChanges(change.getEChanges()).forEach(eChange -> viewRoot = getStructure().doPut(eChange, viewRoot, context));
+            var context = new PutContextImpl(originResourceAccess, viewResourceAccess, correspondences);
+            reorderChanges(change.getEChanges()).forEach(eChange -> viewBinding = getStructure().doPut(eChange, viewBinding, context));
 
             context.validateAttachmentState();
 
@@ -240,8 +230,8 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
             }
 
             while (numberOfDeletionsToReorder > 0) {
-                DeleteEObject<EObject> deletion = (DeleteEObject<EObject>) reorderedChanges.get(reorderedChanges.size() - 1);
-                reorderedChanges.remove(reorderedChanges.size() - 1);
+                DeleteEObject<EObject> deletion = (DeleteEObject<EObject>) reorderedChanges.getLast();
+                reorderedChanges.removeLast();
 
                 List<EChange<EObject>> associatedDeletions = new ArrayList<>();
                 for (int index = reorderedChanges.size() - 1; index >= 0; index--) {
@@ -249,7 +239,7 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
                     if (eChange instanceof DeleteEObject<EObject> subtractedEChange
                             && EChangeUtil.isContainmentRemoval(subtractedEChange)
                             && subtractedEChange.getAffectedElement() == deletion.getAffectedElement()) {
-                        associatedDeletions.add(0, eChange);
+                        associatedDeletions.addFirst(eChange);
                         reorderedChanges.remove(index);
                     } else {
                         break;
@@ -282,9 +272,7 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
 
         @Override
         public Collection<EObject> getRootObjects() {
-            return viewResourceSet.getResources().stream()
-                    .flatMap(resource -> resource.getContents().stream())
-                    .toList();
+            return viewResourceAccess.getRoots();
         }
 
         @Override
@@ -294,7 +282,7 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
 
         @Override
         public boolean isOutdated() {
-            return sourceView.isOutdated();
+            return originResourceAccess.isOutdated();
         }
 
         @Override
@@ -302,12 +290,11 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
             if (!closed) {
                 closed = true;
 
-                sourceView.close();
+                originResourceAccess.close();
 
-                viewResourceSet.getResources().forEach(Resource::unload);
-                viewResourceSet.getResources().clear();
+                removeChangeListeners(viewResourceAccess.getResourceSet());
 
-                removeChangeListeners(viewResourceSet);
+                viewResourceAccess.close();
             }
         }
 
@@ -318,12 +305,12 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
 
         @Override
         public void registerRoot(EObject eObject, URI uri) {
-            throw new UnsupportedOperationException();
+            viewResourceAccess.registerRoot(eObject, uri);
         }
 
         @Override
         public void moveRoot(EObject eObject, URI uri) {
-            throw new UnsupportedOperationException();
+            viewResourceAccess.moveRoot(eObject, uri);
         }
 
         @Override
@@ -338,17 +325,17 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
 
         @Override
         public CommittableView withChangeRecordingTrait() {
-            return new CommittableOperationBasedView(this, sourceView.withChangeRecordingTrait());
+            return new CommittableOperationBasedView(this, originResourceAccess.getView().withChangeRecordingTrait());
         }
 
         @Override
         public CommittableView withChangeDerivingTrait(StateBasedChangeResolutionStrategy stateBasedChangeResolutionStrategy) {
-            return new CommittableOperationBasedView(this, sourceView.withChangeDerivingTrait(stateBasedChangeResolutionStrategy));
+            return new CommittableOperationBasedView(this, originResourceAccess.getView().withChangeDerivingTrait(stateBasedChangeResolutionStrategy));
         }
 
         @Override
         public void modifyContents(Consumer<ResourceSet> consumer) {
-            consumer.accept(viewResourceSet);
+            consumer.accept(viewResourceAccess.getResourceSet());
         }
 
         @Override
@@ -357,8 +344,8 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
         }
 
         private void setupChangeRecorderAndBeginRecording() {
-            changeRecorder = new ChangeRecorder(viewResourceSet);
-            changeRecorder.addToRecording(viewResourceSet);
+            changeRecorder = new ChangeRecorder(viewResourceAccess.getResourceSet());
+            changeRecorder.addToRecording(viewResourceAccess.getResourceSet());
             changeRecorder.beginRecording();
         }
 
@@ -380,115 +367,17 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
                                     viewChanged = true;
                                 }
                             });
-            if (notifier instanceof ResourceSet resourceSet) {
-                resourceSet.getResources().forEach(this::addChangeListeners);
-            } else if (notifier instanceof Resource resource) {
-                resource.getContents().forEach(this::addChangeListeners);
-            } else if (notifier instanceof EObject eObject) {
-                eObject.eContents().forEach(this::addChangeListeners);
+            switch (notifier) {
+                case ResourceSet resourceSet -> resourceSet.getResources().forEach(this::addChangeListeners);
+                case Resource resource -> resource.getContents().forEach(this::addChangeListeners);
+                case EObject eObject -> eObject.eContents().forEach(this::addChangeListeners);
+                default -> {
+                }
             }
         }
 
         private void removeChangeListeners(ResourceSet resourceSet) {
             resourceSet.getAllContents().forEachRemaining(eObject -> eObject.eAdapters().clear());
-        }
-
-        private ObjectBinding unwrap(List<ObjectBinding> bindings) {
-            if (bindings.size() != 1) {
-                throw new UnsupportedOperationException("Views with no or multiple roots are currently not supported");
-            }
-            return bindings.get(0);
-        }
-
-        private EObject getOriginRoot(EPackage ePackage) {
-            return sourceView.getRootObjects().stream()
-                    .filter(eObject -> eObject.eClass().getEPackage().equals(ePackage))
-                    .findFirst()
-                    .orElseThrow();
-        }
-
-        private class AbstractContext implements Context {
-
-            @Override
-            public List<EObject> getOriginObjects(EClass eClass) {
-                List<EObject> result = new ArrayList<>();
-                EObject root = getOriginRoot(eClass.getEPackage());
-                if (eClass.isSuperTypeOf(root.eClass())) {
-                    result.add(root);
-                }
-                var iterator = root.eAllContents();
-                while (iterator.hasNext()) {
-                    EObject eObject = iterator.next();
-                    if (eClass.isSuperTypeOf(eObject.eClass())) {
-                        result.add(eObject);
-                    }
-                }
-                return result;
-            }
-
-            @Override
-            public EditableViewCorrespondences getCorrespondences() {
-                return correspondences;
-            }
-        }
-
-        private final class GetContextImpl extends AbstractContext implements GetContext {
-            @Override
-            public Resource getViewModel() {
-                return viewModel;
-            }
-        }
-
-        private final class PutContextImpl extends AbstractContext implements PutContext {
-            private final Set<EObject> unattachedCreatedOriginObjects = new HashSet<>();
-            private final Set<EObject> undetachedDeletedOriginObjects = new HashSet<>();
-
-            @Override
-            public Resource getViewModel() {
-                return viewModel;
-            }
-
-            @Override
-            public void addRootToOriginModel(EPackage originPackage, EObject originObject) {
-                // The main reason for this is that the View interface does not offer the methods to do so.
-                throw new UnsupportedOperationException("Adding roots to origin models through views not supported");
-            }
-
-            @Override
-            public void removeRootFromOriginModel(EPackage originPackage, EObject originObject) {
-                // The main reason for this is that the View interface does not offer the methods to do so.
-                throw new UnsupportedOperationException("Removing roots from origin models through views not supported");
-            }
-
-            @Override
-            public void trackUnattachedCreatedOriginObject(EObject originObject) {
-                unattachedCreatedOriginObjects.add(originObject);
-                undetachedDeletedOriginObjects.remove(originObject);
-            }
-
-            @Override
-            public void trackUndetachedDeletedOriginObject(EObject originObject) {
-                undetachedDeletedOriginObjects.add(originObject);
-                unattachedCreatedOriginObjects.remove(originObject);
-            }
-
-            @Override
-            public void trackOriginObjectAttachmentChange(EObject originObject) {
-                if (originObject.eResource() != null) {
-                    unattachedCreatedOriginObjects.remove(originObject);
-                } else {
-                    undetachedDeletedOriginObjects.remove(originObject);
-                }
-            }
-
-            public void validateAttachmentState() {
-                if (!unattachedCreatedOriginObjects.isEmpty()) {
-                    throw new IllegalStateException("Failed to attach all created objects in the origin models, possibly because of ambiguous containment");
-                }
-                if (!undetachedDeletedOriginObjects.isEmpty()) {
-                    throw new IllegalStateException("Failed to detach all deleted objects in the origin models, possibly because of ambiguous containment");
-                }
-            }
         }
     }
 }

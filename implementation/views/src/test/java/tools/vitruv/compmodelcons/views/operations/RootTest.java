@@ -43,7 +43,7 @@ public class RootTest extends AbstractOperationTest {
         // Action
         when(rootProject.beginGetByCreatingViewObjects(context)).thenReturn(List.of(root));
         when(emptyProject.beginGetByCreatingViewObjects(context)).thenReturn(empties);
-        List<ObjectBinding> results = operation.doGet(context);
+        List<ObjectBinding> results = operation.doGet(context).getRootBindings();
 
         // Assertions
         verify(rootProject, times(1)).beginGetByCreatingViewObjects(context);
@@ -51,9 +51,9 @@ public class RootTest extends AbstractOperationTest {
         verify(emptyProject, times(1)).beginGetByCreatingViewObjects(context);
         verify(emptyProject, times(empties.size())).completeGetByCallingGetOnFeatures(any(), eq(context));
         assertEquals(1, results.size());
-        assertTrue(context.getViewModel().getContents().contains(results.get(0).viewObject()));
-        assertEquals(restaurants.size(), DynamicModels.getList(results.get(0).viewObject(), emptyContainment).size());
-        assertEquals(empties.stream().map(ObjectBinding::viewObject).collect(Collectors.toSet()), new HashSet<>(DynamicModels.getList(results.get(0).viewObject(), emptyContainment)));
+        assertTrue(models.getViewModel().getContents().contains(results.getFirst().viewObject()));
+        assertEquals(restaurants.size(), DynamicModels.getList(results.getFirst().viewObject(), emptyContainment).size());
+        assertEquals(empties.stream().map(ObjectBinding::viewObject).collect(Collectors.toSet()), new HashSet<>(DynamicModels.getList(results.getFirst().viewObject(), emptyContainment)));
     }
 
     @Test
@@ -76,57 +76,16 @@ public class RootTest extends AbstractOperationTest {
 
         // Action
         when(emptyProject.beginGetByCreatingViewObjects(context)).thenReturn(empties);
-        List<ObjectBinding> results = operation.doGet(context);
+        List<ObjectBinding> results = operation.doGet(context).getRootBindings();
 
         // Assertions
         verify(emptyProject, times(1)).beginGetByCreatingViewObjects(context);
         verify(emptyProject, times(empties.size())).completeGetByCallingGetOnFeatures(any(), eq(context));
         assertEquals(1, results.size());
-        assertTrue(results.get(0).originObjects().isEmpty());
-        assertTrue(context.getViewModel().getContents().contains(results.get(0).viewObject()));
-        assertEquals(restaurants.size(), DynamicModels.getList(results.get(0).viewObject(), emptyContainment).size());
-        assertEquals(empties.stream().map(ObjectBinding::viewObject).collect(Collectors.toSet()), new HashSet<>(DynamicModels.getList(results.get(0).viewObject(), emptyContainment)));
-    }
-
-    @Test
-    public void testPutOfRootRemovalNotPropagate() {
-        // Origin Setup
-        EObject store = models.getRoot(Model.RESTAURANT);
-        List<EObject> restaurants = context.getOriginObjects(DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant"));
-
-        // ViewType Setup
-        EPackage viewType = DynamicModels.createEPackage();
-        EClass rootClass = DynamicModels.createEClass(viewType);
-        EClass emptyClass = DynamicModels.createEClass(viewType);
-        EReference emptyContainment = DynamicModels.createManyContainmentEReference(rootClass, "containment", emptyClass);
-
-        // View Setup
-        ObjectBinding root = createBinding(store, DynamicModels.createEObject(rootClass));
-        List<ObjectBinding> empties = restaurants.stream().map(r -> createBinding(r, DynamicModels.createEObject(emptyClass))).toList();
-
-        // Operation Setup
-        Project rootProject = mock(Project.class);
-        Project emptyProject = mock(Project.class);
-        Root operation = new Root(rootClass, Optional.of(rootProject), List.of(new Root.Target(emptyContainment, emptyProject)));
-
-        // Pre-Action Get
-        when(rootProject.beginGetByCreatingViewObjects(context)).thenReturn(List.of(root));
-        when(emptyProject.beginGetByCreatingViewObjects(context)).thenReturn(empties);
-        List<ObjectBinding> results = operation.doGet(context);
-
-        // Pre-Action Change
-        EObject removed = root.viewObject();
-        int index = context.getViewModel().getContents().indexOf(removed);
-        context.getViewModel().getContents().remove(removed);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, context.getViewModel(), index);
-
-        // Action
-        when(rootProject.doPut(any(), any(), any())).thenReturn(root);
-        operation.doPut(change, results.get(0), context);
-
-        // Assertions
-        verify(rootProject, never()).doPut(eq(change), any(), eq(context));
-        verify(emptyProject, never()).doPut(eq(change), any(), eq(context));
+        assertTrue(results.getFirst().originObjects().isEmpty());
+        assertTrue(models.getViewModel().getContents().contains(results.getFirst().viewObject()));
+        assertEquals(restaurants.size(), DynamicModels.getList(results.getFirst().viewObject(), emptyContainment).size());
+        assertEquals(empties.stream().map(ObjectBinding::viewObject).collect(Collectors.toSet()), new HashSet<>(DynamicModels.getList(results.getFirst().viewObject(), emptyContainment)));
     }
 
     @Test
@@ -139,16 +98,16 @@ public class RootTest extends AbstractOperationTest {
         Root operation = new Root(rootClass, Optional.empty(), List.of());
 
         // Pre-Action Get
-        List<ObjectBinding> results = operation.doGet(context);
+        Root.ViewBinding results = operation.doGet(context);
 
         // Pre-Action Change
-        EObject removed = results.get(0).viewObject();
-        int index = context.getViewModel().getContents().indexOf(removed);
-        context.getViewModel().getContents().remove(removed);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, context.getViewModel(), index);
+        EObject removed = results.getRootBindings().getFirst().viewObject();
+        int index = models.getViewModel().getContents().indexOf(removed);
+        models.getViewModel().getContents().remove(removed);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, models.getViewModel(), index);
 
         // Action & Assertions
-        assertThrows(IllegalArgumentException.class, () -> operation.doPut(change, results.get(0), context));
+        assertThrows(IllegalArgumentException.class, () -> operation.doPut(change, results, context));
     }
 
     @Test
@@ -176,7 +135,7 @@ public class RootTest extends AbstractOperationTest {
         // Pre-Action Get
         when(rootOperation.beginGetByCreatingViewObjects(context)).thenReturn(List.of(root));
         when(emptyContainedOperation.beginGetByCreatingViewObjects(context)).thenReturn(empties);
-        List<ObjectBinding> results = operation.doGet(context);
+        Root.ViewBinding results = operation.doGet(context);
 
         // Pre-Action Change
         EObject inserted = DynamicModels.createEObject(emptyClass);
@@ -187,11 +146,11 @@ public class RootTest extends AbstractOperationTest {
 
         // Action
         when(emptyContainedOperation.doPut(any(), any(), any())).thenReturn(createBinding(insertedCorrespondence, inserted));
-        ObjectBinding result = operation.doPut(change, results.get(0), context);
+        Root.ViewBinding result = operation.doPut(change, results, context);
 
         // Assertions
         verify(rootOperation, never()).doPut(any(), any(), eq(context));
-        assertEquals(results.get(0).originObjects(), result.originObjects());
+        assertEquals(results.getRootBindings().getFirst().originObjects(), result.getRootBindings().getFirst().originObjects());
     }
 
     @Test
@@ -218,21 +177,21 @@ public class RootTest extends AbstractOperationTest {
         // Pre-Action Get
         when(rootOperation.beginGetByCreatingViewObjects(context)).thenReturn(List.of(root));
         when(emptyContainedOperation.beginGetByCreatingViewObjects(context)).thenReturn(empties);
-        List<ObjectBinding> results = operation.doGet(context);
+        Root.ViewBinding results = operation.doGet(context);
 
         // Pre-Action Change
-        EObject removed = empties.get(0).viewObject();
+        EObject removed = empties.getFirst().viewObject();
         int index = DynamicModels.getList(root.viewObject(), emptyContainment).indexOf(removed);
         DynamicModels.getList(root.viewObject(), emptyContainment).remove(removed);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveReferenceChange(root.viewObject(), emptyContainment, removed, index);
 
         // Action
-        when(emptyContainedOperation.doPut(any(), any(), any())).thenReturn(empties.get(0));
-        ObjectBinding result = operation.doPut(change, results.get(0), context);
+        when(emptyContainedOperation.doPut(any(), any(), any())).thenReturn(empties.getFirst());
+        Root.ViewBinding result = operation.doPut(change, results, context);
 
         // Assertions
         verify(rootOperation, never()).doPut(any(), any(), eq(context));
-        assertEquals(results.get(0).originObjects(), result.originObjects());
+        assertEquals(results.getRootBindings().getFirst().originObjects(), result.getRootBindings().getFirst().originObjects());
     }
 
     @Test
@@ -259,7 +218,7 @@ public class RootTest extends AbstractOperationTest {
         // Pre-Action Get
         when(rootProject.beginGetByCreatingViewObjects(context)).thenReturn(List.of(root));
         when(emptyProject.beginGetByCreatingViewObjects(context)).thenReturn(empties);
-        List<ObjectBinding> results = operation.doGet(context);
+        Root.ViewBinding results = operation.doGet(context);
 
         // Pre-Action Change
         EObject deleted = root.viewObject();
@@ -267,12 +226,12 @@ public class RootTest extends AbstractOperationTest {
 
         // Action
         when(rootProject.doPut(any(), any(), any())).thenReturn(root);
-        ObjectBinding result = operation.doPut(change, results.get(0), context);
+        Root.ViewBinding result = operation.doPut(change, results, context);
 
         // Assertions
         verify(rootProject, times(1)).doPut(eq(change), any(), eq(context));
         verify(emptyProject, never()).doPut(eq(change), any(), eq(context));
-        assertEquals(results.get(0).originObjects(), result.originObjects());
+        assertEquals(results.getRootBindings().getFirst().originObjects(), result.getRootBindings().getFirst().originObjects());
     }
 
     @Test
@@ -299,19 +258,19 @@ public class RootTest extends AbstractOperationTest {
         // Pre-Action Get
         when(rootOperation.beginGetByCreatingViewObjects(context)).thenReturn(List.of(root));
         when(emptyContainedOperation.beginGetByCreatingViewObjects(context)).thenReturn(empties);
-        List<ObjectBinding> results = operation.doGet(context);
+        Root.ViewBinding results = operation.doGet(context);
 
         // Pre-Action Change
-        EObject deleted = empties.get(0).viewObject();
+        EObject deleted = empties.getFirst().viewObject();
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(deleted);
 
         // Action
         when(emptyContainedOperation.doPut(any(), any(), any())).thenReturn(ObjectBinding.empty());
-        ObjectBinding result = operation.doPut(change, results.get(0), context);
+        Root.ViewBinding result = operation.doPut(change, results, context);
 
         // Assertions
         verify(rootOperation, never()).doPut(any(), any(), eq(context));
         verify(emptyContainedOperation, times(1)).doPut(eq(change), any(), eq(context));
-        assertEquals(results.get(0).originObjects(), result.originObjects());
+        assertEquals(results.getRootBindings().getFirst().originObjects(), result.getRootBindings().getFirst().originObjects());
     }
 }

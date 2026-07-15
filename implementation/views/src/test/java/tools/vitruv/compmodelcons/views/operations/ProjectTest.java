@@ -39,9 +39,9 @@ public class ProjectTest extends AbstractOperationTest {
         // Assertions
         verify(originOperation, times(1)).doGet(context);
         assertEquals(1, result.size());
-        assertEquals(result.get(0).viewObject().eClass(), emptyClass);
-        assertTrue(correspondences.correspond(List.of(store), result.get(0).viewObject()));
-        assertFalse(context.getViewModel().getContents().contains(result.get(0).viewObject()));
+        assertEquals(result.getFirst().viewObject().eClass(), emptyClass);
+        assertTrue(correspondences.correspond(List.of(store), result.getFirst().viewObject()));
+        assertFalse(models.getViewModel().getContents().contains(result.getFirst().viewObject()));
     }
 
     @Test
@@ -65,7 +65,7 @@ public class ProjectTest extends AbstractOperationTest {
         when(featureProject.doGet(any(), any())).then(invocation -> {
             ObjectBinding binding = invocation.getArgument(0);
             binding.viewObject().eSet(number, 42);
-            return createBinding(binding.originObjects().get(0), binding.viewObject(), ValueBinding.of(42));
+            return createBinding(binding.originObjects().getFirst(), binding.viewObject(), ValueBinding.of(42));
         });
         List<ObjectBinding> result = operation.beginGetByCreatingViewObjects(context);
         for (ObjectBinding binding : result) {
@@ -74,8 +74,8 @@ public class ProjectTest extends AbstractOperationTest {
 
         // Assertions
         assertEquals(1, result.size());
-        verify(featureProject, times(1)).doGet(result.get(0), context);
-        assertEquals(42, result.get(0).viewObject().eGet(number));
+        verify(featureProject, times(1)).doGet(result.getFirst(), context);
+        assertEquals(42, result.getFirst().viewObject().eGet(number));
     }
 
     @Test
@@ -109,7 +109,7 @@ public class ProjectTest extends AbstractOperationTest {
         // Assertions
         verify(originOperation, times(1)).doPut(eq(change), any(), eq(context));
         assertEquals(created, result.viewObject());
-        assertEquals(otherStore, result.originObjects().get(0));
+        assertEquals(otherStore, result.originObjects().getFirst());
     }
 
     @Test
@@ -133,16 +133,16 @@ public class ProjectTest extends AbstractOperationTest {
         }
 
         // Pre-Action Change
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(results.get(0).viewObject());
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(results.getFirst().viewObject());
 
         // Action
-        when(originOperation.doPut(any(), any(), any())).thenReturn(ObjectBinding.ofOriginObject(results.get(0).originObjects().get(0)));
-        ObjectBinding result = operation.doPut(change, results.get(0), context);
+        when(originOperation.doPut(any(), any(), any())).thenReturn(ObjectBinding.ofOriginObject(results.getFirst().originObjects().getFirst()));
+        ObjectBinding result = operation.doPut(change, results.getFirst(), context);
 
         // Assertions
         verify(originOperation, times(1)).doPut(eq(change), any(), eq(context));
-        assertEquals(results.get(0).viewObject(), result.viewObject());
-        assertEquals(results.get(0).originObjects(), result.originObjects());
+        assertEquals(results.getFirst().viewObject(), result.viewObject());
+        assertEquals(results.getFirst().originObjects(), result.originObjects());
     }
 
     @Test
@@ -167,7 +167,7 @@ public class ProjectTest extends AbstractOperationTest {
         when(featureProject.doGet(any(), any())).then(invocation -> {
             ObjectBinding binding = invocation.getArgument(0);
             binding.viewObject().eSet(number, 67);
-            createdFeatureBinding.set(createBinding(binding.originObjects().get(0), binding.viewObject(), ValueBinding.of(67)));
+            createdFeatureBinding.set(createBinding(binding.originObjects().getFirst(), binding.viewObject(), ValueBinding.of(67)));
             return createdFeatureBinding.get();
         });
         List<ObjectBinding> results = operation.beginGetByCreatingViewObjects(context);
@@ -176,15 +176,15 @@ public class ProjectTest extends AbstractOperationTest {
         }
 
         // Pre-Action Change
-        results.get(0).viewObject().eUnset(number);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createUnsetFeatureChange(results.get(0).viewObject(), number);
+        results.getFirst().viewObject().eUnset(number);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createUnsetFeatureChange(results.getFirst().viewObject(), number);
 
         // Action
-        when(featureProject.doPut(any(), any(), any(), any())).thenReturn(createBinding(results.get(0).originObjects().get(0), results.get(0).viewObject(), ValueBinding.of(0)));
-        operation.doPut(change, results.get(0), context);
+        when(featureProject.doPut(any(), any(), any(), any())).thenReturn(createBinding(results.getFirst().originObjects().getFirst(), results.getFirst().viewObject(), ValueBinding.of(0)));
+        operation.doPut(change, results.getFirst(), context);
 
         // Assertions
         verify(originOperation, never()).doPut(any(), any(), any());
-        verify(featureProject, times(1)).doPut(change, createdFeatureBinding.get(), results.get(0), context);
+        verify(featureProject, times(1)).doPut(change, createdFeatureBinding.get(), results.getFirst(), context);
     }
 }

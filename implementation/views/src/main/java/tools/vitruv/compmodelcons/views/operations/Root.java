@@ -16,7 +16,7 @@ import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class Root implements Operation {
+public class Root {
     private final EClass rootClass;
     private final boolean isRootImplicit;
     private final Project root;
@@ -37,11 +37,10 @@ public class Root implements Operation {
         }
     }
 
-    @Override
-    public List<ObjectBinding> doGet(GetContext context) {
+    public ViewBinding doGet(GetContext context) {
         List<RootObjectBindingImpl> roots = root.beginGetByCreatingViewObjects(context).stream()
                 .map(rootBinding -> {
-                    context.getViewModel().getContents().add(rootBinding.viewObject());
+                    context.insertViewRoot(rootBinding.viewObject());
                     return new RootObjectBindingImpl(rootBinding, targets.stream()
                             .map(entry -> {
                                 Map<EObject, ObjectBinding> result = new HashMap<>();
@@ -62,24 +61,54 @@ public class Root implements Operation {
             }
         }
 
-        return roots.stream().map(rootBinding -> (ObjectBinding) rootBinding).toList();
+        return new ViewBinding(roots);
     }
 
-    @Override
-    public ObjectBinding doPut(EChange<EObject> change, ObjectBinding target, PutContext context) {
+    public ViewBinding doPut(EChange<EObject> change, ViewBinding viewBinding, PutContext context) {
+        EObject affectedViewObject = DynamicModels.getAffectedEObject(change);
+        List<RootObjectBindingImpl> rootBindings = new ArrayList<>(viewBinding.rootBindings);
+
+        int responsibleRootIndex = -1;
+        for (int index = 0; index < rootBindings.size(); index++) {
+            RootObjectBindingImpl rootBinding = rootBindings.get(index);
+            if (rootBinding.rootBinding.viewObject().equals(affectedViewObject)) {
+                responsibleRootIndex = index;
+                break;
+            }
+            if (rootBinding.targetBindings().stream().anyMatch(map -> map.values().stream().anyMatch(binding -> binding.viewObject().equals(affectedViewObject)))) {
+                responsibleRootIndex = index;
+                break;
+            }
+        }
+
+        if (responsibleRootIndex == -1 && !affectedViewObject.eClass().equals(rootClass)) {
+            // The object is newly created, but not part of the root class, so we just pick any roo.
+            responsibleRootIndex = 0;
+        }
+
+        ObjectBinding target = responsibleRootIndex == -1 ? ObjectBinding.empty() : rootBindings.get(responsibleRootIndex);
+        RootObjectBindingImpl newTarget = doPut(change, target, context);
+        if (responsibleRootIndex != -1) {
+            rootBindings.set(responsibleRootIndex, newTarget);
+        } else {
+            rootBindings.add(newTarget);
+        }
+
+        return new ViewBinding(rootBindings);
+    }
+
+    private RootObjectBindingImpl doPut(EChange<EObject> change, ObjectBinding target, PutContext context) {
         if (change instanceof RootEChange<EObject>) {
             if (isRootImplicit) {
                 throw new IllegalArgumentException("Cannot insert or remove the implicit root");
             }
-            // The actual insertion / removal is handled by the associated creation / deletion changes.
-            return target;
         }
 
         if (change instanceof InsertEReference<EObject> insertEReference && isContainmentRelevantChange(insertEReference)) {
-            return target;
+            return (RootObjectBindingImpl) target;
         }
         if (change instanceof RemoveEReference<EObject> removeEReference && isContainmentRelevantChange(removeEReference)) {
-            return target;
+            return (RootObjectBindingImpl) target;
         }
 
         EObject affectedViewObject = DynamicModels.getAffectedEObject(change);
@@ -114,7 +143,6 @@ public class Root implements Operation {
         return featureEChange.getAffectedElement().eClass().equals(rootClass) && targetContainmentReferences.contains(featureEChange.getAffectedFeature());
     }
 
-    @Override
     public Optional<EChange<EObject>> doGetChange(EChange<EObject> change) {
         return Optional.empty();
     }
@@ -151,6 +179,18 @@ public class Root implements Operation {
         @Override
         public Optional<EChange<EObject>> doGetChange(EChange<EObject> change) {
             return Optional.empty();
+        }
+    }
+
+    public static class ViewBinding {
+        private final List<RootObjectBindingImpl> rootBindings;
+
+        private ViewBinding(List<RootObjectBindingImpl> rootBindings) {
+            this.rootBindings = rootBindings;
+        }
+
+        public List<ObjectBinding> getRootBindings() {
+            return rootBindings.stream().map(ObjectBinding.class::cast).toList();
         }
     }
 }

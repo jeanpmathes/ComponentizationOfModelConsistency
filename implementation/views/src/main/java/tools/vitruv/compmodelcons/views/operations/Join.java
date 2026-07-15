@@ -6,6 +6,8 @@ import org.eclipse.emf.ecore.EReference;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.eobject.CreateEObject;
 import tools.vitruv.change.atomic.eobject.DeleteEObject;
+import tools.vitruv.change.atomic.root.InsertRootEObject;
+import tools.vitruv.change.atomic.root.RemoveRootEObject;
 import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
@@ -62,6 +64,28 @@ public class Join implements Operation {
             origin.doPut(change, binding.originBinding(), context);
 
             return ObjectBinding.empty();
+        }
+
+        if (change instanceof InsertRootEObject<EObject> insertRootEObject) {
+            JoinObjectBindingImpl binding = (JoinObjectBindingImpl) target;
+            EObject inserted = binding.originObject();
+
+            if (isRoot) {
+                context.moveRootToOtherOriginModel(sourceClass.getEPackage(), inserted, insertRootEObject.getResource().getURI());
+            }
+
+            return ObjectBinding.ofOriginObject(inserted);
+        }
+
+        if (change instanceof RemoveRootEObject<EObject> removeRootEObject) {
+            JoinObjectBindingImpl binding = (JoinObjectBindingImpl) target;
+            EObject removed = binding.originObject();
+
+            if (isRoot) {
+                context.moveRootToDefaultOriginModel(sourceClass.getEPackage(), removed);
+            }
+
+            return ObjectBinding.ofOriginObject(removed);
         }
 
         throw new IllegalArgumentException("Inappropriate change type: " + change.getClass());
