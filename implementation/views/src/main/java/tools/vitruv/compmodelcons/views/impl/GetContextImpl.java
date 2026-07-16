@@ -9,7 +9,7 @@ import tools.vitruv.compmodelcons.views.internal.ViewResourceAccess;
 public class GetContextImpl extends AbstractContext implements GetContext {
     private final ViewResourceAccess viewResourceAccess;
 
-    protected GetContextImpl(OriginResourceAccess originResourceAccess, ViewResourceAccess viewResourceAccess, EditableViewCorrespondences correspondences) {
+    public GetContextImpl(OriginResourceAccess originResourceAccess, ViewResourceAccess viewResourceAccess, EditableViewCorrespondences correspondences) {
         super(originResourceAccess, correspondences);
         this.viewResourceAccess = viewResourceAccess;
     }

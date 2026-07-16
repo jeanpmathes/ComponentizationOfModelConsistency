@@ -10,7 +10,7 @@ import tools.vitruv.compmodelcons.views.internal.ViewResourceAccess;
 
 import java.util.Collection;
 
-public class ViewResourceAccessImpl implements ViewResourceAccess, AutoCloseable {
+public class ViewResourceAccessImpl implements ViewResourceAccess {
     private final ResourceSet resourceSet;
     private final String viewtypeName;
 
@@ -21,10 +21,12 @@ public class ViewResourceAccessImpl implements ViewResourceAccess, AutoCloseable
         this.viewtypeName = viewtypeName;
     }
 
+    @Override
     public ResourceSet getResourceSet() {
         return resourceSet;
     }
 
+    @Override
     public void reset() {
         resourceSet.getResources().forEach(Resource::unload);
         resourceSet.getResources().clear();

@@ -33,7 +33,7 @@ public abstract class AbstractChangePropagationSpecificationWrappingStrategy imp
 
     @Override
     public void propagateChanges(List<EChange<EObject>> viewChanges, EditableCorrespondenceModelView<Correspondence> correspondenceModel, ViewChangePropagationContext context) {
-        specification.propagateChanges(viewChanges, wrapCorrespondenceModel(correspondenceModel), context);
+        specification.propagateChanges(viewChanges, wrapCorrespondenceModel(correspondenceModel), context.getResourceAccess());
     }
 
     protected abstract EditableCorrespondenceModelView<Correspondence> wrapCorrespondenceModel(EditableCorrespondenceModelView<Correspondence> correspondenceModel);

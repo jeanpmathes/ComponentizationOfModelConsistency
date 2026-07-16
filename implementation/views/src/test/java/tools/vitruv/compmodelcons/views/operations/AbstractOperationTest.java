@@ -220,7 +220,22 @@ class AbstractOperationTest {
                     Model model = models.getModelIdentifier(ePackage);
                     return Streams.concat(Stream.of(models.getModel(model)), models.getOtherModels(model).stream()).toList();
                 }
+
+                @Override
+                public void close() {
+
+                }
             }, new ViewResourceAccess() {
+                @Override
+                public void reset() {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public ResourceSet getResourceSet() {
+                    return models.resourceSet;
+                }
+
                 @Override
                 public void insertRoot(EObject root) {
                     models.getViewModel().getContents().add(root);
@@ -239,6 +254,11 @@ class AbstractOperationTest {
                 @Override
                 public Collection<EObject> getRoots() {
                     return models.getViewModels().stream().flatMap(resource -> resource.getContents().stream()).toList();
+                }
+
+                @Override
+                public void close() throws Exception {
+
                 }
             }, correspondences);
         }

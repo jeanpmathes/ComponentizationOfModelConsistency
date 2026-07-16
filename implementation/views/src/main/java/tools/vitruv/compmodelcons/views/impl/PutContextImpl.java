@@ -15,7 +15,7 @@ public class PutContextImpl extends GetContextImpl implements PutContext {
     private final Set<EObject> unattachedCreatedOriginObjects = new HashSet<>();
     private final Set<EObject> undetachedDeletedOriginObjects = new HashSet<>();
 
-    protected PutContextImpl(OriginResourceAccess originResourceAccess, ViewResourceAccess viewResourceAccess, EditableViewCorrespondences correspondences) {
+    public PutContextImpl(OriginResourceAccess originResourceAccess, ViewResourceAccess viewResourceAccess, EditableViewCorrespondences correspondences) {
         super(originResourceAccess, viewResourceAccess, correspondences);
     }
 

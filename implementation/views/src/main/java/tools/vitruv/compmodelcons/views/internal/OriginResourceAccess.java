@@ -8,7 +8,7 @@ import org.eclipse.emf.ecore.resource.Resource;
 import java.util.Collection;
 import java.util.Optional;
 
-public interface OriginResourceAccess {
+public interface OriginResourceAccess extends AutoCloseable {
     Optional<Resource> getDefaultResource(EPackage ePackage);
 
     void createResourceWithRoot(URI uriHint, EObject root);

@@ -33,6 +33,11 @@ public class NullViewChangePropagationSpecificationImpl implements ChangePropaga
 
     private record DirectModelAccessView(ResourceAccess resourceAccess) implements ChangePropagationView {
         @Override
+        public void update() {
+            // Because we are working directly on the resource access of the model, there is no need to update.
+        }
+
+        @Override
         public ResourceAccess getViewResourceAccess() {
             return resourceAccess;
         }
@@ -43,12 +48,12 @@ public class NullViewChangePropagationSpecificationImpl implements ChangePropaga
         }
 
         @Override
-        public void beginChangeRecording() {
-
+        public void commit() {
+            // Because we are working directly on the resource access of the model, there is no need to commit.
         }
 
         @Override
-        public void commitRecordedChanges() {
+        public void close() throws Exception {
 
         }
     }

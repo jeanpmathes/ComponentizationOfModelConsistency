@@ -109,15 +109,15 @@ class OperationBasedViewTypeTest {
         test(new TestViewType(), view -> {
             Repository repository = view.getRootObjects(Repository.class).iterator().next();
             repository.getComponents().add(pcm.Component());
-            repository.getComponents().remove(0);
-            repository.getComponents().remove(0);
+            repository.getComponents().removeFirst();
+            repository.getComponents().removeFirst();
             repository.getComponents().add(pcm.Component());
             repository.getComponents().add(pcm.Component());
         }, view -> {
             EObject root = view.getRootObjects().iterator().next();
             DynamicModels.getList(root, nonRootContainment).add(DynamicModels.createEObject(viewNonRootClass));
-            DynamicModels.getList(root, nonRootContainment).remove(0);
-            DynamicModels.getList(root, nonRootContainment).remove(0);
+            DynamicModels.getList(root, nonRootContainment).removeFirst();
+            DynamicModels.getList(root, nonRootContainment).removeFirst();
             DynamicModels.getList(root, nonRootContainment).add(DynamicModels.createEObject(viewNonRootClass));
             DynamicModels.getList(root, nonRootContainment).add(DynamicModels.createEObject(viewNonRootClass));
         });
@@ -158,11 +158,11 @@ class OperationBasedViewTypeTest {
 
         test(new TestViewType(), view -> {
             Repository repository = view.getRootObjects(Repository.class).iterator().next();
-            Component component1 = repository.getComponents().get(0);
+            Component component1 = repository.getComponents().getFirst();
             component1.setId("NewID");
         }, view -> {
             EObject root = view.getRootObjects().iterator().next();
-            EObject nonRoot1 = DynamicModels.getList(root, nonRootContainment).get(0);
+            EObject nonRoot1 = DynamicModels.getList(root, nonRootContainment).getFirst();
             nonRoot1.eSet(nonRootIdAttribute, "NewID");
         });
     }

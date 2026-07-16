@@ -6,7 +6,9 @@ import tools.vitruv.change.utils.ResourceAccess;
 
 import java.util.List;
 
-public interface ChangePropagationView {
+public interface ChangePropagationView extends AutoCloseable {
+    void update();
+
     ResourceAccess getViewResourceAccess();
 
     List<EChange<EObject>> doGetChange(EChange<EObject> originChange);
@@ -15,7 +17,5 @@ public interface ChangePropagationView {
         return originChanges.stream().flatMap(originChange -> doGetChange(originChange).stream()).toList();
     }
 
-    void beginChangeRecording();
-
-    void commitRecordedChanges();
+    void commit();
 }

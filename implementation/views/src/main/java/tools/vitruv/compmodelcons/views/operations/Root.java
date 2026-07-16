@@ -143,8 +143,8 @@ public class Root {
         return featureEChange.getAffectedElement().eClass().equals(rootClass) && targetContainmentReferences.contains(featureEChange.getAffectedFeature());
     }
 
-    public Optional<EChange<EObject>> doGetChange(EChange<EObject> change) {
-        return Optional.empty();
+    public List<EChange<EObject>> doGetChange(EChange<EObject> change) {
+        return List.of();
     }
 
     public record Target(EReference reference, Project operation) {

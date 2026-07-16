@@ -38,15 +38,17 @@ public class ViewChangePropagationSpecificationAdapter extends AbstractChangePro
 
     @Override
     public void propagateChanges(List<EChange<EObject>> originChanges, EditableCorrespondenceModelView<Correspondence> correspondenceModel, ResourceAccess resourceAccess) {
-        ChangePropagationView sourceView = sourceViewType.createView(resourceAccess);
-        ChangePropagationView targetView = targetViewType.createView(resourceAccess);
-        var context = new ViewChangePropagationContext(sourceView, sourceViewType, targetView, targetViewType);
-
-        List<EChange<EObject>> viewChanges = sourceView.doGetChange(originChanges);
-
-        targetView.beginChangeRecording();
-        specification.propagateChanges(viewChanges, correspondenceModel, context);
-        targetView.commitRecordedChanges();
+        try (
+                ChangePropagationView sourceView = sourceViewType.createView(resourceAccess);
+                ChangePropagationView targetView = targetViewType.createView(resourceAccess)
+        ) {
+            var context = new ViewChangePropagationContext(sourceView, sourceViewType, targetView, targetViewType);
+            List<EChange<EObject>> viewChanges = sourceView.doGetChange(originChanges);
+            specification.propagateChanges(viewChanges, correspondenceModel, context);
+            targetView.commit();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
