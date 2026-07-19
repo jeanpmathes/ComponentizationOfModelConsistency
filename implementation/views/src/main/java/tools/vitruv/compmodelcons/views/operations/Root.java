@@ -64,8 +64,8 @@ public class Root {
         return new ViewBinding(roots);
     }
 
-    public ViewBinding doPut(EChange<EObject> change, ViewBinding viewBinding, PutContext context) {
-        EObject affectedViewObject = DynamicModels.getAffectedEObject(change);
+    public ViewBinding doPut(EChange<EObject> viewChange, ViewBinding viewBinding, PutContext context) {
+        EObject affectedViewObject = DynamicModels.getAffectedEObject(viewChange);
         List<RootObjectBindingImpl> rootBindings = new ArrayList<>(viewBinding.rootBindings);
 
         int responsibleRootIndex = -1;
@@ -87,7 +87,7 @@ public class Root {
         }
 
         ObjectBinding target = responsibleRootIndex == -1 ? ObjectBinding.empty() : rootBindings.get(responsibleRootIndex);
-        RootObjectBindingImpl newTarget = doPut(change, target, context);
+        RootObjectBindingImpl newTarget = doPut(viewChange, target, context);
         if (responsibleRootIndex != -1) {
             rootBindings.set(responsibleRootIndex, newTarget);
         } else {
@@ -143,8 +143,8 @@ public class Root {
         return featureEChange.getAffectedElement().eClass().equals(rootClass) && targetContainmentReferences.contains(featureEChange.getAffectedFeature());
     }
 
-    public List<EChange<EObject>> doGetChange(EChange<EObject> change) {
-        return List.of();
+    public ViewBinding doUpdatingGet(ViewBinding previous, EChange<EObject> originChange, GetContext context) {
+        return null;
     }
 
     public record Target(EReference reference, Project operation) {
@@ -165,20 +165,20 @@ public class Root {
         }
     }
 
-    private static class Empty implements Operation {
+    private static class Empty implements OriginOperation {
         @Override
         public List<ObjectBinding> doGet(GetContext context) {
             return List.of(ObjectBinding.empty());
         }
 
         @Override
-        public ObjectBinding doPut(EChange<EObject> change, ObjectBinding target, PutContext context) {
+        public ObjectBinding doPut(EChange<EObject> viewChange, ObjectBinding target, PutContext context) {
             throw new UnsupportedOperationException("Modification of the default, uncorresponding root is not supported");
         }
 
         @Override
-        public Optional<EChange<EObject>> doGetChange(EChange<EObject> change) {
-            return Optional.empty();
+        public List<ObjectBinding> doUpdatingGet(List<ObjectBinding> previous, EChange<EObject> originChange, GetContext context) {
+            return List.of();
         }
     }
 

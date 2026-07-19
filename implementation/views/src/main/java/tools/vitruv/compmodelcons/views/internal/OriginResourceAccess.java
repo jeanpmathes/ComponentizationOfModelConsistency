@@ -14,4 +14,8 @@ public interface OriginResourceAccess extends AutoCloseable {
     void createResourceWithRoot(URI uriHint, EObject root);
 
     Collection<Resource> getResources(EPackage ePackage);
+
+    Optional<URI> getViewUriHint(EPackage originPackage, EPackage viewtypePackage);
+
+    void refreshResourceMapping();
 }

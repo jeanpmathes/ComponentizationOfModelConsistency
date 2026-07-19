@@ -23,7 +23,7 @@ class JoinTest extends AbstractOperationTest {
         List<ObjectBinding> restaurantBindings = restaurants.stream().map(ObjectBinding::ofOriginObject).toList();
 
         // Operation Setup
-        Operation originOperation = mock(Operation.class);
+        OriginOperation originOperation = mock(OriginOperation.class);
         Join operation = new Join(restaurantClass, originOperation);
 
         // Action
@@ -51,7 +51,7 @@ class JoinTest extends AbstractOperationTest {
         EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
-        Operation originOperation = mock(Operation.class);
+        OriginOperation originOperation = mock(OriginOperation.class);
         Join operation = new Join(storeClass, originOperation);
 
         // Pre-Action Get
@@ -90,7 +90,7 @@ class JoinTest extends AbstractOperationTest {
         EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
-        Operation originOperation = mock(Operation.class);
+        OriginOperation originOperation = mock(OriginOperation.class);
         Join operation = new Join(storeClass, originOperation);
 
         // Pre-Action Get

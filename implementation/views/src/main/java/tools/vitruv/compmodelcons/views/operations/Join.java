@@ -15,15 +15,14 @@ import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-public class Join implements Operation {
+public class Join implements OriginOperation {
     private final EClass sourceClass;
     private final boolean isRoot;
     private final EReference container;
-    private final Operation origin;
+    private final OriginOperation origin;
 
-    public Join(EClass sourceClass, Operation origin) {
+    public Join(EClass sourceClass, OriginOperation origin) {
         this.sourceClass = sourceClass;
         this.isRoot = DynamicModels.isRoot(sourceClass);
         this.container = isRoot ? null : DynamicModels.getUnambiguousContainer(sourceClass);
@@ -39,13 +38,13 @@ public class Join implements Operation {
     }
 
     @Override
-    public ObjectBinding doPut(EChange<EObject> change, ObjectBinding target, PutContext context) {
-        if (change instanceof CreateEObject<EObject> createEObject) {
+    public ObjectBinding doPut(EChange<EObject> viewChange, ObjectBinding target, PutContext context) {
+        if (viewChange instanceof CreateEObject<EObject> createEObject) {
             if (!target.originObjects().isEmpty()) {
                 throw new IllegalArgumentException("Cannot create an origin object if there is already an origin object");
             }
 
-            ObjectBinding originBinding = origin.doPut(change, target, context);
+            ObjectBinding originBinding = origin.doPut(viewChange, target, context);
 
             EObject created = sourceClass.getEPackage().getEFactoryInstance().create(sourceClass);
             context.getCorrespondences().joinCorrespondence(originBinding.originObjects(), List.of(created), createEObject.getAffectedElement());
@@ -54,19 +53,19 @@ public class Join implements Operation {
             return new JoinObjectBindingImpl(originBinding, created);
         }
 
-        if (change instanceof DeleteEObject<EObject> deleteEObject) {
+        if (viewChange instanceof DeleteEObject<EObject> deleteEObject) {
             JoinObjectBindingImpl binding = (JoinObjectBindingImpl) target;
 
             EObject deleted = binding.originObject();
             context.getCorrespondences().unjoinCorrespondence(binding.originObjects(), List.of(deleted), deleteEObject.getAffectedElement());
             Source.detachDeletedOriginObject(deleted, sourceClass, isRoot, container, context);
 
-            origin.doPut(change, binding.originBinding(), context);
+            origin.doPut(viewChange, binding.originBinding(), context);
 
             return ObjectBinding.empty();
         }
 
-        if (change instanceof InsertRootEObject<EObject> insertRootEObject) {
+        if (viewChange instanceof InsertRootEObject<EObject> insertRootEObject) {
             JoinObjectBindingImpl binding = (JoinObjectBindingImpl) target;
             EObject inserted = binding.originObject();
 
@@ -77,7 +76,7 @@ public class Join implements Operation {
             return ObjectBinding.ofOriginObject(inserted);
         }
 
-        if (change instanceof RemoveRootEObject<EObject> removeRootEObject) {
+        if (viewChange instanceof RemoveRootEObject<EObject> removeRootEObject) {
             JoinObjectBindingImpl binding = (JoinObjectBindingImpl) target;
             EObject removed = binding.originObject();
 
@@ -88,12 +87,12 @@ public class Join implements Operation {
             return ObjectBinding.ofOriginObject(removed);
         }
 
-        throw new IllegalArgumentException("Inappropriate change type: " + change.getClass());
+        throw new IllegalArgumentException("Inappropriate change type: " + viewChange.getClass());
     }
 
     @Override
-    public Optional<EChange<EObject>> doGetChange(EChange<EObject> change) {
-        return Optional.empty();
+    public List<ObjectBinding> doUpdatingGet(List<ObjectBinding> previous, EChange<EObject> originChange, GetContext context) {
+        return List.of();
     }
 
     private static final class JoinObjectBindingImpl implements ObjectBinding {

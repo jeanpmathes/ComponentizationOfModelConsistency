@@ -13,7 +13,7 @@ public interface ValueBinding {
     static ValueBinding ofFeature(EObject subject, EStructuralFeature feature) {
         if (subject.eIsSet(feature)) {
             if (feature.isMany()) {
-                return new Many((List<?>) subject.eGet(feature));
+                return new Many(List.copyOf((List<?>) subject.eGet(feature)));
             } else {
                 return new Single(subject.eGet(feature));
             }

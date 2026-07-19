@@ -34,9 +34,18 @@ public abstract class AbstractOriginResourceAccess implements OriginResourceAcce
         return uriHint.trimFileExtension().appendFileExtension(originPackage.getNsPrefix());
     }
 
+    @Override
+    public Optional<URI> getViewUriHint(EPackage originPackage, EPackage viewtypePackage) {
+        if (resources.isEmpty() || !resources.containsKey(originPackage)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(resources.get(originPackage).defaultResource().getURI().trimFileExtension().appendFileExtension(viewtypePackage.getNsPrefix()));
+    }
+
     protected abstract Collection<EObject> getRoots();
 
-    protected void resetResourceMapping() {
+    protected void rebuildResourceMapping() {
         knownDefaults.clear();
         resources.clear();
 
@@ -52,7 +61,8 @@ public abstract class AbstractOriginResourceAccess implements OriginResourceAcce
         }
     }
 
-    protected void updateResourceMapping() {
+    @Override
+    public void refreshResourceMapping() {
         resources.clear();
 
         Map<EPackage, Map<URI, Resource>> allResources = new HashMap<>();

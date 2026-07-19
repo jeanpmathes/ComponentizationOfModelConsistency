@@ -13,16 +13,15 @@ import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class Project {
     private final EClass createdClass;
-    private final Operation origin;
+    private final OriginOperation origin;
     private final List<FeatureProject> features;
 
     private final Map<EStructuralFeature, Integer> featureIndices = new java.util.HashMap<>();
 
-    public Project(EClass createdClass, Operation origin, List<FeatureProject> features) {
+    public Project(EClass createdClass, OriginOperation origin, List<FeatureProject> features) {
         this.createdClass = createdClass;
         this.origin = origin;
         this.features = List.copyOf(features);
@@ -48,7 +47,7 @@ public class Project {
         initializeFeatureBindings(projected.featureBindings, projected, context);
     }
 
-    public ObjectBinding doPut(EChange<EObject> change, ObjectBinding target, PutContext context) {
+    public ObjectBinding doPut(EChange<EObject> viewChange, ObjectBinding target, PutContext context) {
         if (!target.viewObject().eClass().equals(createdClass)) {
             throw new IllegalArgumentException("Cannot put a change on an object that is not of the created class");
         }
@@ -65,12 +64,12 @@ public class Project {
             featureBindings = createUninitializedFeatureBindings();
         }
 
-        if (change instanceof FeatureEChange<EObject, ?> featureEChange) {
+        if (viewChange instanceof FeatureEChange<EObject, ?> featureEChange) {
             int featureIndex = featureIndices.get(featureEChange.getAffectedFeature());
-            featureBindings.set(featureIndex, features.get(featureIndex).doPut(change, featureBindings.get(featureIndex), target, context));
+            featureBindings.set(featureIndex, features.get(featureIndex).doPut(viewChange, featureBindings.get(featureIndex), target, context));
             return new ProjectObjectBindingImpl(peeledTarget, viewObject, featureBindings);
         } else {
-            ObjectBinding originBinding = origin.doPut(change, peeledTarget, context);
+            ObjectBinding originBinding = origin.doPut(viewChange, peeledTarget, context);
 
             ProjectObjectBindingImpl projected = new ProjectObjectBindingImpl(originBinding, viewObject, featureBindings);
 
@@ -83,8 +82,8 @@ public class Project {
     }
 
 
-    public Optional<EChange<EObject>> doGetChange(EChange<EObject> change) {
-        return Optional.empty();
+    public Root.ViewBinding doUpdatingGet(Root.ViewBinding previous, EChange<EObject> originChange, GetContext context) {
+        return null;
     }
 
     private List<FeatureBinding> createUninitializedFeatureBindings() {

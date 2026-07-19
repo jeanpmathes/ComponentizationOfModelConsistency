@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+                xmi:version="2.0" name="model"
+                nsURI="http://vitruv.tools/compmodelcons/view_id"
+                nsPrefix="view_id">
+    <eClassifiers xsi:type="ecore:EClass" name="ViewIdModel">
+        <eStructuralFeatures xsi:type="ecore:EReference" name="ids" upperBound="-1"
+                             eType="#//ViewId" containment="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="ViewId">
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="hierarchicalId"
+                             eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+</ecore:EPackage>

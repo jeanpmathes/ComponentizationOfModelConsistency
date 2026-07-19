@@ -12,7 +12,7 @@ public class ResourceAccessWrappingOriginResourceAccess extends AbstractOriginRe
 
     public ResourceAccessWrappingOriginResourceAccess(ResourceAccess resourceAccess) {
         this.resourceAccess = resourceAccess;
-        resetResourceMapping();
+        rebuildResourceMapping();
     }
 
     @Override
@@ -26,7 +26,7 @@ public class ResourceAccessWrappingOriginResourceAccess extends AbstractOriginRe
     @Override
     public void createResourceWithRoot(URI uriHint, EObject root) {
         resourceAccess.persistAsRoot(root, determineOriginUri(root.eClass().getEPackage(), uriHint));
-        updateResourceMapping();
+        refreshResourceMapping();
     }
 
     @Override

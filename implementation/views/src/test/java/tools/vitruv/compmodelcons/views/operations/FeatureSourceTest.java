@@ -39,7 +39,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         ObjectBinding simpleBinding = createBinding(restaurant, simple);
 
         // Operation Setup
-        FeatureOperation operation = new FeatureSource(numEmployees);
+        FeatureOriginOperation operation = new FeatureSource(numEmployees);
 
         // Action
         FeatureBinding result = operation.doGet(simpleBinding, context);
@@ -70,7 +70,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         ObjectBinding simpleBinding = createBinding(restaurant, simple);
 
         // Operation Setup
-        FeatureOperation operation = new FeatureSource(numEmployees);
+        FeatureOriginOperation operation = new FeatureSource(numEmployees);
 
         // Pre-Action Get
         FeatureBinding result = operation.doGet(simpleBinding, context);
@@ -106,7 +106,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         ObjectBinding simpleBinding = createBinding(store, simple);
 
         // Operation Setup
-        FeatureOperation operation = new FeatureSource(restaurantsReference);
+        FeatureOriginOperation operation = new FeatureSource(restaurantsReference);
 
         // Pre-Action Get
         FeatureBinding result = operation.doGet(simpleBinding, context);
@@ -147,7 +147,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         ObjectBinding simpleBinding = createBinding(store, simple);
 
         // Operation Setup
-        FeatureOperation operation = new FeatureSource(restaurantsReference);
+        FeatureOriginOperation operation = new FeatureSource(restaurantsReference);
 
         // Pre-Action Get
         FeatureBinding result = operation.doGet(simpleBinding, context);
@@ -186,7 +186,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         ObjectBinding simpleBinding = createBinding(restaurant, simple);
 
         // Operation Setup
-        FeatureOperation operation = new FeatureSource(numEmployees);
+        FeatureOriginOperation operation = new FeatureSource(numEmployees);
 
         // Pre-Action Get
         FeatureBinding result = operation.doGet(simpleBinding, context);

@@ -20,7 +20,7 @@ public class ViewWrappingOriginResourceAccessImpl extends AbstractOriginResource
 
     public void update() {
         view.update();
-        resetResourceMapping();
+        rebuildResourceMapping();
     }
 
     public boolean isOutdated() {
@@ -35,7 +35,7 @@ public class ViewWrappingOriginResourceAccessImpl extends AbstractOriginResource
     @Override
     public void createResourceWithRoot(URI uriHint, EObject root) {
         view.registerRoot(root, determineOriginUri(root.eClass().getEPackage(), uriHint));
-        updateResourceMapping();
+        refreshResourceMapping();
     }
 
     @Override

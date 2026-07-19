@@ -24,9 +24,9 @@ public class FeatureProject {
     private final EClass sourceObjectClass;
     private final EStructuralFeature createdFeature;
     private final boolean isReference;
-    private final FeatureOperation origin;
+    private final FeatureOriginOperation origin;
 
-    public FeatureProject(Optional<EStructuralFeature> sourceFeature, EStructuralFeature createdFeature, FeatureOperation origin) {
+    public FeatureProject(Optional<EStructuralFeature> sourceFeature, EStructuralFeature createdFeature, FeatureOriginOperation origin) {
         this.hasKnownSource = sourceFeature.isPresent();
         if (sourceFeature.isPresent() && sourceFeature.get().getEType() instanceof EClass eClass) {
             this.sourceObjectClass = eClass;
@@ -49,13 +49,13 @@ public class FeatureProject {
             subject.viewObject().eUnset(createdFeature);
             return new FeatureProjectBindingImpl(originFeature, subject.viewObject(), originFeature.value());
         }
-        if (originFeature.value() instanceof ValueBinding.Single single) {
-            Object translated = translateOriginToView(single.value(), context);
+        if (originFeature.value() instanceof ValueBinding.Single(Object value)) {
+            Object translated = translateOriginToView(value, context);
             subject.viewObject().eSet(createdFeature, translated);
             return new FeatureProjectBindingImpl(originFeature, subject.viewObject(), new ValueBinding.Single(translated));
         }
-        if (originFeature.value() instanceof ValueBinding.Many many) {
-            List<?> translated = many.values().stream().map(value -> translateOriginToView(value, context)).toList();
+        if (originFeature.value() instanceof ValueBinding.Many(List<?> values)) {
+            List<?> translated = values.stream().map(value -> translateOriginToView(value, context)).toList();
             subject.viewObject().eSet(createdFeature, translated);
             return new FeatureProjectBindingImpl(originFeature, subject.viewObject(), new ValueBinding.Many(translated));
         }
@@ -70,19 +70,17 @@ public class FeatureProject {
 
         FeatureProjectBindingImpl binding = (FeatureProjectBindingImpl) feature;
 
-        ValueUpdateBinding value;
-
-        if (change instanceof ReplaceSingleValuedFeatureEChange<EObject, ?, ?> replaceSingleValuedFeatureEChange) {
-            value = new ValueUpdateBinding.Replace(translateViewToOrigin(replaceSingleValuedFeatureEChange.getNewValue(), context));
-        } else if (change instanceof InsertInListEChange<EObject, ?, ?> insertInListEChange) {
-            value = new ValueUpdateBinding.Insert(translateViewToOrigin(insertInListEChange.getNewValue(), context), insertInListEChange.getIndex());
-        } else if (change instanceof RemoveFromListEChange<EObject, ?, ?> removeFromListEChange) {
-            value = new ValueUpdateBinding.Remove(translateViewToOrigin(removeFromListEChange.getOldValue(), context), removeFromListEChange.getIndex());
-        } else if (change instanceof UnsetFeature<EObject, ?>) {
-            value = new ValueUpdateBinding.Unset();
-        } else {
-            throw new IllegalArgumentException("Unsupported change type: " + change.getClass().getSimpleName());
-        }
+        ValueUpdateBinding value = switch (change) {
+            case ReplaceSingleValuedFeatureEChange<EObject, ?, ?> replaceSingleValuedFeatureEChange ->
+                    new ValueUpdateBinding.Replace(translateViewToOrigin(replaceSingleValuedFeatureEChange.getNewValue(), context));
+            case InsertInListEChange<EObject, ?, ?> insertInListEChange ->
+                    new ValueUpdateBinding.Insert(translateViewToOrigin(insertInListEChange.getNewValue(), context), insertInListEChange.getIndex());
+            case RemoveFromListEChange<EObject, ?, ?> removeFromListEChange ->
+                    new ValueUpdateBinding.Remove(translateViewToOrigin(removeFromListEChange.getOldValue(), context), removeFromListEChange.getIndex());
+            case UnsetFeature<EObject, ?> ignored -> new ValueUpdateBinding.Unset();
+            default ->
+                    throw new IllegalArgumentException("Unsupported change type: " + change.getClass().getSimpleName());
+        };
 
         FeatureBinding originBinding = origin.doPut(change, binding.originBinding(), subject, value, context);
 
@@ -110,8 +108,8 @@ public class FeatureProject {
         return viewValue;
     }
 
-    public Optional<EChange<EObject>> doGetChange(EChange<EObject> change) {
-        return Optional.empty();
+    public FeatureBinding doGet(FeatureBinding previous, EChange<EObject> originChange, GetContext context) {
+        return null;
     }
 
     private record FeatureProjectBindingImpl(FeatureBinding originBinding, EObject viewSubjectObject,

@@ -14,9 +14,8 @@ import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 
 import java.util.List;
-import java.util.Optional;
 
-public class Source implements Operation {
+public class Source implements OriginOperation {
     private final EClass sourceClass;
     private final boolean isRoot;
     private final EReference container;
@@ -71,8 +70,8 @@ public class Source implements Operation {
     }
 
     @Override
-    public ObjectBinding doPut(EChange<EObject> change, ObjectBinding target, PutContext context) {
-        if (change instanceof CreateEObject<EObject> createEObject) {
+    public ObjectBinding doPut(EChange<EObject> viewChange, ObjectBinding target, PutContext context) {
+        if (viewChange instanceof CreateEObject<EObject> createEObject) {
             if (!target.originObjects().isEmpty()) {
                 throw new IllegalArgumentException("Cannot create an origin object if there is already an origin object");
             }
@@ -85,7 +84,7 @@ public class Source implements Operation {
             return ObjectBinding.ofOriginObject(created);
         }
 
-        if (change instanceof DeleteEObject<EObject> deleteEObject) {
+        if (viewChange instanceof DeleteEObject<EObject> deleteEObject) {
             EObject deleted = target.originObjects().getFirst();
             context.getCorrespondences().removeCorrespondence(List.of(deleted), deleteEObject.getAffectedElement());
 
@@ -94,7 +93,7 @@ public class Source implements Operation {
             return ObjectBinding.empty();
         }
 
-        if (change instanceof InsertRootEObject<EObject> insertRootEObject) {
+        if (viewChange instanceof InsertRootEObject<EObject> insertRootEObject) {
             EObject inserted = target.originObjects().getFirst();
 
             if (isRoot) {
@@ -104,7 +103,7 @@ public class Source implements Operation {
             return ObjectBinding.ofOriginObject(inserted);
         }
 
-        if (change instanceof RemoveRootEObject<EObject>) {
+        if (viewChange instanceof RemoveRootEObject<EObject>) {
             EObject removed = target.originObjects().getFirst();
 
             if (isRoot) {
@@ -114,11 +113,11 @@ public class Source implements Operation {
             return ObjectBinding.ofOriginObject(removed);
         }
 
-        throw new IllegalArgumentException("Inappropriate change type: " + change.getClass());
+        throw new IllegalArgumentException("Inappropriate change type: " + viewChange.getClass());
     }
 
     @Override
-    public Optional<EChange<EObject>> doGetChange(EChange<EObject> change) {
-        return Optional.empty();
+    public List<ObjectBinding> doUpdatingGet(List<ObjectBinding> previous, EChange<EObject> originChange, GetContext context) {
+        return List.of();
     }
 }

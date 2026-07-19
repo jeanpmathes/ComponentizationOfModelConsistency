@@ -15,7 +15,7 @@ import tools.vitruv.compmodelcons.views.bindings.ValueUpdateBinding;
 import java.util.List;
 import java.util.Optional;
 
-public class FeatureSource implements FeatureOperation {
+public class FeatureSource implements FeatureOriginOperation {
     private final EClass sourceClass;
     private final EStructuralFeature sourceFeature;
     private final boolean isSourceFeatureAContainmentFeature;
@@ -40,7 +40,7 @@ public class FeatureSource implements FeatureOperation {
         return getSource(subjectBinding).map(subject -> FeatureBinding.ofOriginObject(subject, ValueBinding.ofFeature(subject, sourceFeature))).orElseThrow();
     }
 
-    public FeatureBinding doPut(EChange<EObject> change, FeatureBinding feature, ObjectBinding subjectBinding, ValueUpdateBinding value, PutContext context) {
+    public FeatureBinding doPut(EChange<EObject> viewChange, FeatureBinding feature, ObjectBinding subjectBinding, ValueUpdateBinding value, PutContext context) {
         return getSource(subjectBinding).map(subject -> {
             Object object = null;
 
@@ -85,7 +85,7 @@ public class FeatureSource implements FeatureOperation {
     }
 
     @Override
-    public Optional<EChange<EObject>> doGetChange(EChange<EObject> change) {
-        return Optional.empty();
+    public FeatureBinding doUpdatingGet(FeatureBinding feature, EChange<EObject> originChange, GetContext context) {
+        return null;
     }
 }

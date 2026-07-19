@@ -22,6 +22,7 @@ import tools.vitruv.framework.views.impl.ModifiableView;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public abstract class OperationBasedViewType extends AbstractViewType<AllSelector, HierarchicalId> {
     private final List<EPackage> originMetamodels;
@@ -34,6 +35,22 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
 
         this.originMetamodels = List.copyOf(originMetamodels);
         this.sourceModelsViewType = new IdentityMappingViewType(String.format("%s_InternalIdentity", name));
+    }
+
+    public List<EPackage> getOriginMetamodels() {
+        return originMetamodels;
+    }
+
+    public URI createPlaceholderViewUri() {
+        return URI.createURI(String.format("view:/%s", getViewResourceName()));
+    }
+
+    public URI createUri(Function<String, URI> uriFactory) {
+        return uriFactory.apply(getViewResourceName());
+    }
+
+    private String getViewResourceName() {
+        return String.format("%s.default.view", getName());
     }
 
     protected abstract Root createStructure();
@@ -160,7 +177,7 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
             this.selector = selector;
 
             originResourceAccess = new ViewWrappingOriginResourceAccessImpl(createSourceModelsView());
-            viewResourceAccess = new ViewResourceAccessImpl(getName());
+            viewResourceAccess = new ViewResourceAccessImpl(createPlaceholderViewUri());
             internalView = new InternalViewImpl(getStructure(), viewResourceAccess, originResourceAccess);
 
             update();

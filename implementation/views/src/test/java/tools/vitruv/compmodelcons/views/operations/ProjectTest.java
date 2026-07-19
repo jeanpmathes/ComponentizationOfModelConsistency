@@ -26,7 +26,7 @@ public class ProjectTest extends AbstractOperationTest {
         EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
-        Operation originOperation = mock(Operation.class);
+        OriginOperation originOperation = mock(OriginOperation.class);
         Project operation = new Project(emptyClass, originOperation, List.of());
 
         // Action
@@ -55,7 +55,7 @@ public class ProjectTest extends AbstractOperationTest {
         EAttribute number = DynamicModels.createEAttribute(simpleClass, "number", EcorePackage.eINSTANCE.getEInt());
 
         // Operation Setup
-        Operation originOperation = mock(Operation.class);
+        OriginOperation originOperation = mock(OriginOperation.class);
         FeatureProject featureProject = mock(FeatureProject.class);
         when(featureProject.getCreatedFeature()).thenReturn(number);
         Project operation = new Project(simpleClass, originOperation, List.of(featureProject));
@@ -89,7 +89,7 @@ public class ProjectTest extends AbstractOperationTest {
         EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
-        Operation originOperation = mock(Operation.class);
+        OriginOperation originOperation = mock(OriginOperation.class);
         Project operation = new Project(emptyClass, originOperation, List.of());
 
         // Pre-Action Get
@@ -122,7 +122,7 @@ public class ProjectTest extends AbstractOperationTest {
         EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
-        Operation originOperation = mock(Operation.class);
+        OriginOperation originOperation = mock(OriginOperation.class);
         Project operation = new Project(emptyClass, originOperation, List.of());
 
         // Pre-Action Get
@@ -156,7 +156,7 @@ public class ProjectTest extends AbstractOperationTest {
         EAttribute number = DynamicModels.createEAttribute(simpleClass, "number", EcorePackage.eINSTANCE.getEInt());
 
         // Operation Setup
-        Operation originOperation = mock(Operation.class);
+        OriginOperation originOperation = mock(OriginOperation.class);
         FeatureProject featureProject = mock(FeatureProject.class);
         when(featureProject.getCreatedFeature()).thenReturn(number);
         Project operation = new Project(simpleClass, originOperation, List.of(featureProject));

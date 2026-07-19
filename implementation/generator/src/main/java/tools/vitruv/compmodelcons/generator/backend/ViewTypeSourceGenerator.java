@@ -5,7 +5,6 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.eclipse.emf.codegen.ecore.genmodel.GenClass;
 import org.eclipse.emf.codegen.ecore.genmodel.GenFeature;
 import org.eclipse.emf.ecore.EPackage;
-import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.compmodelcons.change.ChangeSpecificationAwareViewType;
 import tools.vitruv.compmodelcons.generator.Metamodel;
 import tools.vitruv.compmodelcons.generator.tools.NamingGenerator;
@@ -68,18 +67,6 @@ public class ViewTypeSourceGenerator {
 
         builder.append("    public ").append(getClassName()).append("() {\n");
         builder.append("        super(NAME, originMetamodels, viewtype);\n");
-        builder.append("    }\n\n");
-
-        importHelper.typeRef(MetamodelDescriptor.class);
-
-        builder.append("    @Override\n");
-        builder.append("    public List<MetamodelDescriptor> getOriginMetamodelDescriptors() {\n");
-        builder.append("        return originMetamodels.stream().map(MetamodelDescriptor::of).toList();\n");
-        builder.append("    }\n\n");
-
-        builder.append("    @Override\n");
-        builder.append("    public MetamodelDescriptor getViewTypeMetamodelDescriptor() {\n");
-        builder.append("        return MetamodelDescriptor.of(viewtype);\n");
         builder.append("    }\n\n");
 
         importHelper.typeRef(Root.class);

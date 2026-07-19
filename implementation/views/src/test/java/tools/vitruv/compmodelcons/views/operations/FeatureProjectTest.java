@@ -26,7 +26,7 @@ class FeatureProjectTest extends AbstractOperationTest {
         EClass simpleClass = DynamicModels.createEClass(viewType);
         EAttribute numberAttribute = DynamicModels.createEAttribute(simpleClass, "number", EcorePackage.eINSTANCE.getEInt());
 
-        FeatureOperation originOperation = mock(FeatureOperation.class);
+        FeatureOriginOperation originOperation = mock(FeatureOriginOperation.class);
         FeatureProject operation = new FeatureProject(Optional.empty(), numberAttribute, originOperation);
 
         assertEquals(numberAttribute, operation.getCreatedFeature());
@@ -47,7 +47,7 @@ class FeatureProjectTest extends AbstractOperationTest {
         ObjectBinding simpleBinding = createBinding(store, simple);
 
         // Operation Setup
-        FeatureOperation originOperation = mock(FeatureOperation.class);
+        FeatureOriginOperation originOperation = mock(FeatureOriginOperation.class);
         FeatureProject operation = new FeatureProject(Optional.empty(), numberAttribute, originOperation);
 
         // Action
@@ -79,7 +79,7 @@ class FeatureProjectTest extends AbstractOperationTest {
         ObjectBinding simpleBinding = createBinding(store, simple);
 
         // Operation Setup
-        FeatureOperation originOperation = mock(FeatureOperation.class);
+        FeatureOriginOperation originOperation = mock(FeatureOriginOperation.class);
         FeatureProject operation = new FeatureProject(Optional.empty(), numberAttribute, originOperation);
 
         // Action
@@ -111,7 +111,7 @@ class FeatureProjectTest extends AbstractOperationTest {
         ObjectBinding simpleBinding = createBinding(store, simple);
 
         // Operation Setup
-        FeatureOperation originOperation = mock(FeatureOperation.class);
+        FeatureOriginOperation originOperation = mock(FeatureOriginOperation.class);
         FeatureProject operation = new FeatureProject(Optional.empty(), numberAttribute, originOperation);
 
         // Action
@@ -152,7 +152,7 @@ class FeatureProjectTest extends AbstractOperationTest {
         }
 
         // Operation Setup
-        FeatureOperation originOperation = mock(FeatureOperation.class);
+        FeatureOriginOperation originOperation = mock(FeatureOriginOperation.class);
         FeatureProject operation = new FeatureProject(Optional.of(restaurantsReference), mappedReference, originOperation);
 
         // Action
@@ -187,7 +187,7 @@ class FeatureProjectTest extends AbstractOperationTest {
         ObjectBinding simpleBinding = createBinding(restaurant, simple);
 
         // Operation Setup
-        FeatureOperation originOperation = mock(FeatureOperation.class);
+        FeatureOriginOperation originOperation = mock(FeatureOriginOperation.class);
         FeatureProject operation = new FeatureProject(Optional.of(numEmployees), numberAttribute, originOperation);
 
         // Pre-Action Get
@@ -232,7 +232,7 @@ class FeatureProjectTest extends AbstractOperationTest {
         }
 
         // Operation Setup
-        FeatureOperation originOperation = mock(FeatureOperation.class);
+        FeatureOriginOperation originOperation = mock(FeatureOriginOperation.class);
         FeatureProject operation = new FeatureProject(Optional.of(restaurantsReference), mappedReference, originOperation);
 
         // Pre-Action Get
@@ -273,7 +273,7 @@ class FeatureProjectTest extends AbstractOperationTest {
         ObjectBinding simpleBinding = createBinding(restaurant, simple);
 
         // Operation Setup
-        FeatureOperation originOperation = mock(FeatureOperation.class);
+        FeatureOriginOperation originOperation = mock(FeatureOriginOperation.class);
         FeatureProject operation = new FeatureProject(Optional.empty(), numberAttribute, originOperation);
 
         // Pre-Action Get

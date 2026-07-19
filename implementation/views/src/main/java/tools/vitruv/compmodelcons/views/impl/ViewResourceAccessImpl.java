@@ -12,13 +12,13 @@ import java.util.Collection;
 
 public class ViewResourceAccessImpl implements ViewResourceAccess {
     private final ResourceSet resourceSet;
-    private final String viewtypeName;
+    private final URI defaultViewUri;
 
     private Resource resource;
 
-    public ViewResourceAccessImpl(String viewtypeName) {
+    public ViewResourceAccessImpl(URI defaultViewUri) {
         this.resourceSet = ResourceSetUtil.withGlobalFactories(new ResourceSetImpl());
-        this.viewtypeName = viewtypeName;
+        this.defaultViewUri = defaultViewUri;
     }
 
     @Override
@@ -31,7 +31,7 @@ public class ViewResourceAccessImpl implements ViewResourceAccess {
         resourceSet.getResources().forEach(Resource::unload);
         resourceSet.getResources().clear();
 
-        resource = resourceSet.createResource(URI.createURI(String.format("view:/%s/default.view", viewtypeName)));
+        resource = resourceSet.createResource(defaultViewUri);
     }
 
     @Override

@@ -222,6 +222,16 @@ class AbstractOperationTest {
                 }
 
                 @Override
+                public Optional<URI> getViewUriHint(EPackage originPackage, EPackage viewtypePackage) {
+                    return Optional.empty();
+                }
+
+                @Override
+                public void refreshResourceMapping() {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
                 public void close() {
 
                 }

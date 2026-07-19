@@ -120,8 +120,19 @@ public class InternalViewImpl implements AutoCloseable {
         context.validateAttachmentState();
     }
 
-    public List<EChange<EObject>> doGetChange(EChange<EObject> originChange) {
-        return structure.doGetChange(originChange);
+    public List<EChange<EObject>> updateAndTranslateChange(EChange<EObject> originChange) {
+        originResourceAccess.refreshResourceMapping();
+
+        var context = new GetContextImpl(originResourceAccess, viewResourceAccess, correspondences);
+        viewBinding = structure.doUpdatingGet(viewBinding, originChange, context);
+
+        VitruviusChange<EObject> viewChange = changeRecorder.endRecording();
+        List<EChange<EObject>> viewChanges = reorderChanges(viewChange.getEChanges());
+
+        endRecordingAndClose();
+        setupChangeRecorderAndBeginRecording();
+
+        return viewChanges;
     }
 
     private void setupChangeRecorderAndBeginRecording() {
