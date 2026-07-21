@@ -286,11 +286,13 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                     return;
                 }
                 HierarchicalIdResolver hierarchicalIdResolver = HierarchicalIdResolver.create(viewResourceAccess.getResourceSet());
-                for (var entry : viewObjectToViewId.entrySet()) {
-                    if (entry.getKey().eResource() == null || entry.getKey().eResource().getResourceSet() == null) {
-                        viewIdModel.getIds().remove(entry.getValue());
+                for (ViewId viewId : List.copyOf(viewIdModel.getIds())) {
+                    EObject viewObject = viewObjectToViewId.inverse().get(viewId);
+
+                    if (viewObject.eResource() == null || viewObject.eResource().getResourceSet() == null) {
+                        viewIdModel.getIds().remove(viewId);
                     } else {
-                        entry.getValue().setHierarchicalId(hierarchicalIdResolver.getAndUpdateId(entry.getKey()).getId());
+                        viewId.setHierarchicalId(hierarchicalIdResolver.getAndUpdateId(viewObject).getId());
                     }
                 }
             }

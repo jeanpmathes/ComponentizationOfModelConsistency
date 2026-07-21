@@ -77,7 +77,7 @@ public abstract class AbstractOriginResourceAccess implements OriginResourceAcce
 
             Optional.ofNullable(knownDefaults.get(ePackage))
                     .flatMap(uri -> Optional.ofNullable(packageResources.get(uri)))
-                    .or(() -> packageResources.values().stream().findFirst())
+                    .or(() -> packageResources.values().stream().min(Comparator.comparing(resource -> resource.getURI().toString().length())))
                     .map(defaultResource -> new ResourceEntry(defaultResource, new HashSet<>(packageResources.values())))
                     .ifPresent(resourceEntry -> resources.put(ePackage, resourceEntry));
         }
@@ -85,7 +85,7 @@ public abstract class AbstractOriginResourceAccess implements OriginResourceAcce
 
     private record ResourceEntry(Resource defaultResource, Set<Resource> allResources) {
         public static ResourceEntry create(EObject eObject) {
-            return new ResourceEntry(eObject.eResource(), new HashSet<>(List.of(eObject.eResource())));
+            return new ResourceEntry(eObject.eResource(), new LinkedHashSet<>(List.of(eObject.eResource())));
         }
     }
 }
