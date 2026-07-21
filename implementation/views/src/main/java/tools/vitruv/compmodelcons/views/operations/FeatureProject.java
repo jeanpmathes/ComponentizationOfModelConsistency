@@ -89,7 +89,15 @@ public class FeatureProject {
 
     private Object translateOriginToView(Object originValue, GetContext context) {
         if (originValue instanceof EObject eObject) {
-            return context.getCorrespondences().getCorrespondingViewObjectForPartialOriginObjects(eObject, (EClass) createdFeature.getEType());
+            var candidates = context.getCorrespondences().getCorrespondingViewObjectForPartialOriginObjects(eObject, (EClass) createdFeature.getEType());
+            if (candidates.isEmpty()) {
+                throw new IllegalStateException("Could not find view object for origin object " + eObject);
+            }
+            if (candidates.size() > 1) {
+                throw new IllegalStateException("Found multiple view objects for origin object " + eObject);
+            }
+            return candidates.stream().findAny().orElseThrow();
+
         }
         return originValue;
     }

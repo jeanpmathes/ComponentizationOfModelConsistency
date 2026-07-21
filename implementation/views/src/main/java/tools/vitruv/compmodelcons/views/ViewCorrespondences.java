@@ -4,6 +4,7 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Used to track correspondences between objects in the origin models and the objects of the view.
@@ -22,7 +23,7 @@ public interface ViewCorrespondences {
 
     List<EObject> getCorrespondingOriginObjectsForViewObject(EObject viewObject);
 
-    EObject getCorrespondingViewObjectForPartialOriginObjects(EObject originObject, EClass viewClass);
+    Set<EObject> getCorrespondingViewObjectForPartialOriginObjects(EObject originObject, EClass viewClass);
 
     boolean correspond(List<EObject> originObjects, EObject viewObject);
 }

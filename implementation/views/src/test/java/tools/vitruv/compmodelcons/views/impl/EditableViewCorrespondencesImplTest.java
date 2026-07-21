@@ -5,6 +5,7 @@ import org.eclipse.emf.ecore.EcoreFactory;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,8 +25,8 @@ class EditableViewCorrespondencesImplTest {
 
         assertEquals(List.of(originObject1, originObject2), correspondences.getCorrespondingOriginObjectsForViewObject(viewObject));
         assertEquals(viewObject, correspondences.getCorrespondingViewObjectForOriginObjects(List.of(originObject1, originObject2), viewObject.eClass()));
-        assertEquals(viewObject, correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject1, viewObject.eClass()));
-        assertEquals(viewObject, correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject2, viewObject.eClass()));
+        assertEquals(Set.of(viewObject), correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject1, viewObject.eClass()));
+        assertEquals(Set.of(viewObject), correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject2, viewObject.eClass()));
     }
 
     @Test
@@ -42,8 +43,8 @@ class EditableViewCorrespondencesImplTest {
 
         assertEquals(List.of(originObject1, originObject2), correspondences.getCorrespondingOriginObjectsForViewObject(viewObject));
         assertEquals(viewObject, correspondences.getCorrespondingViewObjectForOriginObjects(List.of(originObject1, originObject2), viewObject.eClass()));
-        assertEquals(viewObject, correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject1, viewObject.eClass()));
-        assertEquals(viewObject, correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject2, viewObject.eClass()));
+        assertEquals(Set.of(viewObject), correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject1, viewObject.eClass()));
+        assertEquals(Set.of(viewObject), correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject2, viewObject.eClass()));
     }
 
     @Test
@@ -60,6 +61,6 @@ class EditableViewCorrespondencesImplTest {
 
         assertEquals(List.of(originObject1), correspondences.getCorrespondingOriginObjectsForViewObject(viewObject));
         assertEquals(viewObject, correspondences.getCorrespondingViewObjectForOriginObjects(List.of(originObject1), viewObject.eClass()));
-        assertEquals(viewObject, correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject1, viewObject.eClass()));
+        assertEquals(Set.of(viewObject), correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject1, viewObject.eClass()));
     }
 }

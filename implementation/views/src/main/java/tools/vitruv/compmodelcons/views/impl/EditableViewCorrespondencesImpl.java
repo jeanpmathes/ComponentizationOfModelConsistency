@@ -2,18 +2,20 @@ package tools.vitruv.compmodelcons.views.impl;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.SetMultimap;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.compmodelcons.views.EditableViewCorrespondences;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class EditableViewCorrespondencesImpl implements EditableViewCorrespondences {
     private final BiMap<OriginKey, ViewKey> correspondences = HashBiMap.create();
-    private final Map<PartialOriginKey, ViewKey> partialCorrespondences = new HashMap<>();
+    private final SetMultimap<PartialOriginKey, ViewKey> partialCorrespondences = HashMultimap.create();
 
     public EditableViewCorrespondencesImpl() {
 
@@ -30,8 +32,9 @@ public class EditableViewCorrespondencesImpl implements EditableViewCorresponden
     }
 
     @Override
-    public EObject getCorrespondingViewObjectForPartialOriginObjects(EObject originObject, EClass viewClass) {
-        return partialCorrespondences.get(new PartialOriginKey(originObject, viewClass)).viewObject();
+    public Set<EObject> getCorrespondingViewObjectForPartialOriginObjects(EObject originObject, EClass viewClass) {
+        return partialCorrespondences.get(new PartialOriginKey(originObject, viewClass)).stream()
+                .map(ViewKey::viewObject).collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
@@ -66,10 +69,12 @@ public class EditableViewCorrespondencesImpl implements EditableViewCorresponden
 
     @Override
     public void removeCorrespondence(List<EObject> originObjects, EObject viewObject) {
-        correspondences.remove(new OriginKey(originObjects, viewObject.eClass()), new ViewKey(viewObject));
+        var viewKey = new ViewKey(viewObject);
+
+        correspondences.remove(new OriginKey(originObjects, viewObject.eClass()), viewKey);
 
         for (var originObject : originObjects) {
-            partialCorrespondences.remove(new PartialOriginKey(originObject, viewObject.eClass()));
+            partialCorrespondences.remove(new PartialOriginKey(originObject, viewObject.eClass()), viewKey);
         }
     }
 
