@@ -6,7 +6,7 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
 import tools.vitruv.change.propagation.ChangePropagationSpecification;
-import tools.vitruv.change.propagation.ModelRepositorySnapshot;
+import tools.vitruv.change.propagation.ModelSnapshot;
 import tools.vitruv.change.propagation.impl.AbstractChangePropagationSpecification;
 import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.compmodelcons.change.impl.CorrespondenceResolvingContextImpl;
@@ -46,7 +46,7 @@ public class ViewChangePropagationSpecificationAdapter extends AbstractChangePro
     }
 
     @Override
-    public void propagateChanges(List<EChange<EObject>> originChanges, EditableCorrespondenceModelView<Correspondence> correspondenceModel, ResourceAccess changedOrigin, ModelRepositorySnapshot previousState) {
+    public void propagateChanges(List<EChange<EObject>> originChanges, EditableCorrespondenceModelView<Correspondence> correspondenceModel, ResourceAccess changedOrigin, ModelSnapshot previousState) {
         Function<String, URI> uriFactory = changedOrigin.getModelResources().stream()
                 .filter(resource -> resource.getURI().isFile())
                 .findAny()
@@ -57,7 +57,7 @@ public class ViewChangePropagationSpecificationAdapter extends AbstractChangePro
         CorrespondenceResolvingContext correspondenceContext = new CorrespondenceResolvingContextImpl(changedOrigin);
 
         try (
-                ModelRepositorySnapshot unchangedOrigin = previousState.copy();
+                ModelSnapshot unchangedOrigin = previousState.copy();
                 ChangePropagationView sourceView = sourceViewType.createView(sourceViewTypeMetamodelIndex, unchangedOrigin, uriFactory, correspondenceContext);
                 ChangePropagationView targetView = targetViewType.createView(targetViewTypeMetamodelIndex, changedOrigin, uriFactory, correspondenceContext)
         ) {

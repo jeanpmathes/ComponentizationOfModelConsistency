@@ -5,13 +5,13 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.command.internal.ApplyEChangeSwitch;
 import tools.vitruv.change.atomic.eobject.CreateEObject;
 import tools.vitruv.change.atomic.resolve.AtomicEChangeResolverHelper;
-import tools.vitruv.change.propagation.ModelRepositorySnapshot;
+import tools.vitruv.change.propagation.ModelSnapshot;
 import tools.vitruv.compmodelcons.views.DynamicModels;
 
 public class SnapshotChangeApplier {
-    private final ModelRepositorySnapshot snapshot;
+    private final ModelSnapshot snapshot;
 
-    public SnapshotChangeApplier(ModelRepositorySnapshot snapshot) {
+    public SnapshotChangeApplier(ModelSnapshot snapshot) {
         this.snapshot = snapshot;
     }
 

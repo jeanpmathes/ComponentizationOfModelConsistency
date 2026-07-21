@@ -5,7 +5,7 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
-import tools.vitruv.change.propagation.ModelRepositorySnapshot;
+import tools.vitruv.change.propagation.ModelSnapshot;
 
 import java.util.List;
 
@@ -16,5 +16,5 @@ public interface ChangePropagationSpecificationWrappingStrategy {
 
     boolean doesHandleChange(EChange<EObject> eChange, EditableCorrespondenceModelView<Correspondence> correspondenceModel);
 
-    void propagateChanges(List<EChange<EObject>> viewChanges, EditableCorrespondenceModelView<Correspondence> correspondenceModel, ViewChangePropagationContext context, ModelRepositorySnapshot previousState);
+    void propagateChanges(List<EChange<EObject>> viewChanges, EditableCorrespondenceModelView<Correspondence> correspondenceModel, ViewChangePropagationContext context, ModelSnapshot previousState);
 }

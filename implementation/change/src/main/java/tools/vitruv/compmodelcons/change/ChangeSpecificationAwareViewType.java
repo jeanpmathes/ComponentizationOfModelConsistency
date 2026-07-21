@@ -14,7 +14,7 @@ import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.change.composite.description.VitruviusChangeFactory;
 import tools.vitruv.change.composite.description.VitruviusChangeResolverFactory;
-import tools.vitruv.change.propagation.ModelRepositorySnapshot;
+import tools.vitruv.change.propagation.ModelSnapshot;
 import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.compmodelcons.change.viewid.model.ViewId;
 import tools.vitruv.compmodelcons.change.viewid.model.ViewIdModel;
@@ -176,7 +176,7 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                     return viewChanges;
                 }
                 case USE_UPDATING_GET -> {
-                    if (resourceAccess instanceof ModelRepositorySnapshot snapshot) {
+                    if (resourceAccess instanceof ModelSnapshot snapshot) {
                         SnapshotChangeApplier applier = new SnapshotChangeApplier(snapshot);
                         List<EChange<EObject>> viewChanges = new ArrayList<>();
                         for (EChange<EObject> repositoryOriginChange : originChanges) {

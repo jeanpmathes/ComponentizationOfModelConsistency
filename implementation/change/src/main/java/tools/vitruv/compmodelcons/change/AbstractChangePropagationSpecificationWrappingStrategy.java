@@ -6,7 +6,7 @@ import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
 import tools.vitruv.change.propagation.ChangePropagationSpecification;
-import tools.vitruv.change.propagation.ModelRepositorySnapshot;
+import tools.vitruv.change.propagation.ModelSnapshot;
 
 import java.util.List;
 
@@ -33,7 +33,7 @@ public abstract class AbstractChangePropagationSpecificationWrappingStrategy imp
     }
 
     @Override
-    public void propagateChanges(List<EChange<EObject>> viewChanges, EditableCorrespondenceModelView<Correspondence> correspondenceModel, ViewChangePropagationContext context, ModelRepositorySnapshot previousState) {
+    public void propagateChanges(List<EChange<EObject>> viewChanges, EditableCorrespondenceModelView<Correspondence> correspondenceModel, ViewChangePropagationContext context, ModelSnapshot previousState) {
         specification.propagateChanges(viewChanges, wrapCorrespondenceModel(correspondenceModel, context), context.getResourceAccess(), previousState);
     }
 

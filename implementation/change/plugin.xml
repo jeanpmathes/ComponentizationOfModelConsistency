@@ -6,12 +6,12 @@
 
 <plugin>
 
-    <extension point="org.eclipse.emf.ecore.generated_package">
-        <!-- @generated view_id -->
-        <package
-                uri="http://vitruv.tools/compmodelcons/view_id"
-                class="tools.vitruv.compmodelcons.change.viewid.model.ViewIdModelPackage"
-                genModel="src/main/ecore/view_id.genmodel"/>
-    </extension>
+   <extension point="org.eclipse.emf.ecore.generated_package">
+      <!-- @generated view_id -->
+      <package
+              uri="http://vitruv.tools/compmodelcons/view_id"
+              class="tools.vitruv.compmodelcons.change.viewid.model.ViewIdModelPackage"
+              genModel="src/main/ecore/view_id.genmodel"/>
+   </extension>
 
 </plugin>
