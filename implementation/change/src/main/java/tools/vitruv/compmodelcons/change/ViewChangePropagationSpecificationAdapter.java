@@ -21,8 +21,9 @@ public class ViewChangePropagationSpecificationAdapter extends AbstractChangePro
     private final ChangePropagationSpecificationWrappingStrategy specification;
     private final ChangePropagationViewTypeSpecification targetViewType;
     private final int targetViewTypeMetamodelIndex;
+    private final ChangeDeterminationMode changeDeterminationMode;
 
-    public ViewChangePropagationSpecificationAdapter(ChangePropagationViewTypeSpecification sourceViewType, int sourceViewTypeMetamodelIndex, ChangePropagationSpecificationWrappingStrategy specification, ChangePropagationViewTypeSpecification targetViewType, int targetViewTypeMetamodelIndex) {
+    public ViewChangePropagationSpecificationAdapter(ChangePropagationViewTypeSpecification sourceViewType, int sourceViewTypeMetamodelIndex, ChangePropagationSpecificationWrappingStrategy specification, ChangePropagationViewTypeSpecification targetViewType, int targetViewTypeMetamodelIndex, ChangeDeterminationMode changeDeterminationMode) {
         super(sourceViewType.getOriginMetamodelDescriptors().get(sourceViewTypeMetamodelIndex), targetViewType.getOriginMetamodelDescriptors().get(targetViewTypeMetamodelIndex));
 
         if (!sourceViewType.getViewTypeMetamodelDescriptor().equals(specification.getSourceMetamodelDescriptor())) {
@@ -38,6 +39,7 @@ public class ViewChangePropagationSpecificationAdapter extends AbstractChangePro
         this.specification = specification;
         this.targetViewType = targetViewType;
         this.targetViewTypeMetamodelIndex = targetViewTypeMetamodelIndex;
+        this.changeDeterminationMode = changeDeterminationMode;
     }
 
     @Override
@@ -61,7 +63,7 @@ public class ViewChangePropagationSpecificationAdapter extends AbstractChangePro
                 ChangePropagationView sourceView = sourceViewType.createView(sourceViewTypeMetamodelIndex, unchangedOrigin, uriFactory, correspondenceContext);
                 ChangePropagationView targetView = targetViewType.createView(targetViewTypeMetamodelIndex, changedOrigin, uriFactory, correspondenceContext)
         ) {
-            List<EChange<EObject>> viewChanges = sourceView.fitAndDetermineChanges(changedOrigin, originChanges, ChangeDeterminationMode.DERIVE_ALL_AT_ONCE);
+            List<EChange<EObject>> viewChanges = sourceView.fitAndDetermineChanges(changedOrigin, originChanges, changeDeterminationMode);
 
             var context = new ViewChangePropagationContext(sourceView, sourceViewType, targetView, targetViewType);
             // For full correctness, the previous state would need to include the unchanged state of the two views as well.

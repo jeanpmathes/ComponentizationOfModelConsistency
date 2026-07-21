@@ -4,6 +4,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Sets;
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.compare.utils.UseIdentifiers;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -147,46 +148,29 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
         @Override
         public List<EChange<EObject>> fitAndDetermineChanges(ResourceAccess changedOrigin, List<EChange<EObject>> originChanges, ChangeDeterminationMode changeDeterminationMode) {
             switch (changeDeterminationMode) {
-                case DERIVE_ALL_AT_ONCE -> {
+                case CHANGE_DERIVATION -> {
                     StateBasedChangeResolutionStrategy stateBasedChangeResolutionStrategy = getStateBasedChangeResolutionStrategy();
-                    ChangePropagationViewImpl changedView = new ChangePropagationViewImpl(originMetamodelIndex, changedOrigin, viewUri, Optional.empty());
-                    var result = deriveAndApplyChangesToReach(changedView, stateBasedChangeResolutionStrategy);
-                    try {
-                        changedView.close();
+
+                    List<EChange<EObject>> result;
+                    try (ChangePropagationViewImpl changedView = new ChangePropagationViewImpl(originMetamodelIndex, changedOrigin, viewUri, Optional.empty())) {
+                        result = deriveAndApplyChangesToReach(changedView, stateBasedChangeResolutionStrategy);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                     return result;
                 }
-                case DERIVE_INDIVIDUALLY -> {
-                    StateBasedChangeResolutionStrategy stateBasedChangeResolutionStrategy = getStateBasedChangeResolutionStrategy();
-                    List<EChange<EObject>> viewChanges = new ArrayList<>();
-                    ChangePropagationViewImpl changedView = null;
-                    for (EChange<EObject> originChange : originChanges) {
-                        if (changedView != null) {
-                            try {
-                                changedView.close();
-                            } catch (Exception e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                        changedView = createCopyFromChangedOrigin(originChange);
-                        viewChanges.addAll(deriveAndApplyChangesToReach(changedView, stateBasedChangeResolutionStrategy));
-                    }
-                    return viewChanges;
-                }
-                case USE_UPDATING_GET -> {
-                    if (resourceAccess instanceof ModelSnapshot snapshot) {
-                        SnapshotChangeApplier applier = new SnapshotChangeApplier(snapshot);
-                        List<EChange<EObject>> viewChanges = new ArrayList<>();
-                        for (EChange<EObject> repositoryOriginChange : originChanges) {
-                            EChange<EObject> snapshotViewChange = applier.apply(repositoryOriginChange);
-                            viewChanges.addAll(internalView.updateAndTranslateChange(snapshotViewChange));
-                        }
-                        return viewChanges;
-                    } else {
+                case UPDATING_GET -> {
+                    if (!(resourceAccess instanceof ModelSnapshot snapshot)) {
                         throw new IllegalStateException("Cannot use updating get with a non-snapshot resource access");
                     }
+
+                    SnapshotChangeApplier applier = new SnapshotChangeApplier(snapshot.copy());
+                    List<EChange<EObject>> viewChanges = new ArrayList<>();
+                    for (EChange<EObject> repositoryOriginChange : originChanges) {
+                        EChange<EObject> snapshotChange = applier.apply(repositoryOriginChange);
+                        viewChanges.addAll(internalView.updateAndTranslateChange(snapshotChange));
+                    }
+                    return viewChanges;
                 }
             }
 
@@ -199,14 +183,14 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
         }
 
         private StateBasedChangeResolutionStrategy getStateBasedChangeResolutionStrategy() {
-            return new DefaultStateBasedChangeResolutionStrategy();
+            return new DefaultStateBasedChangeResolutionStrategy(UseIdentifiers.NEVER);
         }
 
         private List<EChange<EObject>> deriveAndApplyChangesToReach(ChangePropagationViewImpl changedView, StateBasedChangeResolutionStrategy stateBasedChangeResolutionStrategy) {
             Map<URI, Resource> localResourceMap = getResources();
             Map<URI, Resource> changedResourceMap = changedView.getResources();
 
-            Set<URI> uris = Sets.union(localResourceMap.keySet(), changedResourceMap.keySet());
+            List<URI> uris = Sets.union(localResourceMap.keySet(), changedResourceMap.keySet()).stream().sorted(Comparator.comparing(URI::toString)).toList();
             List<VitruviusChange<HierarchicalId>> changes = new ArrayList<>();
 
             for (URI uri : uris) {
@@ -244,10 +228,6 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                 resources.put(resource.getURI(), resource);
             }
             return resources;
-        }
-
-        private ChangePropagationViewImpl createCopyFromChangedOrigin(EChange<EObject> originChange) {
-            return null;
         }
 
         @Override

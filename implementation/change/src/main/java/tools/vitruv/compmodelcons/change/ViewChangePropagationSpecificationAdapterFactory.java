@@ -32,17 +32,19 @@ public class ViewChangePropagationSpecificationAdapterFactory {
         return result;
     }
 
-    public List<ChangePropagationSpecification> createInternal(Optional<ChangePropagationViewTypeSpecification> sourceViewType, AbstractReactionsChangePropagationSpecification specification, Optional<ChangePropagationViewTypeSpecification> targetViewType) {
+    public List<ChangePropagationSpecification> createInternal(Optional<ChangePropagationViewTypeSpecification> sourceViewType, AbstractReactionsChangePropagationSpecification specification, Optional<ChangePropagationViewTypeSpecification> targetViewType, ChangeDeterminationMode changeDeterminationMode) {
         return create(sourceViewType, targetViewType, (sourceMetamodelIndex, targetMetamodelIndex) -> new ViewChangePropagationSpecificationAdapter(
                 sourceViewType.orElse(new NullViewChangePropagationSpecificationImpl(specification.getSourceMetamodelDescriptor())), sourceMetamodelIndex,
                 new InternalReactionsChangePropagationSpecificationWrappingStrategy(specification),
-                targetViewType.orElse(new NullViewChangePropagationSpecificationImpl(specification.getTargetMetamodelDescriptor())), targetMetamodelIndex));
+                targetViewType.orElse(new NullViewChangePropagationSpecificationImpl(specification.getTargetMetamodelDescriptor())), targetMetamodelIndex,
+                changeDeterminationMode));
     }
 
-    public List<ChangePropagationSpecification> createRemote(Optional<ChangePropagationViewTypeSpecification> sourceViewType, ChangePropagationSpecification specification, Optional<ChangePropagationViewTypeSpecification> targetViewType) {
+    public List<ChangePropagationSpecification> createRemote(Optional<ChangePropagationViewTypeSpecification> sourceViewType, ChangePropagationSpecification specification, Optional<ChangePropagationViewTypeSpecification> targetViewType, ChangeDeterminationMode changeDeterminationMode) {
         return create(sourceViewType, targetViewType, (sourceMetamodelIndex, targetMetamodelIndex) -> new ViewChangePropagationSpecificationAdapter(
                 sourceViewType.orElse(new NullViewChangePropagationSpecificationImpl(specification.getSourceMetamodelDescriptor())), sourceMetamodelIndex,
                 new RemoteChangePropagationSpecificationWrappingStrategy(specification),
-                targetViewType.orElse(new NullViewChangePropagationSpecificationImpl(specification.getTargetMetamodelDescriptor())), targetMetamodelIndex));
+                targetViewType.orElse(new NullViewChangePropagationSpecificationImpl(specification.getTargetMetamodelDescriptor())), targetMetamodelIndex,
+                changeDeterminationMode));
     }
 }
