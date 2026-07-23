@@ -99,6 +99,10 @@ public class AggregateEcoreGenerator implements IWorkflowComponent {
 
         Path root = Path.of(fileURI.toFileString());
 
+        if (!Files.exists(root)) {
+            return List.of();
+        }
+
         try (Stream<Path> files = Files.walk(root)) {
             return files
                     .filter(Files::isRegularFile)
