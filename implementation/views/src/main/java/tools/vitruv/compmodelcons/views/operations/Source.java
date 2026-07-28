@@ -11,7 +11,7 @@ import tools.vitruv.change.atomic.root.RemoveRootEObject;
 import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
-import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
+import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
 
 import java.util.List;
 
@@ -65,23 +65,21 @@ public class Source implements OriginOperation {
     }
 
     @Override
-    public List<ObjectBinding> doGet(GetContext context) {
-        return context.getOriginObjects(sourceClass).stream().map(ObjectBinding::ofOriginObject).toList();
+    public List<OriginBinding> doGet(GetContext context) {
+        return context.getOriginObjects(sourceClass).stream().map(OriginBinding::of).toList();
     }
 
     @Override
-    public ObjectBinding doPut(EChange<EObject> viewChange, ObjectBinding target, PutContext context) {
+    public OriginBinding doPut(EChange<EObject> viewChange, OriginBinding target, PutContext context) {
         if (viewChange instanceof CreateEObject<EObject> createEObject) {
-            if (!target.originObjects().isEmpty()) {
-                throw new IllegalArgumentException("Cannot create an origin object if there is already an origin object");
-            }
+            assert target.originObjects().isEmpty();
 
             EObject created = sourceClass.getEPackage().getEFactoryInstance().create(sourceClass);
             context.getCorrespondences().addCorrespondence(List.of(created), createEObject.getAffectedElement());
 
             attachedCreatedOriginObject(created, sourceClass, isRoot, container, context);
 
-            return ObjectBinding.ofOriginObject(created);
+            return OriginBinding.of(created);
         }
 
         if (viewChange instanceof DeleteEObject<EObject> deleteEObject) {
@@ -90,7 +88,7 @@ public class Source implements OriginOperation {
 
             detachDeletedOriginObject(deleted, sourceClass, isRoot, container, context);
 
-            return ObjectBinding.empty();
+            return OriginBinding.empty();
         }
 
         if (viewChange instanceof InsertRootEObject<EObject> insertRootEObject) {
@@ -100,7 +98,7 @@ public class Source implements OriginOperation {
                 context.moveRootToOtherOriginModel(sourceClass.getEPackage(), inserted, insertRootEObject.getResource().getURI());
             }
 
-            return ObjectBinding.ofOriginObject(inserted);
+            return OriginBinding.of(inserted);
         }
 
         if (viewChange instanceof RemoveRootEObject<EObject>) {
@@ -110,14 +108,14 @@ public class Source implements OriginOperation {
                 context.moveRootToDefaultOriginModel(sourceClass.getEPackage(), removed);
             }
 
-            return ObjectBinding.ofOriginObject(removed);
+            return OriginBinding.of(removed);
         }
 
         throw new IllegalArgumentException("Inappropriate change type: " + viewChange.getClass());
     }
 
     @Override
-    public List<ObjectBinding> doUpdatingGet(List<ObjectBinding> previous, EChange<EObject> originChange, GetContext context) {
+    public List<OriginBinding> doUpdatingGet(List<OriginBinding> previous, EChange<EObject> originChange, GetContext context) {
         return List.of();
     }
 }

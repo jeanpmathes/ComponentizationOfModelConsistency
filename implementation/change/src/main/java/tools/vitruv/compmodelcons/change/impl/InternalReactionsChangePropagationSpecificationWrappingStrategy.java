@@ -22,8 +22,6 @@ public class InternalReactionsChangePropagationSpecificationWrappingStrategy ext
     @Override
     public EditableCorrespondenceModelView<Correspondence> wrapCorrespondenceModel(EditableCorrespondenceModelView<Correspondence> correspondenceModel, ViewChangePropagationContext context) {
         var baseView = correspondenceModel.getEditableView(ReactionsCorrespondence.class, CorrespondenceFactory.eINSTANCE::createReactionsCorrespondence);
-        // todo: potentially use baseView and ViewChangePropagationParticipationSpecification::getCorrespondingObjects
-
         return new LiftedCorrespondenceModelView();
     }
 

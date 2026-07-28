@@ -9,6 +9,7 @@ import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.FeatureBinding;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
+import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +54,7 @@ public class Project {
         }
 
         EObject viewObject = target.viewObject();
-        ObjectBinding peeledTarget = target;
+        OriginBinding peeledTarget = OriginBinding.of(target.originObjects());
         List<FeatureBinding> featureBindings;
 
         if (!target.originObjects().isEmpty()) {
@@ -69,7 +70,7 @@ public class Project {
             featureBindings.set(featureIndex, features.get(featureIndex).doPut(viewChange, featureBindings.get(featureIndex), target, context));
             return new ProjectObjectBindingImpl(peeledTarget, viewObject, featureBindings);
         } else {
-            ObjectBinding originBinding = origin.doPut(viewChange, peeledTarget, context);
+            OriginBinding originBinding = origin.doPut(viewChange, peeledTarget, context);
 
             ProjectObjectBindingImpl projected = new ProjectObjectBindingImpl(originBinding, viewObject, featureBindings);
 
@@ -102,7 +103,7 @@ public class Project {
         }
     }
 
-    private record ProjectObjectBindingImpl(ObjectBinding originBinding,
+    private record ProjectObjectBindingImpl(OriginBinding originBinding,
                                             EObject viewObject,
                                             List<FeatureBinding> featureBindings) implements ObjectBinding {
 

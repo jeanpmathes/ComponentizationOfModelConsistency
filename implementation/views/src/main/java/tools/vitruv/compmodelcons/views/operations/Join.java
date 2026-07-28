@@ -11,7 +11,7 @@ import tools.vitruv.change.atomic.root.RemoveRootEObject;
 import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
-import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
+import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,31 +30,29 @@ public class Join implements OriginOperation {
     }
 
     @Override
-    public List<ObjectBinding> doGet(GetContext context) {
+    public List<OriginBinding> doGet(GetContext context) {
         return origin.doGet(context).stream()
                 .flatMap(originBinding -> context.getOriginObjects(sourceClass).stream()
-                        .map(joinedBinding -> (ObjectBinding) new JoinObjectBindingImpl(originBinding, joinedBinding)))
+                        .map(joinedBinding -> (OriginBinding) new JoinOriginBindingImpl(originBinding, joinedBinding)))
                 .toList();
     }
 
     @Override
-    public ObjectBinding doPut(EChange<EObject> viewChange, ObjectBinding target, PutContext context) {
+    public OriginBinding doPut(EChange<EObject> viewChange, OriginBinding target, PutContext context) {
         if (viewChange instanceof CreateEObject<EObject> createEObject) {
-            if (!target.originObjects().isEmpty()) {
-                throw new IllegalArgumentException("Cannot create an origin object if there is already an origin object");
-            }
+            assert target.originObjects().isEmpty();
 
-            ObjectBinding originBinding = origin.doPut(viewChange, target, context);
+            OriginBinding originBinding = origin.doPut(viewChange, target, context);
 
             EObject created = sourceClass.getEPackage().getEFactoryInstance().create(sourceClass);
             context.getCorrespondences().joinCorrespondence(originBinding.originObjects(), List.of(created), createEObject.getAffectedElement());
             Source.attachedCreatedOriginObject(created, sourceClass, isRoot, container, context);
 
-            return new JoinObjectBindingImpl(originBinding, created);
+            return new JoinOriginBindingImpl(originBinding, created);
         }
 
         if (viewChange instanceof DeleteEObject<EObject> deleteEObject) {
-            JoinObjectBindingImpl binding = (JoinObjectBindingImpl) target;
+            JoinOriginBindingImpl binding = (JoinOriginBindingImpl) target;
 
             EObject deleted = binding.originObject();
             context.getCorrespondences().unjoinCorrespondence(binding.originObjects(), List.of(deleted), deleteEObject.getAffectedElement());
@@ -62,45 +60,49 @@ public class Join implements OriginOperation {
 
             origin.doPut(viewChange, binding.originBinding(), context);
 
-            return ObjectBinding.empty();
+            return OriginBinding.empty();
         }
 
         if (viewChange instanceof InsertRootEObject<EObject> insertRootEObject) {
-            JoinObjectBindingImpl binding = (JoinObjectBindingImpl) target;
+            JoinOriginBindingImpl binding = (JoinOriginBindingImpl) target;
             EObject inserted = binding.originObject();
+
+            OriginBinding originBinding = origin.doPut(viewChange, binding.originBinding(), context);
 
             if (isRoot) {
                 context.moveRootToOtherOriginModel(sourceClass.getEPackage(), inserted, insertRootEObject.getResource().getURI());
             }
 
-            return ObjectBinding.ofOriginObject(inserted);
+            return new JoinOriginBindingImpl(originBinding, inserted);
         }
 
-        if (viewChange instanceof RemoveRootEObject<EObject> removeRootEObject) {
-            JoinObjectBindingImpl binding = (JoinObjectBindingImpl) target;
+        if (viewChange instanceof RemoveRootEObject<EObject>) {
+            JoinOriginBindingImpl binding = (JoinOriginBindingImpl) target;
             EObject removed = binding.originObject();
+
+            OriginBinding originBinding = origin.doPut(viewChange, binding.originBinding(), context);
 
             if (isRoot) {
                 context.moveRootToDefaultOriginModel(sourceClass.getEPackage(), removed);
             }
 
-            return ObjectBinding.ofOriginObject(removed);
+            return new JoinOriginBindingImpl(originBinding, removed);
         }
 
         throw new IllegalArgumentException("Inappropriate change type: " + viewChange.getClass());
     }
 
     @Override
-    public List<ObjectBinding> doUpdatingGet(List<ObjectBinding> previous, EChange<EObject> originChange, GetContext context) {
+    public List<OriginBinding> doUpdatingGet(List<OriginBinding> previous, EChange<EObject> originChange, GetContext context) {
         return List.of();
     }
 
-    private static final class JoinObjectBindingImpl implements ObjectBinding {
-        private final ObjectBinding originBinding;
+    private static final class JoinOriginBindingImpl implements OriginBinding {
+        private final OriginBinding originBinding;
         private final EObject originObject;
         private final List<EObject> originObjects = new ArrayList<>();
 
-        private JoinObjectBindingImpl(ObjectBinding originBinding, EObject originObject) {
+        private JoinOriginBindingImpl(OriginBinding originBinding, EObject originObject) {
             this.originBinding = originBinding;
             this.originObject = originObject;
 
@@ -113,12 +115,7 @@ public class Join implements OriginOperation {
             return originObjects;
         }
 
-        @Override
-        public EObject viewObject() {
-            throw new UnsupportedOperationException();
-        }
-
-        public ObjectBinding originBinding() {
+        public OriginBinding originBinding() {
             return originBinding;
         }
 

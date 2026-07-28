@@ -12,6 +12,7 @@ import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
+import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -167,17 +168,17 @@ public class Root {
 
     private static class Empty implements OriginOperation {
         @Override
-        public List<ObjectBinding> doGet(GetContext context) {
-            return List.of(ObjectBinding.empty());
+        public List<OriginBinding> doGet(GetContext context) {
+            return List.of(OriginBinding.empty());
         }
 
         @Override
-        public ObjectBinding doPut(EChange<EObject> viewChange, ObjectBinding target, PutContext context) {
+        public OriginBinding doPut(EChange<EObject> viewChange, OriginBinding target, PutContext context) {
             throw new UnsupportedOperationException("Modification of the default, uncorresponding root is not supported");
         }
 
         @Override
-        public List<ObjectBinding> doUpdatingGet(List<ObjectBinding> previous, EChange<EObject> originChange, GetContext context) {
+        public List<OriginBinding> doUpdatingGet(List<OriginBinding> previous, EChange<EObject> originChange, GetContext context) {
             return List.of();
         }
     }

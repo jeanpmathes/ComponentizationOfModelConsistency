@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
 import tools.vitruv.compmodelcons.views.DynamicModels;
-import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
+import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ class JoinTest extends AbstractOperationTest {
         // Origin Setup
         EClass restaurantClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
-        List<ObjectBinding> restaurantBindings = restaurants.stream().map(ObjectBinding::ofOriginObject).toList();
+        List<OriginBinding> restaurantBindings = restaurants.stream().map(OriginBinding::of).toList();
 
         // Operation Setup
         OriginOperation originOperation = mock(OriginOperation.class);
@@ -28,14 +28,13 @@ class JoinTest extends AbstractOperationTest {
 
         // Action
         when(originOperation.doGet(context)).thenReturn(restaurantBindings);
-        List<ObjectBinding> result = operation.doGet(context);
+        List<OriginBinding> result = operation.doGet(context);
 
         // Assertions
         assertEquals(restaurants.size() * restaurants.size(), result.size());
         assertForAll(result, binding -> binding.originObjects().size() == 2);
-        assertForAll(result, binding -> restaurants.contains(binding.originObjects().get(0)));
+        assertForAll(result, binding -> restaurants.contains(binding.originObjects().getFirst()));
         assertForAll(result, binding -> restaurants.contains(binding.originObjects().get(1)));
-        result.forEach(binding -> assertThrows(UnsupportedOperationException.class, binding::viewObject));
     }
 
     @Test
@@ -55,7 +54,7 @@ class JoinTest extends AbstractOperationTest {
         Join operation = new Join(storeClass, originOperation);
 
         // Pre-Action Get
-        when(originOperation.doGet(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(restaurants.get(0))));
+        when(originOperation.doGet(context)).thenReturn(List.of(OriginBinding.of(restaurants.getFirst())));
         operation.doGet(context);
 
         // Pre-Action Change
@@ -65,12 +64,11 @@ class JoinTest extends AbstractOperationTest {
         // Action
         EObject createdRestaurant = DynamicModels.createEObject(restaurantClass);
         correspondences.addCorrespondence(List.of(createdRestaurant), created);
-        when(originOperation.doPut(eq(change), any(), eq(context))).thenReturn(ObjectBinding.ofOriginObject(createdRestaurant));
-        ObjectBinding result = operation.doPut(change, ObjectBinding.ofViewObject(created), context);
+        when(originOperation.doPut(eq(change), any(), eq(context))).thenReturn(OriginBinding.of(createdRestaurant));
+        OriginBinding result = operation.doPut(change, OriginBinding.empty(), context);
 
         // Assertions
         verify(originOperation, times(1)).doPut(eq(change), any(), eq(context));
-        assertThrows(UnsupportedOperationException.class, result::viewObject);
         assertEquals(2, result.originObjects().size());
         assertEquals(createdRestaurant, result.originObjects().get(0));
         assertEquals(storeClass, result.originObjects().get(1).eClass());
@@ -94,22 +92,21 @@ class JoinTest extends AbstractOperationTest {
         Join operation = new Join(storeClass, originOperation);
 
         // Pre-Action Get
-        when(originOperation.doGet(context)).thenReturn(List.of(ObjectBinding.ofOriginObject(restaurants.get(0))));
-        List<ObjectBinding> results = operation.doGet(context);
+        when(originOperation.doGet(context)).thenReturn(List.of(OriginBinding.of(restaurants.getFirst())));
+        List<OriginBinding> results = operation.doGet(context);
 
         // Pre-Action Change
         EObject deleted = DynamicModels.createEObject(emptyClass);
-        correspondences.addCorrespondence(results.get(0).originObjects(), deleted);
+        correspondences.addCorrespondence(results.getFirst().originObjects(), deleted);
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(deleted);
 
         // Action
-        when(originOperation.doPut(eq(change), any(), eq(context))).thenReturn(ObjectBinding.empty());
-        ObjectBinding result = operation.doPut(change, results.get(0), context);
+        when(originOperation.doPut(eq(change), any(), eq(context))).thenReturn(OriginBinding.empty());
+        OriginBinding result = operation.doPut(change, results.getFirst(), context);
 
         // Assertions
-        assertThrows(UnsupportedOperationException.class, result::viewObject);
         assertTrue(result.originObjects().isEmpty());
-        assertTrue(correspondences.correspond(results.get(0).originObjects().subList(0, 1), deleted));
-        assertFalse(correspondences.correspond(results.get(0).originObjects(), deleted));
+        assertTrue(correspondences.correspond(results.getFirst().originObjects().subList(0, 1), deleted));
+        assertFalse(correspondences.correspond(results.getFirst().originObjects(), deleted));
     }
 }
