@@ -14,11 +14,18 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.xtext.generator.IFileSystemAccess;
 import org.eclipse.xtext.generator.IGenerator;
+import org.eclipse.xtext.xbase.compiler.IGeneratorConfigProvider;
+import org.eclipse.xtext.xbase.compiler.JvmModelGenerator;
+import org.eclipse.xtext.xbase.jvmmodel.IJvmModelAssociations;
+import org.eclipse.xtext.xbase.jvmmodel.ILogicalContainerProvider;
+import tools.vitruv.compmodelcons.generator.backend.ViewTypeExpressionSourceGenerator;
 import tools.vitruv.compmodelcons.generator.backend.ViewTypeSourceGenerator;
+import tools.vitruv.compmodelcons.generator.tools.Metamodel;
 import tools.vitruv.compmodelcons.generator.tools.NamingGenerator;
 import tools.vitruv.neojoin.Parser;
 import tools.vitruv.neojoin.aqr.AQR;
 import tools.vitruv.neojoin.aqr.AQRImport;
+import tools.vitruv.neojoin.ast.ViewTypeDefinition;
 import tools.vitruv.neojoin.generation.MetaModelGenerator;
 import tools.vitruv.neojoin.generation.ModelInfo;
 
@@ -33,24 +40,34 @@ public class NeoJoinVitruvGenerator implements IGenerator {
     private final static String PACKAGE_EXTENSION = ".ecore";
     private final static String GENMODEL_EXTENSION = ".genmodel";
 
-    private final Parser parser;
+    @Inject
+    private Parser parser;
 
     @Inject
-    public NeoJoinVitruvGenerator(Parser parser) {
-        this.parser = parser;
-    }
+    private JvmModelGenerator jvmModelGenerator;
+
+    @Inject
+    private IGeneratorConfigProvider generatorConfigProvider;
+
+    @Inject
+    private IJvmModelAssociations jvmModelAssociations;
+
+    @Inject
+    private ILogicalContainerProvider logicalContainerProvider;
 
     @Override
     public void doGenerate(Resource input, IFileSystemAccess fsa) {
-        Parser.Result result = parser.parse(input.getURI());
+        Parser.Result result = parser.parse(input);
 
         if (result instanceof Parser.Result.Success success) {
             String name = input.getURI().trimFileExtension().lastSegment();
             AQR aqr = success.aqr();
 
-            Metamodel metamodel;
+            ViewTypeDefinition viewTypeDefinition = (ViewTypeDefinition) input.getContents().getFirst();
+
+            Metamodel viewTypeMetamodel;
             try {
-                metamodel = generateMetamodel(input, name, aqr, fsa);
+                viewTypeMetamodel = generateMetamodel(input, name, aqr, fsa);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -60,7 +77,11 @@ public class NeoJoinVitruvGenerator implements IGenerator {
                     .map(ePackage -> Metamodel.load(ePackage, input.getResourceSet()))
                     .toList();
 
-            generateSource(name, originMetaModels, metamodel, aqr, fsa);
+            ViewTypeExpressionSourceGenerator expressionSourceGenerator = new ViewTypeExpressionSourceGenerator(viewTypeDefinition, jvmModelGenerator, generatorConfigProvider, jvmModelAssociations, logicalContainerProvider);
+            fsa.generateFile(expressionSourceGenerator.getFileName(), expressionSourceGenerator.generate());
+
+            ViewTypeSourceGenerator sourceGenerator = new ViewTypeSourceGenerator(name, originMetaModels, viewTypeMetamodel, aqr, expressionSourceGenerator);
+            fsa.generateFile(sourceGenerator.getFileName(), sourceGenerator.generate());
         }
     }
 
@@ -76,7 +97,7 @@ public class NeoJoinVitruvGenerator implements IGenerator {
         GenModel genModel = createGenModel(input, name, aqr, metaModel);
         fsa.generateFile(baseFileName + GENMODEL_EXTENSION, getContentsForFile(resourceSet, name, GENMODEL_EXTENSION, genModel));
 
-        return new Metamodel(metaModel, genModel.getGenPackages().get(0));
+        return new Metamodel(metaModel, genModel.getGenPackages().getFirst());
     }
 
     private GenModel createGenModel(Resource input, String name, AQR aqr, EPackage ePackage) {
@@ -98,18 +119,13 @@ public class NeoJoinVitruvGenerator implements IGenerator {
         genModel.setModelDirectory(String.format("/%s/target/generated-sources/ecore", getProjectPackage(input)));
 
         genModel.initialize(List.of(ePackage));
-        GenPackage genPackage = genModel.getGenPackages().get(0);
+        GenPackage genPackage = genModel.getGenPackages().getFirst();
 
         genPackage.setPrefix(modelName);
         genPackage.setBasePackage(modelPackage);
         genPackage.setDisposableProviderFactory(true);
 
         return genModel;
-    }
-
-    private void generateSource(String name, List<Metamodel> originMetaModels, Metamodel viewtypeMetaModel, AQR aqr, IFileSystemAccess fsa) {
-        ViewTypeSourceGenerator sourceGenerator = new ViewTypeSourceGenerator(name, originMetaModels, viewtypeMetaModel, aqr);
-        fsa.generateFile(sourceGenerator.getFileName(), sourceGenerator.generate());
     }
 
     private String getProjectPackage(Resource input) {

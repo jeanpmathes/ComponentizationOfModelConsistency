@@ -7,10 +7,14 @@ import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.plugin.EcorePlugin;
 import org.eclipse.xtext.generator.IGenerator;
 import org.jspecify.annotations.NonNull;
+import tools.vitruv.compmodelcons.generator.backend.GeneratedQueryModelExpressionTypeConfiguration;
+import tools.vitruv.compmodelcons.generator.backend.GeneratorBackedSourceTypeRegistryInitialization;
 import tools.vitruv.neojoin.NeoJoinStandaloneSetup;
+import tools.vitruv.neojoin.QueryModelExpressionTypeConfiguration;
+import tools.vitruv.neojoin.jvmmodel.SourceTypeRegistryInitialization;
 
-public class NeoJoinVitruvSetup extends NeoJoinStandaloneSetup {
-    public NeoJoinVitruvSetup() {
+public class NeoJoinVitruvBuildSetup extends NeoJoinStandaloneSetup {
+    public NeoJoinVitruvBuildSetup() {
         super(getRegistry());
     }
 
@@ -27,6 +31,8 @@ public class NeoJoinVitruvSetup extends NeoJoinStandaloneSetup {
             @Override
             protected void configure() {
                 bind(IGenerator.class).to(NeoJoinVitruvGenerator.class);
+                bind(QueryModelExpressionTypeConfiguration.class).to(GeneratedQueryModelExpressionTypeConfiguration.class);
+                bind(SourceTypeRegistryInitialization.class).to(GeneratorBackedSourceTypeRegistryInitialization.class);
             }
         });
     }

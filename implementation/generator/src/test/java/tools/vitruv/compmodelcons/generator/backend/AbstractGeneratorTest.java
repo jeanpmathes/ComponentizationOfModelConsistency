@@ -5,7 +5,7 @@ import org.eclipse.emf.codegen.ecore.genmodel.GenModelFactory;
 import org.eclipse.emf.codegen.ecore.genmodel.GenPackage;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EPackage;
-import tools.vitruv.compmodelcons.generator.Metamodel;
+import tools.vitruv.compmodelcons.generator.tools.Metamodel;
 import tools.vitruv.compmodelcons.generator.tools.NamingGenerator;
 import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.neojoin.NeoJoinStandaloneSetup;
@@ -61,7 +61,7 @@ public class AbstractGeneratorTest {
 
         Metamodel viewtypeMetamodel = createMetamodel(viewtype, NamingGenerator.convertToPascalCase(aqr.export().name()), NamingGenerator.PACKAGE_BASE);
 
-        return new ViewTypeSourceGenerator(name, originMetamodels, viewtypeMetamodel, aqr);
+        return new ViewTypeSourceGenerator(name, originMetamodels, viewtypeMetamodel, aqr, expression -> "ExpressionStubClass.method");
     }
 
     private static Metamodel createMetamodel(EPackage ePackage, String prefix, String basePackage) {
@@ -72,7 +72,7 @@ public class AbstractGeneratorTest {
         GenModel genModel = GenModelFactory.eINSTANCE.createGenModel();
         genModel.initialize(List.of(ePackage));
 
-        GenPackage genPackage = genModel.getGenPackages().get(0);
+        GenPackage genPackage = genModel.getGenPackages().getFirst();
         genPackage.setPrefix(prefix);
         genPackage.setBasePackage(basePackage);
 
@@ -100,8 +100,8 @@ public class AbstractGeneratorTest {
 
             List<JavaFileObject> files = new ArrayList<>();
             files.add(new JavaSourceFromString(generator.getFileName(), generator.generate()));
-            files.add(new JavaSourceFromString("models/restaurant/Package.java", createRestaurantStub()));
-            files.add(new JavaSourceFromString("models/reviewpage/Package.java", createReviewPageStub()));
+            files.addAll(createRestaurantStubs());
+            files.addAll(createReviewPageStubs());
             files.addAll(List.of(stubs));
 
             boolean ok = compiler.getTask(null, fileManager, null, options, null, files).call();
@@ -109,73 +109,131 @@ public class AbstractGeneratorTest {
         }
     }
 
-    private static String createRestaurantStub() {
-        return """
-                package models.restaurant;
-                
-                import org.eclipse.emf.ecore.EPackage;
-                import org.eclipse.emf.ecore.EClass;
-                import org.eclipse.emf.ecore.EAttribute;
-                import org.eclipse.emf.ecore.EReference;
-                import org.eclipse.emf.ecore.EDataType;
-                import org.eclipse.emf.ecore.EEnum;
-                
-                public interface Package extends EPackage {
-                    Package eINSTANCE = null;
-                
-                    interface Literals {
-                        EClass RESTAURANT = null;
-                        EAttribute RESTAURANT__NAME = null;
-                        EAttribute RESTAURANT__ADDRESS = null;
-                        EReference RESTAURANT__SELLS = null;
-                        EAttribute RESTAURANT__NUM_EMPLOYEES = null;
-                        EAttribute RESTAURANT__DAILY_REVENUE = null;
-                
-                        EClass FOOD = null;
-                        EAttribute FOOD__NAME = null;
-                        EAttribute FOOD__PRICE = null;
-                        EAttribute FOOD__TYPE = null;
-                
-                        EClass STORE = null;
-                        EReference STORE__RESTAURANTS = null;
-                        EReference STORE__FOODS = null;
-                
-                        EDataType MONEY = null;
-                        EEnum FOOD_TYPE = null;
-                    }
-                }
-                """;
+    private static List<JavaSourceFromString> createRestaurantStubs() {
+        return List.of(
+                new JavaSourceFromString("models/restaurant/Package.java",
+                        """
+                                package models.restaurant;
+                                
+                                import org.eclipse.emf.ecore.EPackage;
+                                import org.eclipse.emf.ecore.EClass;
+                                import org.eclipse.emf.ecore.EAttribute;
+                                import org.eclipse.emf.ecore.EReference;
+                                import org.eclipse.emf.ecore.EDataType;
+                                import org.eclipse.emf.ecore.EEnum;
+                                
+                                public interface Package extends EPackage {
+                                    Package eINSTANCE = null;
+                                
+                                    interface Literals {
+                                        EClass RESTAURANT = null;
+                                        EAttribute RESTAURANT__NAME = null;
+                                        EAttribute RESTAURANT__ADDRESS = null;
+                                        EReference RESTAURANT__SELLS = null;
+                                        EAttribute RESTAURANT__NUM_EMPLOYEES = null;
+                                        EAttribute RESTAURANT__DAILY_REVENUE = null;
+                                
+                                        EClass FOOD = null;
+                                        EAttribute FOOD__NAME = null;
+                                        EAttribute FOOD__PRICE = null;
+                                        EAttribute FOOD__TYPE = null;
+                                
+                                        EClass STORE = null;
+                                        EReference STORE__RESTAURANTS = null;
+                                        EReference STORE__FOODS = null;
+                                
+                                        EDataType MONEY = null;
+                                        EEnum FOOD_TYPE = null;
+                                    }
+                                }
+                                """),
+                new JavaSourceFromString("models/restaurant/Restaurant.java",
+                        """
+                                package models.restaurant;
+                                
+                                import org.eclipse.emf.ecore.EObject;
+                                
+                                public interface Restaurant extends EObject {
+                                }
+                                """),
+                new JavaSourceFromString("models/restaurant/Food.java",
+                        """
+                                package models.restaurant;
+                                
+                                import org.eclipse.emf.ecore.EObject;
+                                
+                                public interface Food extends EObject {
+                                }
+                                """),
+                new JavaSourceFromString("models/restaurant/Store.java",
+                        """
+                                package models.restaurant;
+                                
+                                import org.eclipse.emf.ecore.EObject;
+                                
+                                public interface Store extends EObject {
+                                }
+                                """));
     }
 
-    private static String createReviewPageStub() {
-        return """
-                package models.reviewpage;
-                
-                import org.eclipse.emf.ecore.EPackage;
-                import org.eclipse.emf.ecore.EClass;
-                import org.eclipse.emf.ecore.EAttribute;
-                import org.eclipse.emf.ecore.EReference;
-                import org.eclipse.emf.ecore.EDataType;
-                import org.eclipse.emf.ecore.EEnum;
-                
-                public interface Package extends EPackage {
-                    Package eINSTANCE = null;
-                
-                    interface Literals {
-                        EClass REVIEW_PAGE = null;
-                        EAttribute REVIEW_PAGE__NAME = null;
-                        EReference REVIEW_PAGE__REVIEWS = null;
-                
-                        EClass REVIEW = null;
-                        EAttribute REVIEW__USER = null;
-                        EAttribute REVIEW__RATING = null;
-                
-                        EClass STORE = null;
-                        EReference STORE__PAGES = null;
-                        EReference STORE__REVIEWS = null;
-                    }
-                }
-                """;
+    private static List<JavaSourceFromString> createReviewPageStubs() {
+        return List.of(
+                new JavaSourceFromString("models/reviewpage/Package.java",
+                        """
+                                package models.reviewpage;
+                                
+                                import org.eclipse.emf.ecore.EPackage;
+                                import org.eclipse.emf.ecore.EClass;
+                                import org.eclipse.emf.ecore.EAttribute;
+                                import org.eclipse.emf.ecore.EReference;
+                                import org.eclipse.emf.ecore.EDataType;
+                                import org.eclipse.emf.ecore.EEnum;
+                                
+                                public interface Package extends EPackage {
+                                    Package eINSTANCE = null;
+                                
+                                    interface Literals {
+                                        EClass REVIEW_PAGE = null;
+                                        EAttribute REVIEW_PAGE__NAME = null;
+                                        EReference REVIEW_PAGE__REVIEWS = null;
+                                
+                                        EClass REVIEW = null;
+                                        EAttribute REVIEW__USER = null;
+                                        EAttribute REVIEW__RATING = null;
+                                
+                                        EClass STORE = null;
+                                        EReference STORE__PAGES = null;
+                                        EReference STORE__REVIEWS = null;
+                                    }
+                                }
+                                """),
+                new JavaSourceFromString("models/reviewpage/ReviewPage.java",
+                        """
+                                package models.reviewpage;
+                                
+                                import org.eclipse.emf.ecore.EObject;
+                                
+                                public interface ReviewPage extends EObject {
+                                }
+                                """),
+                new JavaSourceFromString("models/reviewpage/Review.java",
+                        """
+                                package models.reviewpage;
+                                
+                                import org.eclipse.emf.ecore.EObject;
+                                
+                                public interface Review extends EObject {
+                                }
+                                """),
+                new JavaSourceFromString("models/reviewpage/Store.java",
+                        """
+                                package models.reviewpage;
+                                
+                                import org.eclipse.emf.ecore.EObject;
+                                
+                                public interface Store extends EObject {
+                                }
+                                """));
     }
 
     public static class JavaSourceFromString extends SimpleJavaFileObject {

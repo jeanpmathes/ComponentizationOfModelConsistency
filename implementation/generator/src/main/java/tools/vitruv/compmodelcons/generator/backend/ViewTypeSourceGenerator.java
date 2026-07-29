@@ -5,14 +5,16 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.eclipse.emf.codegen.ecore.genmodel.GenClass;
 import org.eclipse.emf.codegen.ecore.genmodel.GenFeature;
 import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.xtext.xbase.XExpression;
 import tools.vitruv.compmodelcons.change.ChangeSpecificationAwareViewType;
-import tools.vitruv.compmodelcons.generator.Metamodel;
+import tools.vitruv.compmodelcons.generator.tools.Metamodel;
 import tools.vitruv.compmodelcons.generator.tools.NamingGenerator;
 import tools.vitruv.compmodelcons.views.operations.*;
 import tools.vitruv.dsls.common.JavaFileGenerator;
 import tools.vitruv.dsls.common.JavaImportHelper;
 import tools.vitruv.neojoin.aqr.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -24,12 +26,14 @@ public class ViewTypeSourceGenerator {
     private final AQR aqr;
     private final List<Metamodel> originMetamodels;
     private final Metamodel viewtypeMetamodel;
+    private final ExpressionResolver expressions;
 
-    public ViewTypeSourceGenerator(String name, List<Metamodel> originMetamodels, Metamodel viewtypeMetamodel, AQR aqr) {
+    public ViewTypeSourceGenerator(String name, List<Metamodel> originMetamodels, Metamodel viewtypeMetamodel, AQR aqr, ExpressionResolver expressions) {
         this.name = NamingGenerator.convertToPascalCase(name);
         this.aqr = aqr;
         this.originMetamodels = originMetamodels;
         this.viewtypeMetamodel = viewtypeMetamodel;
+        this.expressions = expressions;
     }
 
     public String generate() {
@@ -148,7 +152,20 @@ public class ViewTypeSourceGenerator {
     }
 
     private void appendQueryOperations(StringBuilder builder, int level, AQRSource source) {
-        appendQueryOperations(builder, level, source, 0);
+        if (source.condition() != null) {
+            importHelper.typeRef(Filter.class);
+
+            builder.append(indent(level)).append("new Filter(\n");
+            appendConditionExpression(builder, level + 1, source.condition(), source.allFroms().toList());
+            builder.append(",\n");
+
+            appendQueryOperations(builder, level + 1, source, 0);
+            builder.append("\n");
+
+            builder.append(indent(level)).append(")");
+        } else {
+            appendQueryOperations(builder, level, source, 0);
+        }
     }
 
     private void appendQueryOperations(StringBuilder builder, int level, AQRSource source, int joinIndex) {
@@ -169,6 +186,7 @@ public class ViewTypeSourceGenerator {
             builder.append(indent(level)).append("new Join(\n");
             builder.append(indent(level + 1)).append(sourceClass.getQualifiedClassifierAccessor()).append(",\n");
             appendQueryOperations(builder, level + 1, source, joinIndex + 1);
+            builder.append("\n");
             builder.append(indent(level)).append(")");
         }
     }
@@ -214,6 +232,36 @@ public class ViewTypeSourceGenerator {
         importHelper.typeRef(FeatureSource.class);
 
         builder.append(indent(level)).append("new FeatureSource(").append(sourceFeature.getQualifiedFeatureAccessor()).append(")");
+    }
+
+    private void appendConditionExpression(StringBuilder builder, int level, XExpression expression, List<AQRFrom> parameters) {
+        builder.append(indent(level)).append("originBinding -> {\n");
+        builder.append(indent(level + 1)).append("var originObjects = originBinding.originObjects();\n");
+        builder.append(indent(level + 1)).append("return ").append(expressions.resolve(expression)).append("(\n");
+
+        boolean indexAlwaysZero = false;
+        if (parameters.size() == 1 && parameters.getFirst().alias() != null) {
+            // NeoJoin adds 'it' as the first parameter if there is only one parameter, even if there is an alias.
+            // The alias then becomes a second parameter.
+            parameters = new ArrayList<>(parameters);
+            parameters.addFirst(parameters.getFirst());
+            indexAlwaysZero = true;
+        }
+
+        for (int index = 0; index < parameters.size(); index++) {
+            if (index > 0) {
+                builder.append(",\n");
+            }
+
+            AQRFrom parameter = parameters.get(index);
+            GenClass parameterClass = getOriginMetamodel(parameter.clazz().getEPackage()).getGenClass(parameter.clazz());
+
+            builder.append(indent(level + 2)).append("(").append(parameterClass.getQualifiedInterfaceName()).append(") originObjects.get(").append(indexAlwaysZero ? 0 : index).append(")");
+        }
+
+        builder.append("\n");
+        builder.append(indent(level + 1)).append(");\n");
+        builder.append(indent(level)).append("}");
     }
 
     private Metamodel getOriginMetamodel(EPackage ePackage) {
