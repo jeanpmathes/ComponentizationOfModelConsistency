@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
 import tools.vitruv.compmodelcons.views.DynamicModels;
+import tools.vitruv.compmodelcons.views.expressions.Condition;
 
 import java.util.HashSet;
 import java.util.List;
@@ -106,7 +107,7 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         EReference joinedContainment = DynamicModels.createManyContainmentEReference(rootClass, "allJoined", joinedClass);
 
         // Operation Setup
-        Root operation = new Root(rootClass, Optional.empty(), List.of(new Root.Target(joinedContainment, new Project(joinedClass, new Join(reviewClass, new Join(foodClass, new Source(restaurantClass))), List.of()))));
+        Root operation = new Root(rootClass, Optional.empty(), List.of(new Root.Target(joinedContainment, new Project(joinedClass, new Join(reviewClass, new Join(foodClass, new Source(restaurantClass), Join.Type.INNER, Condition.TRUE), Join.Type.INNER, Condition.TRUE), List.of()))));
 
         // Action: Get the view.
         var view = wrap(operation.doGet(context));

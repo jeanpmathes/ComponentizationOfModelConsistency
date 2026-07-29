@@ -237,4 +237,106 @@ class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
                                 }
                                 """));
     }
+
+    @Test
+    public void testGeneratorShouldGenerateCodeThatCompiles6() throws URISyntaxException, IOException {
+        EPackage viewType = createEPackage();
+
+        EClass root = DynamicModels.createEClass(viewType, "Root");
+        EClass joined = DynamicModels.createEClass(viewType, "Joined");
+
+        DynamicModels.createManyContainmentEReference(root, "allJoineds", joined);
+        DynamicModels.createEAttribute(joined, "numEmployees", EcorePackage.eINSTANCE.getEInt());
+        DynamicModels.createEAttribute(joined, "name", EcorePackage.eINSTANCE.getEString());
+
+        ViewTypeSourceGenerator generator = createGenerator(viewType, "test", """
+                from Restaurant r
+                join Food f
+                    using name
+                create Joined {
+                    r.numEmployees
+                    f.name
+                }
+                """);
+
+        compile(generator,
+                new JavaSourceFromString("neojoin/viewtypes/mymodel/MymodelPackage.java",
+                        """
+                                package neojoin.viewtypes.mymodel;
+                                
+                                import org.eclipse.emf.ecore.EPackage;
+                                import org.eclipse.emf.ecore.EClass;
+                                import org.eclipse.emf.ecore.EReference;
+                                
+                                public interface MymodelPackage extends EPackage {
+                                    MymodelPackage eINSTANCE = null;
+                                
+                                    public interface Literals {
+                                        EClass ROOT = null;
+                                        EClass JOINED = null;
+                                        EReference ROOT__ALL_JOINEDS = null;
+                                        EReference JOINED__NUM_EMPLOYEES = null;
+                                        EReference JOINED__NAME = null;
+                                    }
+                                }
+                                """));
+    }
+
+    @Test
+    public void testGeneratorShouldGenerateCodeThatCompiles7() throws URISyntaxException, IOException {
+        EPackage viewType = createEPackage();
+
+        EClass root = DynamicModels.createEClass(viewType, "Root");
+        EClass joined = DynamicModels.createEClass(viewType, "Joined");
+
+        DynamicModels.createManyContainmentEReference(root, "allJoineds", joined);
+        DynamicModels.createEAttribute(joined, "numEmployees", EcorePackage.eINSTANCE.getEInt());
+        DynamicModels.createEAttribute(joined, "name", EcorePackage.eINSTANCE.getEString());
+
+        ViewTypeSourceGenerator generator = createGenerator(viewType, "test", """
+                from Restaurant r
+                join Food f
+                    on r.name == f.name
+                    using name, name, name, name
+                create Joined {
+                    r.numEmployees
+                    f.name
+                }
+                """);
+
+        compile(generator,
+                new JavaSourceFromString("neojoin/viewtypes/mymodel/MymodelPackage.java",
+                        """
+                                package neojoin.viewtypes.mymodel;
+                                
+                                import org.eclipse.emf.ecore.EPackage;
+                                import org.eclipse.emf.ecore.EClass;
+                                import org.eclipse.emf.ecore.EReference;
+                                
+                                public interface MymodelPackage extends EPackage {
+                                    MymodelPackage eINSTANCE = null;
+                                
+                                    public interface Literals {
+                                        EClass ROOT = null;
+                                        EClass JOINED = null;
+                                        EReference ROOT__ALL_JOINEDS = null;
+                                        EReference JOINED__NUM_EMPLOYEES = null;
+                                        EReference JOINED__NAME = null;
+                                    }
+                                }
+                                """),
+                new JavaSourceFromString("neojoin/viewtypes/mymodel/ExpressionStubClass.java",
+                        """
+                                package neojoin.viewtypes.mymodel;
+                                
+                                class ExpressionStubClass {
+                                    static boolean method(
+                                        models.restaurant.Restaurant restaurant,
+                                        models.restaurant.Food food
+                                    ) {
+                                        return true;
+                                    }
+                                }
+                                """));
+    }
 }

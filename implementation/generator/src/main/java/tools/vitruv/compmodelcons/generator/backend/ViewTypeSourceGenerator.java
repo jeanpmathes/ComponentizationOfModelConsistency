@@ -1,14 +1,16 @@
 package tools.vitruv.compmodelcons.generator.backend;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.text.StringEscapeUtils;
 import org.eclipse.emf.codegen.ecore.genmodel.GenClass;
 import org.eclipse.emf.codegen.ecore.genmodel.GenFeature;
+import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.xtext.xbase.XExpression;
 import tools.vitruv.compmodelcons.change.ChangeSpecificationAwareViewType;
 import tools.vitruv.compmodelcons.generator.tools.Metamodel;
 import tools.vitruv.compmodelcons.generator.tools.NamingGenerator;
+import tools.vitruv.compmodelcons.views.expressions.ConjunctiveCondition;
+import tools.vitruv.compmodelcons.views.expressions.FeatureCondition;
 import tools.vitruv.compmodelcons.views.operations.*;
 import tools.vitruv.dsls.common.JavaFileGenerator;
 import tools.vitruv.dsls.common.JavaImportHelper;
@@ -159,34 +161,87 @@ public class ViewTypeSourceGenerator {
             appendConditionExpression(builder, level + 1, source.condition(), source.allFroms().toList());
             builder.append(",\n");
 
-            appendQueryOperations(builder, level + 1, source, 0);
+            appendQueryOperations(builder, level + 1, source, source.joins().size() - 1);
             builder.append("\n");
 
             builder.append(indent(level)).append(")");
         } else {
-            appendQueryOperations(builder, level, source, 0);
+            appendQueryOperations(builder, level, source, source.joins().size() - 1);
         }
     }
 
     private void appendQueryOperations(StringBuilder builder, int level, AQRSource source, int joinIndex) {
-        if (joinIndex >= source.joins().size()) {
+        if (joinIndex < 0) {
             appendSourceOperation(builder, level, source.from());
         } else {
             importHelper.typeRef(Join.class);
 
-            AQRJoin join = source.joins().get(joinIndex);
+            int fromIndex = joinIndex + 1; // The first 'from' element is not included in the joins.
 
-            if (join.type() != AQRJoin.Type.Inner || !join.featureConditions().isEmpty() || !join.expressionConditions().isEmpty()) {
-                throw new NotImplementedException();
-            }
+            AQRJoin join = source.joins().get(joinIndex);
+            List<AQRFrom> froms = source.allFroms().limit(fromIndex + 1).toList();
 
             Metamodel originMetamodel = getOriginMetamodel(join.from().clazz().getEPackage());
             GenClass sourceClass = originMetamodel.getGenClass(join.from().clazz());
 
             builder.append(indent(level)).append("new Join(\n");
             builder.append(indent(level + 1)).append(sourceClass.getQualifiedClassifierAccessor()).append(",\n");
-            appendQueryOperations(builder, level + 1, source, joinIndex + 1);
-            builder.append("\n");
+            appendQueryOperations(builder, level + 1, source, joinIndex - 1);
+            builder.append(",\n");
+
+            builder.append(indent(level + 1));
+            switch (join.type()) {
+                case Inner -> builder.append("Join.Type.INNER");
+                case Left -> builder.append("Join.Type.LEFT");
+            }
+            builder.append(",\n");
+
+            importHelper.typeRef(ConjunctiveCondition.class);
+
+            builder.append(indent(level + 1));
+            builder.append("new ConjunctiveCondition(\n");
+            boolean first = true;
+            for (var featureCondition : join.featureConditions()) {
+                final int leftIndex = featureCondition.otherIndex();
+                final int rightIndex = fromIndex;
+
+                EClass leftClass = froms.get(leftIndex).clazz();
+                Metamodel leftMetamodel = getOriginMetamodel(leftClass.getEPackage());
+                EClass rightClass = froms.get(rightIndex).clazz();
+                Metamodel rightMetamodel = getOriginMetamodel(rightClass.getEPackage());
+
+                importHelper.typeRef(FeatureCondition.class);
+
+                for (String feature : featureCondition.features()) {
+                    if (!first) {
+                        builder.append(",\n");
+                    }
+                    first = false;
+
+                    GenFeature leftFeatureGen = leftMetamodel.getGenFeature(leftClass.getEStructuralFeature(feature));
+                    GenFeature rightFeatureGen = rightMetamodel.getGenFeature(rightClass.getEStructuralFeature(feature));
+
+                    builder.append(indent(level + 2)).append("new FeatureCondition(");
+                    builder.append(indent(level + 3)).append(leftIndex).append(",\n");
+                    builder.append(indent(level + 3)).append(leftFeatureGen.getQualifiedFeatureAccessor()).append(",\n");
+                    builder.append(indent(level + 3)).append(rightIndex).append(",\n");
+                    builder.append(indent(level + 3)).append(rightFeatureGen.getQualifiedFeatureAccessor()).append("\n");
+                    builder.append(indent(level + 2)).append(")");
+                }
+            }
+            for (XExpression expression : join.expressionConditions()) {
+                if (!first) {
+                    builder.append(",\n");
+                }
+                first = false;
+
+                appendConditionExpression(builder, level + 2, expression, froms);
+            }
+            if (!first) {
+                builder.append("\n").append(indent(level + 1));
+            }
+            builder.append(")\n");
+            
             builder.append(indent(level)).append(")");
         }
     }

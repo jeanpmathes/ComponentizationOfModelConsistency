@@ -1,5 +1,6 @@
 package tools.vitruv.compmodelcons.views.operations;
 
+import com.google.common.collect.Streams;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
@@ -12,29 +13,52 @@ import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
+import tools.vitruv.compmodelcons.views.expressions.Condition;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class Join implements OriginOperation {
     private final EClass sourceClass;
     private final boolean isRoot;
     private final EReference container;
     private final OriginOperation origin;
+    private final Type type;
+    private final Condition condition;
 
-    public Join(EClass sourceClass, OriginOperation origin) {
+    public Join(EClass sourceClass, OriginOperation origin, Type type, Condition condition) {
         this.sourceClass = sourceClass;
         this.isRoot = DynamicModels.isRoot(sourceClass);
         this.container = isRoot ? null : DynamicModels.getUnambiguousContainer(sourceClass);
         this.origin = origin;
+        this.type = type;
+        this.condition = condition;
     }
 
     @Override
     public List<OriginBinding> doGet(GetContext context) {
         return origin.doGet(context).stream()
-                .flatMap(originBinding -> context.getOriginObjects(sourceClass).stream()
-                        .map(joinedBinding -> (OriginBinding) new JoinOriginBindingImpl(originBinding, joinedBinding)))
+                .flatMap(originBinding -> {
+                    Stream<OriginBinding> result = context.getOriginObjects(sourceClass).stream()
+                            .map(joined -> (OriginBinding) new JoinOriginBindingImpl(originBinding, joined))
+                            .filter(condition::evaluate);
+
+                    return type == Type.INNER ? result : defaultIfEmpty(result, () -> originBinding);
+                })
                 .toList();
+    }
+
+    private Stream<OriginBinding> defaultIfEmpty(Stream<OriginBinding> stream, Supplier<OriginBinding> defaultFunction) {
+        Iterator<OriginBinding> iterator = stream.iterator();
+        return iterator.hasNext() ? Streams.stream(iterator) : Stream.of(defaultFunction.get());
+    }
+
+    public enum Type {
+        INNER,
+        LEFT
     }
 
     @Override
