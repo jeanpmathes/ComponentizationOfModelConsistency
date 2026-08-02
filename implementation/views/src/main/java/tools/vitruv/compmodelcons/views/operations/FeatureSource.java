@@ -1,6 +1,5 @@
 package tools.vitruv.compmodelcons.views.operations;
 
-import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
@@ -16,76 +15,127 @@ import java.util.List;
 import java.util.Optional;
 
 public class FeatureSource implements FeatureOriginOperation {
-    private final EClass sourceClass;
-    private final EStructuralFeature sourceFeature;
+    private final Target target;
     private final boolean isSourceFeatureAContainmentFeature;
 
-    public FeatureSource(EStructuralFeature sourceFeature) {
-        this.sourceClass = sourceFeature.getEContainingClass();
-        this.sourceFeature = sourceFeature;
+    public FeatureSource(Target target) {
+        assert !target.features.isEmpty();
 
-        if (this.sourceFeature instanceof EReference eReference) {
+        this.target = target;
+
+        if (target.features.getLast() instanceof EReference eReference) {
             this.isSourceFeatureAContainmentFeature = eReference.isContainment();
         } else {
             this.isSourceFeatureAContainmentFeature = false;
         }
     }
 
-    private Optional<EObject> getSource(ObjectBinding subject) {
-        return subject.originObjects().stream().filter(eObject -> sourceClass.isSuperTypeOf(eObject.eClass())).findFirst();
-    }
-
     @Override
     public FeatureBinding doGet(ObjectBinding subjectBinding, GetContext context) {
-        return getSource(subjectBinding).map(subject -> FeatureBinding.ofOriginObject(subject, ValueBinding.ofFeature(subject, sourceFeature))).orElseThrow();
+        return target.get(subjectBinding);
     }
 
     public FeatureBinding doPut(EChange<EObject> viewChange, FeatureBinding feature, ObjectBinding subjectBinding, ValueUpdateBinding value, PutContext context) {
-        return getSource(subjectBinding).map(subject -> {
-            Object object = null;
+        EObject subject = subjectBinding.originObjects().get(target.index());
+        Optional<Target.Access> access = target.access(subjectBinding);
 
-            switch (value) {
-                case ValueUpdateBinding.Unset ignored -> subject.eUnset(sourceFeature);
-                case ValueUpdateBinding.Replace(Object newValue) -> {
-                    subject.eSet(sourceFeature, newValue);
-                    object = newValue;
-                }
-                case ValueUpdateBinding.Insert(Object inserted, int index) -> {
-                    //noinspection unchecked
-                    var list = ((List<Object>) subject.eGet(sourceFeature));
-                    if (index != -1) {
-                        if (index >= list.size() || list.get(index) != inserted) {
-                            list.add(index, inserted);
-                        }
-                    } else {
-                        list.add(inserted);
-                    }
-                    object = inserted;
-                }
-                case ValueUpdateBinding.Remove(Object removed, int index) -> {
-                    //noinspection unchecked
-                    var list = ((List<Object>) subject.eGet(sourceFeature));
-                    if (index != -1 && list.get(index) == removed) {
-                        list.remove(index);
-                    } else {
-                        list.remove(removed);
-                    }
-                    object = removed;
-                }
-                default ->
-                        throw new IllegalArgumentException("Unsupported value update type: " + value.getClass().getSimpleName());
+        if (access.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Cannot put a change on a feature that is not accessible");
+        }
+
+        Object object = null;
+
+        switch (value) {
+            case ValueUpdateBinding.Unset ignored ->
+                    access.get().eObject().eUnset(access.get().eStructuralFeature());
+            case ValueUpdateBinding.Replace(Object newValue) -> {
+                access.get().eObject().eSet(access.get().eStructuralFeature(), newValue);
+                object = newValue;
             }
-
-            if (isSourceFeatureAContainmentFeature && object instanceof EObject eObject) {
-                context.trackOriginObjectAttachmentChange(eObject);
+            case ValueUpdateBinding.Insert(Object inserted, int index) -> {
+                //noinspection unchecked
+                var
+                        list =
+                        ((List<Object>) access.get()
+                                .eObject()
+                                .eGet(access.get().eStructuralFeature()));
+                if (index != -1) {
+                    if (index >= list.size() || list.get(index) != inserted) {
+                        list.add(index, inserted);
+                    }
+                } else {
+                    list.add(inserted);
+                }
+                object = inserted;
             }
+            case ValueUpdateBinding.Remove(Object removed, int index) -> {
+                //noinspection unchecked
+                var
+                        list =
+                        ((List<Object>) access.get()
+                                .eObject()
+                                .eGet(access.get().eStructuralFeature()));
+                if (index != -1 && list.get(index) == removed) {
+                    list.remove(index);
+                } else {
+                    list.remove(removed);
+                }
+                object = removed;
+            }
+            default -> throw new IllegalArgumentException("Unsupported value update type: " +
+                    value.getClass().getSimpleName());
+        }
 
-            return FeatureBinding.ofOriginObject(subject, ValueBinding.ofFeature(subject, sourceFeature));
-        }).orElseThrow();
+        if (isSourceFeatureAContainmentFeature && object instanceof EObject eObject) {
+            context.trackOriginObjectAttachmentChange(eObject);
+        }
+
+        return FeatureBinding.ofOriginObject(subject,
+                ValueBinding.ofFeature(access.get().eObject(), access.get().eStructuralFeature()));
     }
 
     @Override
-    public FeatureBinding doUpdatingGet(FeatureBinding feature, EChange<EObject> originChange, GetContext context) {
+    public FeatureBinding doUpdatingGet(FeatureBinding previous, ObjectBinding subjectBinding, EChange<EObject> originChange, GetContext context) {
         return null;
+    }
+
+    public record Target(int index, List<EStructuralFeature> features) {
+        public static Target ofFirst(EStructuralFeature feature) {
+            return new Target(0, List.of(feature));
+        }
+
+        private Optional<Access> access(ObjectBinding subjectBinding) {
+            EObject current = subjectBinding.originObjects().get(index);
+            EStructuralFeature currentFeature = features.get(index);
+
+            for (int featureIndex = 0; featureIndex < features.size() - 1; featureIndex++) {
+                if (current.eIsSet(currentFeature)) {
+                    Object next = current.eGet(currentFeature);
+                    if (next instanceof EObject eObject) {
+                        current = eObject;
+                        currentFeature = features.get(featureIndex + 1);
+                    } else {
+                        break;
+                    }
+                } else {
+                    return Optional.empty();
+                }
+            }
+
+            return Optional.of(new Access(current, currentFeature));
+        }
+
+        public FeatureBinding get(ObjectBinding subjectBinding) {
+            EObject subject = subjectBinding.originObjects().get(index);
+
+            return FeatureBinding.ofOriginObject(subject, access(subjectBinding)
+                    .map(access -> ValueBinding.ofFeature(access.eObject(),
+                            access.eStructuralFeature()))
+                    .orElseGet(ValueBinding.Unset::new));
+        }
+
+        private record Access(EObject eObject, EStructuralFeature eStructuralFeature) {
+        }
     }
 }

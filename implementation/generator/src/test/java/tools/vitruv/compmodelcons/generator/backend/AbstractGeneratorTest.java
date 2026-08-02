@@ -4,7 +4,11 @@ import org.eclipse.emf.codegen.ecore.genmodel.GenModel;
 import org.eclipse.emf.codegen.ecore.genmodel.GenModelFactory;
 import org.eclipse.emf.codegen.ecore.genmodel.GenPackage;
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.xtext.xbase.XExpression;
+import org.eclipse.xtext.xbase.XMemberFeatureCall;
 import tools.vitruv.compmodelcons.generator.tools.Metamodel;
 import tools.vitruv.compmodelcons.generator.tools.NamingGenerator;
 import tools.vitruv.compmodelcons.views.DynamicModels;
@@ -22,9 +26,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AbstractGeneratorTest {
     protected final static String MODEL_NAME = "mymodel";
@@ -61,7 +66,54 @@ public class AbstractGeneratorTest {
 
         Metamodel viewtypeMetamodel = createMetamodel(viewtype, NamingGenerator.convertToPascalCase(aqr.export().name()), NamingGenerator.PACKAGE_BASE);
 
-        return new ViewTypeSourceGenerator(name, originMetamodels, viewtypeMetamodel, aqr, expression -> "ExpressionStubClass.method");
+        Pattern pattern = Pattern.compile("^(.+)\\.[^.]+\\.([^.]+)$");
+
+        return new ViewTypeSourceGenerator(name,
+                originMetamodels,
+                viewtypeMetamodel,
+                aqr,
+                new ExpressionResolver() {
+                    @Override
+                    public String getMethodName(XExpression expression) {
+                        return "method";
+                    }
+
+                    @Override
+                    public String getQualifiedMethodName(XExpression expression) {
+                        return "ExpressionStubClass.method";
+                    }
+
+                    @Override
+                    public EStructuralFeature getAccessedFeature(XExpression expression) {
+                        if (!(expression instanceof XMemberFeatureCall xMemberFeatureCall)) {
+                            return null;
+                        }
+
+                        String name = xMemberFeatureCall.getFeature().getQualifiedName();
+                        Matcher matcher = pattern.matcher(name);
+
+                        if (!matcher.matches()) {
+                            throw new IllegalArgumentException("Invalid feature name: " + name);
+                        }
+
+                        String uri = matcher.group(1);
+                        String featureName = matcher.group(2);
+
+                        return originMetamodels.stream()
+                                .filter(metamodel -> metamodel.ePackage().getNsURI().equals(uri))
+                                .findAny()
+                                .map(Metamodel::ePackage)
+                                .map(EPackage::getEClassifiers)
+                                .stream()
+                                .flatMap(List::stream)
+                                .filter(EClass.class::isInstance)
+                                .map(EClass.class::cast)
+                                .flatMap(eClass -> eClass.getEStructuralFeatures().stream())
+                                .filter(feature -> feature.getName().equals(featureName))
+                                .findAny()
+                                .orElseThrow();
+                    }
+                });
     }
 
     private static Metamodel createMetamodel(EPackage ePackage, String prefix, String basePackage) {

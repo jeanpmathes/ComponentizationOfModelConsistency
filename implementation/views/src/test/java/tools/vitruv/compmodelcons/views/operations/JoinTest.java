@@ -8,7 +8,7 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
 import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
-import tools.vitruv.compmodelcons.views.expressions.Condition;
+import tools.vitruv.compmodelcons.views.conditions.Condition;
 
 import java.util.List;
 

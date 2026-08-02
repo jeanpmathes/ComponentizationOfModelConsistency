@@ -1,4 +1,4 @@
-package tools.vitruv.compmodelcons.views.expressions;
+package tools.vitruv.compmodelcons.views.conditions;
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;

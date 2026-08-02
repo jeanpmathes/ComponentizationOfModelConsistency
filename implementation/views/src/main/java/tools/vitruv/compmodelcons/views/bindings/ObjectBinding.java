@@ -4,7 +4,7 @@ import org.eclipse.emf.ecore.EObject;
 
 import java.util.List;
 
-public interface ObjectBinding {
+public interface ObjectBinding extends OriginBinding {
     static ObjectBinding ofOriginObject(EObject eObject) {
         return new ObjectBinding() {
             @Override

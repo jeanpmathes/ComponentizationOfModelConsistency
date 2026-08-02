@@ -1,4 +1,4 @@
-package tools.vitruv.compmodelcons.views.expressions;
+package tools.vitruv.compmodelcons.views.conditions;
 
 import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
 

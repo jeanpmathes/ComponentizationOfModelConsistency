@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
 import tools.vitruv.compmodelcons.views.DynamicModels;
-import tools.vitruv.compmodelcons.views.expressions.Condition;
+import tools.vitruv.compmodelcons.views.conditions.Condition;
 
 import java.util.HashSet;
 import java.util.List;
@@ -71,7 +71,17 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         EAttribute employeeCount = DynamicModels.createEAttribute(simpleClass, "employeeCount", EcorePackage.eINSTANCE.getEInt());
 
         // Operation Setup
-        Root operation = new Root(rootClass, Optional.empty(), List.of(new Root.Target(simpleContainment, new Project(simpleClass, new Source(restaurantClass), List.of(new FeatureProject(Optional.of(numEmployees), employeeCount, new FeatureSource(numEmployees)))))));
+        Root
+                operation =
+                new Root(rootClass,
+                        Optional.empty(),
+                        List.of(new Root.Target(simpleContainment,
+                                new Project(simpleClass,
+                                        new Source(restaurantClass),
+                                        List.of(new FeatureProject(Optional.of(numEmployees),
+                                                employeeCount,
+                                                new FeatureSource(FeatureSource.Target.ofFirst(
+                                                        numEmployees))))))));
 
         // Action: Get the view.
         var view = wrap(operation.doGet(context));

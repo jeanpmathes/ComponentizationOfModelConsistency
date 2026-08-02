@@ -13,7 +13,7 @@ import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
-import tools.vitruv.compmodelcons.views.expressions.Condition;
+import tools.vitruv.compmodelcons.views.conditions.Condition;
 
 import java.util.ArrayList;
 import java.util.Iterator;

@@ -15,8 +15,7 @@ import tools.vitruv.compmodelcons.views.bindings.ValueUpdateBinding;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class FeatureSourceTest extends AbstractOperationTest {
@@ -25,7 +24,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         // Origin Setup
         EPackage metamodel = models.getPackage(Model.RESTAURANT);
         EClass restaurantClass = DynamicModels.getEClass(metamodel, "Restaurant");
-        EObject restaurant = context.getOriginObjects(restaurantClass).get(0);
+        EObject restaurant = context.getOriginObjects(restaurantClass).getFirst();
         EStructuralFeature numEmployees = restaurantClass.getEStructuralFeature("numEmployees");
         int numEmployeesValue = (int) restaurant.eGet(numEmployees);
 
@@ -39,7 +38,9 @@ class FeatureSourceTest extends AbstractOperationTest {
         ObjectBinding simpleBinding = createBinding(restaurant, simple);
 
         // Operation Setup
-        FeatureOriginOperation operation = new FeatureSource(numEmployees);
+        FeatureOriginOperation
+                operation =
+                new FeatureSource(FeatureSource.Target.ofFirst(numEmployees));
 
         // Action
         FeatureBinding result = operation.doGet(simpleBinding, context);
@@ -48,7 +49,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         assertEquals(new ValueBinding.Single(numEmployeesValue), result.value());
         assertThrows(UnsupportedOperationException.class, result::viewSubjectObject);
         assertEquals(1, result.originSubjectObjects().size());
-        assertEquals(restaurant, result.originSubjectObjects().get(0));
+        assertEquals(restaurant, result.originSubjectObjects().getFirst());
     }
 
     @Test
@@ -56,7 +57,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         // Origin Setup
         EPackage metamodel = models.getPackage(Model.RESTAURANT);
         EClass restaurantClass = DynamicModels.getEClass(metamodel, "Restaurant");
-        EObject restaurant = context.getOriginObjects(restaurantClass).get(0);
+        EObject restaurant = context.getOriginObjects(restaurantClass).getFirst();
         EStructuralFeature numEmployees = restaurantClass.getEStructuralFeature("numEmployees");
         int numEmployeesValue = (int) restaurant.eGet(numEmployees);
 
@@ -70,7 +71,9 @@ class FeatureSourceTest extends AbstractOperationTest {
         ObjectBinding simpleBinding = createBinding(restaurant, simple);
 
         // Operation Setup
-        FeatureOriginOperation operation = new FeatureSource(numEmployees);
+        FeatureOriginOperation
+                operation =
+                new FeatureSource(FeatureSource.Target.ofFirst(numEmployees));
 
         // Pre-Action Get
         FeatureBinding result = operation.doGet(simpleBinding, context);
@@ -106,7 +109,9 @@ class FeatureSourceTest extends AbstractOperationTest {
         ObjectBinding simpleBinding = createBinding(store, simple);
 
         // Operation Setup
-        FeatureOriginOperation operation = new FeatureSource(restaurantsReference);
+        FeatureOriginOperation
+                operation =
+                new FeatureSource(FeatureSource.Target.ofFirst(restaurantsReference));
 
         // Pre-Action Get
         FeatureBinding result = operation.doGet(simpleBinding, context);
@@ -147,14 +152,16 @@ class FeatureSourceTest extends AbstractOperationTest {
         ObjectBinding simpleBinding = createBinding(store, simple);
 
         // Operation Setup
-        FeatureOriginOperation operation = new FeatureSource(restaurantsReference);
+        FeatureOriginOperation
+                operation =
+                new FeatureSource(FeatureSource.Target.ofFirst(restaurantsReference));
 
         // Pre-Action Get
         FeatureBinding result = operation.doGet(simpleBinding, context);
 
         // Pre-Action Change
         EObject removed = DynamicModels.createEObject(restaurantClass);
-        EObject removedRestaurant = restaurants.get(0);
+        EObject removedRestaurant = restaurants.getFirst();
         EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveReferenceChange(simple, reference, removed, 0);
 
         // Action
@@ -173,7 +180,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         // Origin Setup
         EPackage metamodel = models.getPackage(Model.RESTAURANT);
         EClass restaurantClass = DynamicModels.getEClass(metamodel, "Restaurant");
-        EObject restaurant = context.getOriginObjects(restaurantClass).get(0);
+        EObject restaurant = context.getOriginObjects(restaurantClass).getFirst();
         EStructuralFeature numEmployees = restaurantClass.getEStructuralFeature("numEmployees");
 
         // ViewType Setup
@@ -186,7 +193,9 @@ class FeatureSourceTest extends AbstractOperationTest {
         ObjectBinding simpleBinding = createBinding(restaurant, simple);
 
         // Operation Setup
-        FeatureOriginOperation operation = new FeatureSource(numEmployees);
+        FeatureOriginOperation
+                operation =
+                new FeatureSource(FeatureSource.Target.ofFirst(numEmployees));
 
         // Pre-Action Get
         FeatureBinding result = operation.doGet(simpleBinding, context);

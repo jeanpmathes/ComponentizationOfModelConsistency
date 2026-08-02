@@ -28,6 +28,7 @@ import tools.vitruv.neojoin.aqr.AQRImport;
 import tools.vitruv.neojoin.ast.ViewTypeDefinition;
 import tools.vitruv.neojoin.generation.MetaModelGenerator;
 import tools.vitruv.neojoin.generation.ModelInfo;
+import tools.vitruv.neojoin.jvmmodel.ExpressionHelper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -42,6 +43,9 @@ public class NeoJoinVitruvGenerator implements IGenerator {
 
     @Inject
     private Parser parser;
+
+    @Inject
+    private ExpressionHelper expressionHelper;
 
     @Inject
     private JvmModelGenerator jvmModelGenerator;
@@ -63,7 +67,9 @@ public class NeoJoinVitruvGenerator implements IGenerator {
             String name = input.getURI().trimFileExtension().lastSegment();
             AQR aqr = success.aqr();
 
-            ViewTypeDefinition viewTypeDefinition = (ViewTypeDefinition) input.getContents().getFirst();
+            ViewTypeDefinition
+                    viewTypeDefinition =
+                    (ViewTypeDefinition) input.getContents().getFirst();
 
             Metamodel viewTypeMetamodel;
             try {
@@ -77,25 +83,41 @@ public class NeoJoinVitruvGenerator implements IGenerator {
                     .map(ePackage -> Metamodel.load(ePackage, input.getResourceSet()))
                     .toList();
 
-            ViewTypeExpressionSourceGenerator expressionSourceGenerator = new ViewTypeExpressionSourceGenerator(viewTypeDefinition, jvmModelGenerator, generatorConfigProvider, jvmModelAssociations, logicalContainerProvider);
-            fsa.generateFile(expressionSourceGenerator.getFileName(), expressionSourceGenerator.generate());
+            ViewTypeExpressionSourceGenerator expressionSourceGenerator =
+                    new ViewTypeExpressionSourceGenerator(expressionHelper,
+                            viewTypeDefinition,
+                            jvmModelGenerator,
+                            generatorConfigProvider,
+                            jvmModelAssociations,
+                            logicalContainerProvider);
+            fsa.generateFile(expressionSourceGenerator.getFileName(),
+                    expressionSourceGenerator.generate());
 
-            ViewTypeSourceGenerator sourceGenerator = new ViewTypeSourceGenerator(name, originMetaModels, viewTypeMetamodel, aqr, expressionSourceGenerator);
+            ViewTypeSourceGenerator
+                    sourceGenerator =
+                    new ViewTypeSourceGenerator(name,
+                            originMetaModels,
+                            viewTypeMetamodel,
+                            aqr,
+                            expressionSourceGenerator);
             fsa.generateFile(sourceGenerator.getFileName(), sourceGenerator.generate());
         }
     }
 
-    private Metamodel generateMetamodel(Resource input, String name, AQR aqr, IFileSystemAccess fsa) throws IOException {
+    private Metamodel generateMetamodel(Resource input, String name, AQR aqr, IFileSystemAccess fsa) throws
+            IOException {
         ResourceSet resourceSet = input.getResourceSet();
         String baseFileName = String.format("ecore/%s/%s", aqr.export().name(), name);
 
         MetaModelGenerator metaModelGenerator = new MetaModelGenerator(aqr);
         ModelInfo metaModelInfo = metaModelGenerator.generate();
         EPackage metaModel = metaModelInfo.pack();
-        fsa.generateFile(baseFileName + PACKAGE_EXTENSION, getContentsForFile(resourceSet, name, PACKAGE_EXTENSION, metaModel));
+        fsa.generateFile(baseFileName + PACKAGE_EXTENSION,
+                getContentsForFile(resourceSet, name, PACKAGE_EXTENSION, metaModel));
 
         GenModel genModel = createGenModel(input, name, aqr, metaModel);
-        fsa.generateFile(baseFileName + GENMODEL_EXTENSION, getContentsForFile(resourceSet, name, GENMODEL_EXTENSION, genModel));
+        fsa.generateFile(baseFileName + GENMODEL_EXTENSION,
+                getContentsForFile(resourceSet, name, GENMODEL_EXTENSION, genModel));
 
         return new Metamodel(metaModel, genModel.getGenPackages().getFirst());
     }
@@ -116,7 +138,8 @@ public class NeoJoinVitruvGenerator implements IGenerator {
         genModel.setImportOrganizing(true);
 
         genModel.setModelPluginID(modelPackage);
-        genModel.setModelDirectory(String.format("/%s/target/generated-sources/ecore", getProjectPackage(input)));
+        genModel.setModelDirectory(String.format("/%s/target/generated-sources/ecore",
+                getProjectPackage(input)));
 
         genModel.initialize(List.of(ePackage));
         GenPackage genPackage = genModel.getGenPackages().getFirst();
@@ -141,10 +164,15 @@ public class NeoJoinVitruvGenerator implements IGenerator {
             return EcorePlugin.getPlatformResourceMap().entrySet().stream()
                     .filter(entry -> entry.getValue().isFile())
                     .filter(entry -> {
-                        Path projectPath = Path.of(entry.getValue().toFileString()).toAbsolutePath().normalize();
+                        Path
+                                projectPath =
+                                Path.of(entry.getValue().toFileString())
+                                        .toAbsolutePath()
+                                        .normalize();
                         return inputPath.startsWith(projectPath);
                     })
-                    .max(Comparator.comparingInt(entry -> Path.of(entry.getValue().toFileString()).getNameCount()))
+                    .max(Comparator.comparingInt(entry -> Path.of(entry.getValue().toFileString())
+                            .getNameCount()))
                     .map(Map.Entry::getKey)
                     .orElseThrow();
         }
@@ -152,7 +180,8 @@ public class NeoJoinVitruvGenerator implements IGenerator {
         throw new IllegalArgumentException("Could not determine project package for " + input);
     }
 
-    private CharSequence getContentsForFile(ResourceSet resourceSet, String name, String extension, EObject eObject) throws IOException {
+    private CharSequence getContentsForFile(ResourceSet resourceSet, String name, String extension, EObject eObject) throws
+            IOException {
         URI uri = URI.createURI(name + extension);
 
         Resource genModelResource = resourceSet.createResource(uri);

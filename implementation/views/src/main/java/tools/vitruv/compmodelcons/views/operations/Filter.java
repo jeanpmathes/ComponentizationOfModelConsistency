@@ -5,7 +5,7 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
-import tools.vitruv.compmodelcons.views.expressions.Condition;
+import tools.vitruv.compmodelcons.views.conditions.Condition;
 
 import java.util.List;
 

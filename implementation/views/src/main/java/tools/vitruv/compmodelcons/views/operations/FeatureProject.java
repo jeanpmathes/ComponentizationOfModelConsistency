@@ -108,9 +108,12 @@ public class FeatureProject {
                 throw new UnsupportedOperationException();
             }
 
-            return context.getCorrespondences().getCorrespondingOriginObjectsForViewObject(eObject).stream()
+            return context.getCorrespondences()
+                    .getCorrespondingOriginObjectsForViewObject(eObject)
+                    .stream()
                     .filter(originObject -> originObject.eClass().equals(sourceObjectClass))
-                    .findFirst().orElseThrow();
+                    .findFirst()
+                    .orElseThrow();
         }
 
         return viewValue;

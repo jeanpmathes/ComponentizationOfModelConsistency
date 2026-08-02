@@ -47,7 +47,8 @@ class OperationBasedViewTypeTest {
 
     @BeforeAll
     static void beforeAll() {
-        Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().put("*", new XMIResourceFactoryImpl());
+        Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap()
+                .put("*", new XMIResourceFactoryImpl());
     }
 
     @BeforeEach
@@ -55,7 +56,10 @@ class OperationBasedViewTypeTest {
         ResourceSet resourceSet = new ResourceSetImpl();
         UuidResolver uuidResolver = UuidResolver.create(resourceSet);
 
-        Resource resource = resourceSet.createResource(URI.createURI(String.format("file://%s/test.xmi", tempDir.toAbsolutePath())));
+        Resource
+                resource =
+                resourceSet.createResource(URI.createURI(String.format("file://%s/test.xmi",
+                        tempDir.toAbsolutePath())));
 
         Repository repository = pcm.Repository();
         uuidResolver.registerEObject(repository);
@@ -82,7 +86,11 @@ class OperationBasedViewTypeTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass viewRootClass = DynamicModels.createEClass(viewType);
         EClass viewNonRootClass = DynamicModels.createEClass(viewType);
-        EReference nonRootContainment = DynamicModels.createManyContainmentEReference(viewRootClass, "containment", viewNonRootClass);
+        EReference
+                nonRootContainment =
+                DynamicModels.createManyContainmentEReference(viewRootClass,
+                        "containment",
+                        viewNonRootClass);
 
         class TestViewType extends OperationBasedViewType {
             public TestViewType() {
@@ -98,7 +106,7 @@ class OperationBasedViewTypeTest {
                                         List.of())),
                         List.of(
                                 new Root.Target(
-                                nonRootContainment,
+                                        nonRootContainment,
                                         new Project(
                                                 viewNonRootClass,
                                                 new Source(Pcm_mockupPackage.eINSTANCE.getComponent()),
@@ -115,11 +123,14 @@ class OperationBasedViewTypeTest {
             repository.getComponents().add(pcm.Component());
         }, view -> {
             EObject root = view.getRootObjects().iterator().next();
-            DynamicModels.getList(root, nonRootContainment).add(DynamicModels.createEObject(viewNonRootClass));
+            DynamicModels.getList(root, nonRootContainment)
+                    .add(DynamicModels.createEObject(viewNonRootClass));
             DynamicModels.getList(root, nonRootContainment).removeFirst();
             DynamicModels.getList(root, nonRootContainment).removeFirst();
-            DynamicModels.getList(root, nonRootContainment).add(DynamicModels.createEObject(viewNonRootClass));
-            DynamicModels.getList(root, nonRootContainment).add(DynamicModels.createEObject(viewNonRootClass));
+            DynamicModels.getList(root, nonRootContainment)
+                    .add(DynamicModels.createEObject(viewNonRootClass));
+            DynamicModels.getList(root, nonRootContainment)
+                    .add(DynamicModels.createEObject(viewNonRootClass));
         });
     }
 
@@ -128,8 +139,16 @@ class OperationBasedViewTypeTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass viewRootClass = DynamicModels.createEClass(viewType, "Root");
         EClass viewNonRootClass = DynamicModels.createEClass(viewType, "NonRoot");
-        EReference nonRootContainment = DynamicModels.createManyContainmentEReference(viewRootClass, "containment", viewNonRootClass);
-        EAttribute nonRootIdAttribute = DynamicModels.createEAttribute(viewNonRootClass, "id", EcorePackage.eINSTANCE.getEString());
+        EReference
+                nonRootContainment =
+                DynamicModels.createManyContainmentEReference(viewRootClass,
+                        "containment",
+                        viewNonRootClass);
+        EAttribute
+                nonRootIdAttribute =
+                DynamicModels.createEAttribute(viewNonRootClass,
+                        "id",
+                        EcorePackage.eINSTANCE.getEString());
 
         class TestViewType extends OperationBasedViewType {
             public TestViewType() {
@@ -151,7 +170,11 @@ class OperationBasedViewTypeTest {
                                                 viewNonRootClass,
                                                 new Source(Pcm_mockupPackage.eINSTANCE.getComponent()),
                                                 List.of(
-                                                        new FeatureProject(Optional.of(Pcm_mockupPackage.eINSTANCE.getIdentified_Id()), nonRootIdAttribute, new FeatureSource(Pcm_mockupPackage.eINSTANCE.getIdentified_Id()))
+                                                        new FeatureProject(Optional.of(
+                                                                Pcm_mockupPackage.eINSTANCE.getIdentified_Id()),
+                                                                nonRootIdAttribute,
+                                                                new FeatureSource(FeatureSource.Target.ofFirst(
+                                                                        Pcm_mockupPackage.eINSTANCE.getIdentified_Id())))
                                                 )))));
             }
         }
@@ -172,10 +195,20 @@ class OperationBasedViewTypeTest {
         EPackage viewType = DynamicModels.createEPackage();
         EClass viewRootClass = DynamicModels.createEClass(viewType, "Root");
         EClass viewComponentClass = DynamicModels.createEClass(viewType, "Component");
-        EReference viewComponentContainment = DynamicModels.createManyContainmentEReference(viewRootClass, "allComponents", viewComponentClass);
+        EReference
+                viewComponentContainment =
+                DynamicModels.createManyContainmentEReference(viewRootClass,
+                        "allComponents",
+                        viewComponentClass);
         EClass viewInterfaceClass = DynamicModels.createEClass(viewType, "Interface");
-        EReference viewInterfaceContainment = DynamicModels.createManyContainmentEReference(viewRootClass, "allInterfaces", viewInterfaceClass);
-        EReference viewComponent2InterfaceReference = DynamicModels.createEReference(viewComponentClass, "interface", viewInterfaceClass);
+        EReference
+                viewInterfaceContainment =
+                DynamicModels.createManyContainmentEReference(viewRootClass,
+                        "allInterfaces",
+                        viewInterfaceClass);
+        EReference
+                viewComponent2InterfaceReference =
+                DynamicModels.createEReference(viewComponentClass, "interface", viewInterfaceClass);
 
         class TestViewType extends OperationBasedViewType {
             public TestViewType() {
@@ -197,7 +230,11 @@ class OperationBasedViewTypeTest {
                                                 viewComponentClass,
                                                 new Source(Pcm_mockupPackage.eINSTANCE.getComponent()),
                                                 List.of(
-                                                        new FeatureProject(Optional.of(Pcm_mockupPackage.eINSTANCE.getComponent_ProvidedInterface()), viewComponent2InterfaceReference, new FeatureSource(Pcm_mockupPackage.eINSTANCE.getComponent_ProvidedInterface()))
+                                                        new FeatureProject(Optional.of(
+                                                                Pcm_mockupPackage.eINSTANCE.getComponent_ProvidedInterface()),
+                                                                viewComponent2InterfaceReference,
+                                                                new FeatureSource(FeatureSource.Target.ofFirst(
+                                                                        (Pcm_mockupPackage.eINSTANCE.getComponent_ProvidedInterface()))))
                                                 ))),
                                 new Root.Target(
                                         viewInterfaceContainment,
@@ -263,7 +300,10 @@ class OperationBasedViewTypeTest {
         // UUIDs of creations are not equal.
         BiMap<Uuid, Uuid> creationMap = HashBiMap.create();
 
-        BiConsumer<Uuid, Uuid> assertUuidEquality = (Uuid expected, Uuid tested) -> assertTrue(Objects.equals(expected, tested) || Objects.equals(creationMap.get(expected), tested));
+        BiConsumer<Uuid, Uuid>
+                assertUuidEquality =
+                (Uuid expected, Uuid tested) -> assertTrue(Objects.equals(expected, tested) ||
+                        Objects.equals(creationMap.get(expected), tested));
 
         for (int index = 0; index < baselineChanges.size(); index++) {
             var baselineChangeElement = baselineChanges.get(index);
@@ -271,41 +311,61 @@ class OperationBasedViewTypeTest {
 
             assertEquals(baselineChangeElement.getClass(), testedChangeElement.getClass());
 
-            if (baselineChangeElement instanceof DeleteEObject<Uuid> baselineDeleteEObject) {
-                DeleteEObject<Uuid> testedDeleteEObject = (DeleteEObject<Uuid>) testedChangeElement;
-                baselineDeletions.add(baselineDeleteEObject.getAffectedElement());
-                testedDeletions.add(testedDeleteEObject.getAffectedElement());
+            switch (baselineChangeElement) {
+                case DeleteEObject<Uuid> baselineDeleteEObject -> {
+                    DeleteEObject<Uuid>
+                            testedDeleteEObject =
+                            (DeleteEObject<Uuid>) testedChangeElement;
+                    baselineDeletions.add(baselineDeleteEObject.getAffectedElement());
+                    testedDeletions.add(testedDeleteEObject.getAffectedElement());
 
-                continue;
-            }
+                    continue;
+                }
+                case CreateEObject<Uuid> baselineCreateEObject -> {
+                    CreateEObject<Uuid>
+                            testedCreateEObject =
+                            (CreateEObject<Uuid>) testedChangeElement;
 
-            if (baselineChangeElement instanceof CreateEObject<Uuid> baselineCreateEObject) {
-                CreateEObject<Uuid> testedCreateEObject = (CreateEObject<Uuid>) testedChangeElement;
+                    creationMap.put(baselineCreateEObject.getAffectedElement(),
+                            testedCreateEObject.getAffectedElement());
 
-                creationMap.put(baselineCreateEObject.getAffectedElement(), testedCreateEObject.getAffectedElement());
-
-                continue;
-            }
-
-            if (baselineChangeElement instanceof FeatureEChange<Uuid, ?> baselineFeatureEChange) {
-                FeatureEChange<Uuid, ?> testedFeatureEChange = (FeatureEChange<Uuid, ?>) testedChangeElement;
-                assertUuidEquality.accept(baselineFeatureEChange.getAffectedElement(), testedFeatureEChange.getAffectedElement());
-                assertEquals(baselineFeatureEChange.getAffectedFeature(), testedFeatureEChange.getAffectedFeature());
+                    continue;
+                }
+                case FeatureEChange<Uuid, ?> baselineFeatureEChange -> {
+                    FeatureEChange<Uuid, ?>
+                            testedFeatureEChange =
+                            (FeatureEChange<Uuid, ?>) testedChangeElement;
+                    assertUuidEquality.accept(baselineFeatureEChange.getAffectedElement(),
+                            testedFeatureEChange.getAffectedElement());
+                    assertEquals(baselineFeatureEChange.getAffectedFeature(),
+                            testedFeatureEChange.getAffectedFeature());
+                }
+                default -> {
+                }
             }
 
             if (baselineChangeElement instanceof EObjectExistenceEChange<Uuid> baselineEObjectExistenceEChange) {
-                EObjectExistenceEChange<Uuid> testedEObjectExistenceEChange = (EObjectExistenceEChange<Uuid>) testedChangeElement;
-                assertUuidEquality.accept(baselineEObjectExistenceEChange.getAffectedElement(), testedEObjectExistenceEChange.getAffectedElement());
+                EObjectExistenceEChange<Uuid>
+                        testedEObjectExistenceEChange =
+                        (EObjectExistenceEChange<Uuid>) testedChangeElement;
+                assertUuidEquality.accept(baselineEObjectExistenceEChange.getAffectedElement(),
+                        testedEObjectExistenceEChange.getAffectedElement());
             }
 
             if (baselineChangeElement instanceof EObjectAddedEChange<Uuid> baselineEObjectAddedEChange) {
-                EObjectAddedEChange<Uuid> testedEObjectAddedEChange = (EObjectAddedEChange<Uuid>) testedChangeElement;
-                assertUuidEquality.accept(baselineEObjectAddedEChange.getNewValue(), testedEObjectAddedEChange.getNewValue());
+                EObjectAddedEChange<Uuid>
+                        testedEObjectAddedEChange =
+                        (EObjectAddedEChange<Uuid>) testedChangeElement;
+                assertUuidEquality.accept(baselineEObjectAddedEChange.getNewValue(),
+                        testedEObjectAddedEChange.getNewValue());
             }
 
             if (baselineChangeElement instanceof EObjectSubtractedEChange<Uuid> baselineEObjectSubtractedEChange) {
-                EObjectSubtractedEChange<Uuid> testedEObjectSubtractedEChange = (EObjectSubtractedEChange<Uuid>) testedChangeElement;
-                assertUuidEquality.accept(baselineEObjectSubtractedEChange.getOldValue(), testedEObjectSubtractedEChange.getOldValue());
+                EObjectSubtractedEChange<Uuid>
+                        testedEObjectSubtractedEChange =
+                        (EObjectSubtractedEChange<Uuid>) testedChangeElement;
+                assertUuidEquality.accept(baselineEObjectSubtractedEChange.getOldValue(),
+                        testedEObjectSubtractedEChange.getOldValue());
             }
 
             if (baselineChangeElement instanceof RootEChange<Uuid> baselineRootEChange) {
@@ -326,7 +386,9 @@ class OperationBasedViewTypeTest {
             throw new RuntimeException(e);
         }
 
-        @SuppressWarnings("unchecked") ArgumentCaptor<VitruviusChange<Uuid>> changeArgument = ArgumentCaptor.forClass(VitruviusChange.class);
+        @SuppressWarnings("unchecked") ArgumentCaptor<VitruviusChange<Uuid>>
+                changeArgument =
+                ArgumentCaptor.forClass(VitruviusChange.class);
         verify(viewSource).propagateChange(changeArgument.capture());
         var result = changeArgument.getValue();
         clearInvocations(viewSource);

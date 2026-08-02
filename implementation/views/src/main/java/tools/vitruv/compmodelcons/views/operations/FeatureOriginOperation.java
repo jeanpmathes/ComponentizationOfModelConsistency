@@ -13,5 +13,5 @@ public interface FeatureOriginOperation {
 
     FeatureBinding doPut(EChange<EObject> viewChange, FeatureBinding feature, ObjectBinding subjectBinding, ValueUpdateBinding value, PutContext context);
 
-    FeatureBinding doUpdatingGet(FeatureBinding feature, EChange<EObject> originChange, GetContext context);
+    FeatureBinding doUpdatingGet(FeatureBinding previous, ObjectBinding subjectBinding, EChange<EObject> originChange, GetContext context);
 }

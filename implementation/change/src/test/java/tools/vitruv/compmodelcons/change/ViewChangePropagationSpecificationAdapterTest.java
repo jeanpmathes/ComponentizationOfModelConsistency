@@ -32,10 +32,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class ViewChangePropagationSpecificationAdapterTest {
     @TempDir
@@ -81,8 +79,12 @@ class ViewChangePropagationSpecificationAdapterTest {
         when(specification.getSourceMetamodelDescriptor()).thenReturn(sourceViewType.getViewTypeMetamodelDescriptor());
         when(specification.getTargetMetamodelDescriptor()).thenReturn(targetViewType.getViewTypeMetamodelDescriptor());
         var wrappingStrategy = new RemoteChangePropagationSpecificationWrappingStrategy(specification);
-        new ViewChangePropagationSpecificationAdapter(
-                sourceViewType, 0, wrappingStrategy, targetViewType, 0, ChangeDeterminationMode.CHANGE_DERIVATION);
+        new ViewChangePropagationSpecificationAdapter(sourceViewType,
+                0,
+                wrappingStrategy,
+                targetViewType,
+                0,
+                ChangeDeterminationMode.CHANGE_DERIVATION);
     }
 
     @Test
@@ -97,8 +99,13 @@ class ViewChangePropagationSpecificationAdapterTest {
         when(otherViewType.getViewTypeMetamodelDescriptor()).thenReturn(otherMetamodel);
         when(otherViewType.getOriginMetamodelDescriptors()).thenReturn(List.of(MetamodelDescriptor.of(sourceOriginInfo.metamodel)));
 
-        assertThrows(IllegalArgumentException.class, () -> new ViewChangePropagationSpecificationAdapter(
-                otherViewType, 0, wrappingStrategy, targetViewType, 0, ChangeDeterminationMode.CHANGE_DERIVATION));
+        assertThrows(IllegalArgumentException.class,
+                () -> new ViewChangePropagationSpecificationAdapter(otherViewType,
+                        0,
+                        wrappingStrategy,
+                        targetViewType,
+                        0,
+                        ChangeDeterminationMode.CHANGE_DERIVATION));
     }
 
     @Test
@@ -128,8 +135,13 @@ class ViewChangePropagationSpecificationAdapterTest {
 
         sourceNonRoot.eSet(sourceOriginInfo.nameAttribute, "newName");
 
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createReplaceSingleAttributeChange(
-                sourceNonRoot, sourceOriginInfo.nameAttribute, "oldName", "newName");
+        EChange<EObject>
+                change =
+                TypeInferringAtomicEChangeFactory.getInstance()
+                        .createReplaceSingleAttributeChange(sourceNonRoot,
+                                sourceOriginInfo.nameAttribute,
+                                "oldName",
+                                "newName");
 
         adapter.propagateChanges(List.of(change), correspondenceModel, changedOrigin, previousState);
 
@@ -138,11 +150,17 @@ class ViewChangePropagationSpecificationAdapterTest {
     }
 
     private ViewChangePropagationSpecificationAdapter getViewChangePropagationSpecificationAdapter() {
-        ChangePropagationSpecification functionalSpecification = new TestChangePropagationSpecification(
-                sourceViewType.getViewTypeMetamodelDescriptor(), targetViewType.getViewTypeMetamodelDescriptor());
+        ChangePropagationSpecification
+                functionalSpecification =
+                new TestChangePropagationSpecification(sourceViewType.getViewTypeMetamodelDescriptor(),
+                        targetViewType.getViewTypeMetamodelDescriptor());
         var wrappingStrategy = new RemoteChangePropagationSpecificationWrappingStrategy(functionalSpecification);
-        return new ViewChangePropagationSpecificationAdapter(
-                sourceViewType, 0, wrappingStrategy, targetViewType, 0, ChangeDeterminationMode.CHANGE_DERIVATION);
+        return new ViewChangePropagationSpecificationAdapter(sourceViewType,
+                0,
+                wrappingStrategy,
+                targetViewType,
+                0,
+                ChangeDeterminationMode.CHANGE_DERIVATION);
     }
 
     private EObject setupOrigin(ResourceSet resourceSet, Path projectPath, String fileName, MetamodelInfo info, String name) {
@@ -206,11 +224,16 @@ class ViewChangePropagationSpecificationAdapterTest {
         @Override
         protected Root createStructure() {
             return new Root(viewInfo.rootClass,
-                    Optional.of(new Project(viewInfo.rootClass, new Source(originInfo.rootClass), List.of())),
+                    Optional.of(new Project(viewInfo.rootClass,
+                            new Source(originInfo.rootClass),
+                            List.of())),
                     List.of(new Root.Target(viewInfo.rootClass.getEAllContainments().getFirst(),
-                            new Project(viewInfo.nonRootClass, new Source(originInfo.nonRootClass), List.of(
-                                    new FeatureProject(Optional.of(originInfo.nameAttribute), viewInfo.nameAttribute, new FeatureSource(originInfo.nameAttribute))
-                            )))));
+                            new Project(viewInfo.nonRootClass,
+                                    new Source(originInfo.nonRootClass),
+                                    List.of(new FeatureProject(Optional.of(originInfo.nameAttribute),
+                                            viewInfo.nameAttribute,
+                                            new FeatureSource(FeatureSource.Target.ofFirst(
+                                                    originInfo.nameAttribute))))))));
         }
     }
 
