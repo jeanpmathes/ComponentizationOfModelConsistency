@@ -23,16 +23,24 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
     public void testSimpleEmptyViewOfRestaurantsAsRootShouldSupportBothRemovingAndInsertingRestaurants() {
         // Origin Setup
         EObject store = models.getRoot(Model.RESTAURANT);
-        EClass restaurantClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
+        EClass restaurantClass =
+                DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
         List<EObject> storeContents = List.copyOf(store.eContents());
 
         // ViewType Setup
-        EPackage viewType = DynamicModels.createEPackage();
-        EClass emptyClass = DynamicModels.createEClass(viewType);
+        EPackage viewType   = DynamicModels.createEPackage();
+        EClass   emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
-        Root operation = new Root(emptyClass, Optional.of(new Project(emptyClass, new Source(restaurantClass), List.of())), List.of());
+        Root operation = new Root(emptyClass,
+                                  Optional.of(new Project(emptyClass,
+                                                          new Source(restaurantClass),
+                                                          List.of(),
+                                                          Project.OnPut.NO_OP
+                                  )),
+                                  List.of()
+        );
 
         // Action: Get the view.
         var view = wrap(operation.doGet(context));
@@ -50,74 +58,123 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         assertTrue(models.getViewModel().getContents().contains(created));
         assertFalse(models.getViewModel().getContents().contains(removed));
         assertEquals(restaurants.size(), context.getOriginObjects(restaurantClass).size());
-        assertEquals(1, Sets.difference(new HashSet<>(restaurants), new HashSet<>(context.getOriginObjects(restaurantClass))).size());
-        assertEquals(1, Sets.difference(new HashSet<>(context.getOriginObjects(restaurantClass)), new HashSet<>(restaurants)).size());
+        assertEquals(1,
+                     Sets.difference(new HashSet<>(restaurants),
+                                     new HashSet<>(context.getOriginObjects(restaurantClass))
+                     ).size()
+        );
+        assertEquals(1,
+                     Sets.difference(new HashSet<>(context.getOriginObjects(restaurantClass)),
+                                     new HashSet<>(restaurants)
+                     ).size()
+        );
         assertEquals(storeContents.size(), store.eContents().size());
-        assertEquals(1, Sets.difference(new HashSet<>(storeContents), new HashSet<>(store.eContents())).size());
-        assertEquals(1, Sets.difference(new HashSet<>(store.eContents()), new HashSet<>(storeContents)).size());
+        assertEquals(1,
+                     Sets.difference(new HashSet<>(storeContents), new HashSet<>(store.eContents()))
+                             .size()
+        );
+        assertEquals(1,
+                     Sets.difference(new HashSet<>(store.eContents()), new HashSet<>(storeContents))
+                             .size()
+        );
     }
 
-    @Test
-    public void testSimpleViewOfRestaurantsShouldSupportSettingTheNumberOfEmployees() {
+    @Test public void testSimpleViewOfRestaurantsShouldSupportSettingTheNumberOfEmployees() {
         // Origin Setup
-        EClass restaurantClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
+        EClass restaurantClass =
+                DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         EStructuralFeature numEmployees = restaurantClass.getEStructuralFeature("numEmployees");
 
         // ViewType Setup
-        EPackage viewType = DynamicModels.createEPackage();
-        EClass rootClass = DynamicModels.createEClass(viewType, "Root");
-        EClass simpleClass = DynamicModels.createEClass(viewType, "Simple");
-        EReference simpleContainment = DynamicModels.createManyContainmentEReference(rootClass, "simples", simpleClass);
-        EAttribute employeeCount = DynamicModels.createEAttribute(simpleClass, "employeeCount", EcorePackage.eINSTANCE.getEInt());
+        EPackage viewType    = DynamicModels.createEPackage();
+        EClass   rootClass   = DynamicModels.createEClass(viewType, "Root");
+        EClass   simpleClass = DynamicModels.createEClass(viewType, "Simple");
+        EReference simpleContainment =
+                DynamicModels.createManyContainmentEReference(rootClass, "simples", simpleClass);
+        EAttribute employeeCount = DynamicModels.createEAttribute(simpleClass,
+                                                                  "employeeCount",
+                                                                  EcorePackage.eINSTANCE.getEInt()
+        );
 
         // Operation Setup
-        Root
-                operation =
-                new Root(rootClass,
-                        Optional.empty(),
-                        List.of(new Root.Target(simpleContainment,
-                                new Project(simpleClass,
-                                        new Source(restaurantClass),
-                                        List.of(new FeatureProject(Optional.of(numEmployees),
-                                                employeeCount,
-                                                new FeatureSource(FeatureSource.Target.ofFirst(
-                                                        numEmployees))))))));
+        Root operation = new Root(rootClass,
+                                  Optional.empty(),
+                                  List.of(new Root.Target(simpleContainment,
+                                                          new Project(simpleClass,
+                                                                      new Source(restaurantClass),
+                                                                      List.of(new FeatureProject(
+                                                                              Optional.of(
+                                                                                      numEmployees),
+                                                                              employeeCount,
+                                                                              new FeatureSource(
+                                                                                      FeatureSource.Target.ofFirst(
+                                                                                              numEmployees))
+                                                                      )),
+                                                                      Project.OnPut.NO_OP
+                                                          )
+                                  ))
+        );
 
         // Action: Get the view.
         var view = wrap(operation.doGet(context));
 
         // Action: Unset the number of employees.
-        for (EObject simple : DynamicModels.getList(models.getViewModel().getContents().getFirst(), simpleContainment)) {
+        for (EObject simple : DynamicModels.getList(models.getViewModel().getContents().getFirst(),
+                                                    simpleContainment
+        )) {
             doUnset(simple, employeeCount, operation, view);
         }
 
         // Action: Set a new number of employees.
-        for (EObject simple : DynamicModels.getList(models.getViewModel().getContents().getFirst(), simpleContainment)) {
+        for (EObject simple : DynamicModels.getList(models.getViewModel().getContents().getFirst(),
+                                                    simpleContainment
+        )) {
             doReplaceAttribute(simple, employeeCount, 52, operation, view);
         }
 
         // Assertions
-        assertForAll(context.getOriginObjects(restaurantClass), restaurant -> restaurant.eGet(numEmployees).equals(52));
+        assertForAll(context.getOriginObjects(restaurantClass),
+                     restaurant -> restaurant.eGet(numEmployees).equals(52)
+        );
     }
 
-    @Test
-    public void testTripleJoinedViewShouldCreateElementInEachSource() {
+    @Test public void testTripleJoinedViewShouldCreateElementInEachSource() {
         // Origin Setup
-        EClass restaurantClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
+        EClass restaurantClass =
+                DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Restaurant");
         EClass foodClass = DynamicModels.getEClass(models.getPackage(Model.RESTAURANT), "Food");
         EClass reviewClass = DynamicModels.getEClass(models.getPackage(Model.REVIEWPAGE), "Review");
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
-        List<EObject> foods = context.getOriginObjects(foodClass);
+        List<EObject> foods   = context.getOriginObjects(foodClass);
         List<EObject> reviews = context.getOriginObjects(reviewClass);
 
         // ViewType Setup
-        EPackage viewType = DynamicModels.createEPackage();
-        EClass rootClass = DynamicModels.createEClass(viewType, "Root");
-        EClass joinedClass = DynamicModels.createEClass(viewType, "Joined");
-        EReference joinedContainment = DynamicModels.createManyContainmentEReference(rootClass, "allJoined", joinedClass);
+        EPackage viewType    = DynamicModels.createEPackage();
+        EClass   rootClass   = DynamicModels.createEClass(viewType, "Root");
+        EClass   joinedClass = DynamicModels.createEClass(viewType, "Joined");
+        EReference joinedContainment =
+                DynamicModels.createManyContainmentEReference(rootClass, "allJoined", joinedClass);
 
         // Operation Setup
-        Root operation = new Root(rootClass, Optional.empty(), List.of(new Root.Target(joinedContainment, new Project(joinedClass, new Join(reviewClass, new Join(foodClass, new Source(restaurantClass), Join.Type.INNER, Condition.TRUE), Join.Type.INNER, Condition.TRUE), List.of()))));
+        Root operation = new Root(rootClass,
+                                  Optional.empty(),
+                                  List.of(new Root.Target(joinedContainment,
+                                                          new Project(joinedClass,
+                                                                      new Join(reviewClass,
+                                                                               new Join(foodClass,
+                                                                                        new Source(
+                                                                                                restaurantClass),
+                                                                                        Join.Type.INNER,
+                                                                                        Condition.TRUE
+                                                                               ),
+                                                                               Join.Type.INNER,
+                                                                               Condition.TRUE
+                                                                      ),
+                                                                      List.of(),
+                                                                      Project.OnPut.NO_OP
+                                                          )
+                                  ))
+        );
 
         // Action: Get the view.
         var view = wrap(operation.doGet(context));
@@ -133,40 +190,46 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
 
     private EObject doCreate(EClass eClass, Root root, Root.ViewBinding[] view) {
         EObject created = DynamicModels.createEObject(eClass);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
+        EChange<EObject> change =
+                TypeInferringAtomicEChangeFactory.getInstance().createCreateEObjectChange(created);
         view[0] = root.doPut(change, view[0], context);
         return created;
     }
 
     private void doDelete(EObject removed, Root root, Root.ViewBinding[] view) {
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(removed);
+        EChange<EObject> change =
+                TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(removed);
         view[0] = root.doPut(change, view[0], context);
     }
 
     private void doInsertRoot(EObject inserted, Root root, Root.ViewBinding[] view) {
         models.getViewModel().getContents().add(inserted);
         int index = models.getViewModel().getContents().indexOf(inserted);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertRootChange(inserted, models.getViewModel(), index);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance()
+                .createInsertRootChange(inserted, models.getViewModel(), index);
         view[0] = root.doPut(change, view[0], context);
     }
 
     private void doRemoveRoot(EObject removed, Root root, Root.ViewBinding[] view) {
         int index = models.getViewModel().getContents().indexOf(removed);
         models.getViewModel().getContents().remove(removed);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveRootChange(removed, models.getViewModel(), index);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance()
+                .createRemoveRootChange(removed, models.getViewModel(), index);
         view[0] = root.doPut(change, view[0], context);
     }
 
     private void doUnset(EObject target, EStructuralFeature feature, Root root, Root.ViewBinding[] view) {
         target.eUnset(feature);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createUnsetFeatureChange(target, feature);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance()
+                .createUnsetFeatureChange(target, feature);
         view[0] = root.doPut(change, view[0], context);
     }
 
     private void doReplaceAttribute(EObject target, EAttribute attribute, Object newValue, Root root, Root.ViewBinding[] view) {
         Object oldValue = target.eGet(attribute);
         target.eSet(attribute, newValue);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createReplaceSingleAttributeChange(target, attribute, oldValue, newValue);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance()
+                .createReplaceSingleAttributeChange(target, attribute, oldValue, newValue);
         view[0] = root.doPut(change, view[0], context);
     }
 }

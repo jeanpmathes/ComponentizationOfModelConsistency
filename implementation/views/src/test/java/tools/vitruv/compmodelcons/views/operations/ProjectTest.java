@@ -28,7 +28,8 @@ public class ProjectTest extends AbstractOperationTest {
 
         // Operation Setup
         OriginOperation originOperation = mock(OriginOperation.class);
-        Project operation = new Project(emptyClass, originOperation, List.of());
+        Project operation =
+                new Project(emptyClass, originOperation, List.of(), Project.OnPut.NO_OP);
 
         // Action
         when(originOperation.doGet(context)).thenReturn(List.of(OriginBinding.of(store)));
@@ -59,7 +60,11 @@ public class ProjectTest extends AbstractOperationTest {
         OriginOperation originOperation = mock(OriginOperation.class);
         FeatureProject featureProject = mock(FeatureProject.class);
         when(featureProject.getCreatedFeature()).thenReturn(number);
-        Project operation = new Project(simpleClass, originOperation, List.of(featureProject));
+        Project operation = new Project(simpleClass,
+                                        originOperation,
+                                        List.of(featureProject),
+                                        Project.OnPut.NO_OP
+        );
 
         // Action
         when(originOperation.doGet(context)).thenReturn(List.of(OriginBinding.of(store)));
@@ -91,7 +96,8 @@ public class ProjectTest extends AbstractOperationTest {
 
         // Operation Setup
         OriginOperation originOperation = mock(OriginOperation.class);
-        Project operation = new Project(emptyClass, originOperation, List.of());
+        Project operation =
+                new Project(emptyClass, originOperation, List.of(), Project.OnPut.NO_OP);
 
         // Pre-Action Get
         when(originOperation.doGet(context)).thenReturn(List.of(OriginBinding.of(store)));
@@ -124,7 +130,8 @@ public class ProjectTest extends AbstractOperationTest {
 
         // Operation Setup
         OriginOperation originOperation = mock(OriginOperation.class);
-        Project operation = new Project(emptyClass, originOperation, List.of());
+        Project operation =
+                new Project(emptyClass, originOperation, List.of(), Project.OnPut.NO_OP);
 
         // Pre-Action Get
         when(originOperation.doGet(context)).thenReturn(List.of(OriginBinding.of(store)));
@@ -160,7 +167,11 @@ public class ProjectTest extends AbstractOperationTest {
         OriginOperation originOperation = mock(OriginOperation.class);
         FeatureProject featureProject = mock(FeatureProject.class);
         when(featureProject.getCreatedFeature()).thenReturn(number);
-        Project operation = new Project(simpleClass, originOperation, List.of(featureProject));
+        Project operation = new Project(simpleClass,
+                                        originOperation,
+                                        List.of(featureProject),
+                                        Project.OnPut.NO_OP
+        );
 
         // Pre-Action Get
         when(originOperation.doGet(context)).thenReturn(List.of(OriginBinding.of(store)));

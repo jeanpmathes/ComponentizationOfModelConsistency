@@ -103,14 +103,19 @@ class OperationBasedViewTypeTest {
                         Optional.of(
                                 new Project(viewRootClass,
                                         new Source(Pcm_mockupPackage.eINSTANCE.getRepository()),
-                                        List.of())),
+                                            List.of(), Project.OnPut.NO_OP
+                                )),
                         List.of(
                                 new Root.Target(
                                         nonRootContainment,
                                         new Project(
                                                 viewNonRootClass,
                                                 new Source(Pcm_mockupPackage.eINSTANCE.getComponent()),
-                                                List.of()))));
+                                                List.of(),
+                                                Project.OnPut.NO_OP
+                                        )
+                                ))
+                );
             }
         }
 
@@ -161,7 +166,8 @@ class OperationBasedViewTypeTest {
                         Optional.of(
                                 new Project(viewRootClass,
                                         new Source(Pcm_mockupPackage.eINSTANCE.getRepository()),
-                                        List.of()
+                                            List.of(),
+                                            Project.OnPut.NO_OP
                                 )),
                         List.of(
                                 new Root.Target(
@@ -175,7 +181,11 @@ class OperationBasedViewTypeTest {
                                                                 nonRootIdAttribute,
                                                                 new FeatureSource(FeatureSource.Target.ofFirst(
                                                                         Pcm_mockupPackage.eINSTANCE.getIdentified_Id())))
-                                                )))));
+                                                ),
+                                                Project.OnPut.NO_OP
+                                        )
+                                ))
+                );
             }
         }
 
@@ -221,7 +231,8 @@ class OperationBasedViewTypeTest {
                         Optional.of(
                                 new Project(viewRootClass,
                                         new Source(Pcm_mockupPackage.eINSTANCE.getRepository()),
-                                        List.of()
+                                            List.of(),
+                                            Project.OnPut.NO_OP
                                 )),
                         List.of(
                                 new Root.Target(
@@ -235,13 +246,17 @@ class OperationBasedViewTypeTest {
                                                                 viewComponent2InterfaceReference,
                                                                 new FeatureSource(FeatureSource.Target.ofFirst(
                                                                         (Pcm_mockupPackage.eINSTANCE.getComponent_ProvidedInterface()))))
-                                                ))),
+                                                ),
+                                                Project.OnPut.NO_OP
+                                        )
+                                ),
                                 new Root.Target(
                                         viewInterfaceContainment,
                                         new Project(
                                                 viewInterfaceClass,
                                                 new Source(Pcm_mockupPackage.eINSTANCE.getPInterface()),
-                                                List.of()
+                                                List.of(),
+                                                Project.OnPut.NO_OP
                                         )
                                 )));
             }

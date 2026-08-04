@@ -38,7 +38,9 @@ public class RootTest extends AbstractOperationTest {
         // Operation Setup
         Project rootProject = mock(Project.class);
         Project emptyProject = mock(Project.class);
-        Root operation = new Root(rootClass, Optional.of(rootProject), List.of(new Root.Target(emptyContainment, emptyProject)));
+        Root operation = new Root(rootClass, Optional.of(rootProject),
+                                  List.of(new Root.Target(emptyContainment, emptyProject))
+        );
 
         // Action
         when(rootProject.beginGetByCreatingViewObjects(context)).thenReturn(List.of(root));

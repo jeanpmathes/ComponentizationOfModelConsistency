@@ -22,43 +22,36 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class Join implements OriginOperation {
-    private final EClass sourceClass;
-    private final boolean isRoot;
+    private final EClass     sourceClass;
+    private final boolean    isRoot;
     private final EReference container;
     private final OriginOperation origin;
-    private final Type type;
-    private final Condition condition;
+    private final Type       type;
+    private final Condition  condition;
 
     public Join(EClass sourceClass, OriginOperation origin, Type type, Condition condition) {
         this.sourceClass = sourceClass;
-        this.isRoot = DynamicModels.isRoot(sourceClass);
+        this.isRoot    = DynamicModels.isRoot(sourceClass);
         this.container = isRoot ? null : DynamicModels.getUnambiguousContainer(sourceClass);
-        this.origin = origin;
-        this.type = type;
+        this.origin    = origin;
+        this.type      = type;
         this.condition = condition;
     }
 
-    @Override
-    public List<OriginBinding> doGet(GetContext context) {
-        return origin.doGet(context).stream()
-                .flatMap(originBinding -> {
-                    Stream<OriginBinding> result = context.getOriginObjects(sourceClass).stream()
-                            .map(joined -> (OriginBinding) new JoinOriginBindingImpl(originBinding, joined))
-                            .filter(condition::evaluate);
+    @Override public List<OriginBinding> doGet(GetContext context) {
+        return origin.doGet(context).stream().flatMap(originBinding -> {
+            Stream<OriginBinding> result = context.getOriginObjects(sourceClass)
+                    .stream()
+                    .map(joined -> (OriginBinding) new JoinOriginBindingImpl(originBinding, joined))
+                    .filter(condition::evaluate);
 
-                    return type == Type.INNER ? result : defaultIfEmpty(result, () -> originBinding);
-                })
-                .toList();
+            return type == Type.INNER ? result : defaultIfEmpty(result, () -> originBinding);
+        }).toList();
     }
 
     private Stream<OriginBinding> defaultIfEmpty(Stream<OriginBinding> stream, Supplier<OriginBinding> defaultFunction) {
         Iterator<OriginBinding> iterator = stream.iterator();
         return iterator.hasNext() ? Streams.stream(iterator) : Stream.of(defaultFunction.get());
-    }
-
-    public enum Type {
-        INNER,
-        LEFT
     }
 
     @Override
@@ -69,7 +62,11 @@ public class Join implements OriginOperation {
             OriginBinding originBinding = origin.doPut(viewChange, target, context);
 
             EObject created = sourceClass.getEPackage().getEFactoryInstance().create(sourceClass);
-            context.getCorrespondences().joinCorrespondence(originBinding.originObjects(), List.of(created), createEObject.getAffectedElement());
+            context.getCorrespondences()
+                    .joinCorrespondence(originBinding.originObjects(),
+                                        List.of(created),
+                                        createEObject.getAffectedElement()
+                    );
             Source.attachedCreatedOriginObject(created, sourceClass, isRoot, container, context);
 
             return new JoinOriginBindingImpl(originBinding, created);
@@ -79,7 +76,11 @@ public class Join implements OriginOperation {
             JoinOriginBindingImpl binding = (JoinOriginBindingImpl) target;
 
             EObject deleted = binding.originObject();
-            context.getCorrespondences().unjoinCorrespondence(binding.originObjects(), List.of(deleted), deleteEObject.getAffectedElement());
+            context.getCorrespondences()
+                    .unjoinCorrespondence(binding.originObjects(),
+                                          List.of(deleted),
+                                          deleteEObject.getAffectedElement()
+                    );
             Source.detachDeletedOriginObject(deleted, sourceClass, isRoot, container, context);
 
             origin.doPut(viewChange, binding.originBinding(), context);
@@ -88,13 +89,17 @@ public class Join implements OriginOperation {
         }
 
         if (viewChange instanceof InsertRootEObject<EObject> insertRootEObject) {
-            JoinOriginBindingImpl binding = (JoinOriginBindingImpl) target;
-            EObject inserted = binding.originObject();
+            JoinOriginBindingImpl binding  = (JoinOriginBindingImpl) target;
+            EObject               inserted = binding.originObject();
 
-            OriginBinding originBinding = origin.doPut(viewChange, binding.originBinding(), context);
+            OriginBinding originBinding =
+                    origin.doPut(viewChange, binding.originBinding(), context);
 
             if (isRoot) {
-                context.moveRootToOtherOriginModel(sourceClass.getEPackage(), inserted, insertRootEObject.getResource().getURI());
+                context.moveRootToOtherOriginModel(sourceClass.getEPackage(),
+                                                   inserted,
+                                                   insertRootEObject.getResource().getURI()
+                );
             }
 
             return new JoinOriginBindingImpl(originBinding, inserted);
@@ -104,7 +109,8 @@ public class Join implements OriginOperation {
             JoinOriginBindingImpl binding = (JoinOriginBindingImpl) target;
             EObject removed = binding.originObject();
 
-            OriginBinding originBinding = origin.doPut(viewChange, binding.originBinding(), context);
+            OriginBinding originBinding =
+                    origin.doPut(viewChange, binding.originBinding(), context);
 
             if (isRoot) {
                 context.moveRootToDefaultOriginModel(sourceClass.getEPackage(), removed);
@@ -114,6 +120,10 @@ public class Join implements OriginOperation {
         }
 
         throw new IllegalArgumentException("Inappropriate change type: " + viewChange.getClass());
+    }
+
+    public enum Type {
+        INNER, LEFT
     }
 
     @Override
@@ -134,8 +144,7 @@ public class Join implements OriginOperation {
             this.originObjects.add(originObject);
         }
 
-        @Override
-        public List<EObject> originObjects() {
+        @Override public List<EObject> originObjects() {
             return originObjects;
         }
 

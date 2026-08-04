@@ -36,7 +36,7 @@ public class ViewTypeExpressionSourceGenerator implements ExpressionResolver {
         this.logicalContainerProvider = logicalContainerProvider;
 
         this.expressionHoldingType = (JvmGenericType) jvmModelAssociations.getPrimaryJvmElement(viewTypeDefinition);
-        this.fileName = expressionHoldingType.getQualifiedName().replace('.', '/') + ".java";
+        this.fileName = this.expressionHoldingType.getQualifiedName().replace('.', '/') + ".java";
     }
 
     public String generate() {
