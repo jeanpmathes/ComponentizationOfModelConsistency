@@ -24,6 +24,25 @@ public interface FeatureBinding {
         };
     }
 
+    static FeatureBinding ofOriginBinding(OriginBinding originBinding, ValueBinding value) {
+        return new FeatureBinding() {
+            @Override
+            public List<EObject> originSubjectObjects() {
+                return originBinding.originObjects();
+            }
+
+            @Override
+            public EObject viewSubjectObject() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public ValueBinding value() {
+                return value;
+            }
+        };
+    }
+
     List<EObject> originSubjectObjects();
 
     EObject viewSubjectObject();

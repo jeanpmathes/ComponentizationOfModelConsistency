@@ -22,6 +22,16 @@ public interface ValueBinding {
         }
     }
 
+    static ValueBinding ofDynamic(Object object) {
+        if (object == null) {
+            return new Unset();
+        }
+        if (object instanceof List) {
+            return new Many((List<?>) object);
+        }
+        return new Single(object);
+    }
+
     record Unset() implements ValueBinding {
 
     }

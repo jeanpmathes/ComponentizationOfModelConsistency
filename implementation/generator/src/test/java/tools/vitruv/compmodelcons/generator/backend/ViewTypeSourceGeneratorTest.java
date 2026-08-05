@@ -9,8 +9,7 @@ import tools.vitruv.compmodelcons.views.DynamicModels;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
     @Test
@@ -338,5 +337,57 @@ class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
                                     }
                                 }
                                 """));
+    }
+
+    @Test
+    public void testGeneratorShouldGenerateCodeThatCompiles8() throws URISyntaxException,
+                                                                      IOException {
+        EPackage viewType = createEPackage();
+
+        EClass root = DynamicModels.createEClass(viewType, "Root");
+        DynamicModels.createEAttribute(root, "value", EcorePackage.eINSTANCE.getEInt());
+
+        ViewTypeSourceGenerator generator = createGenerator(viewType, "test", """
+                                                                              from Restaurant r
+                                                                              create root Root {
+                                                                                  value := 12 + 47
+                                                                              }
+                                                                              """
+        );
+
+        compile(generator,
+                new JavaSourceFromString("neojoin/viewtypes/mymodel/MymodelPackage.java",
+                                         """
+                                         package neojoin.viewtypes.mymodel;
+                                         
+                                         import org.eclipse.emf.ecore.EPackage;
+                                         import org.eclipse.emf.ecore.EClass;
+                                         import org.eclipse.emf.ecore.EReference;
+                                         
+                                         public interface MymodelPackage extends EPackage {
+                                             MymodelPackage eINSTANCE = null;
+                                         
+                                             public interface Literals {
+                                                 EClass ROOT = null;
+                                                 EReference ROOT__VALUE = null;
+                                             }
+                                         }
+                                         """
+                ),
+                new JavaSourceFromString("neojoin/viewtypes/mymodel/ExpressionStubClass.java",
+                                         """
+                                         package neojoin.viewtypes.mymodel;
+                                         
+                                         class ExpressionStubClass {
+                                             static boolean method(
+                                                 models.restaurant.Restaurant it,
+                                                 models.restaurant.Restaurant restaurant
+                                             ) {
+                                                 return true;
+                                             }
+                                         }
+                                         """
+                )
+        );
     }
 }

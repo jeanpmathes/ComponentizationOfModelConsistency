@@ -16,10 +16,7 @@ import tools.vitruv.compmodelcons.generator.tools.Metamodel;
 import tools.vitruv.compmodelcons.generator.tools.NamingGenerator;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
-import tools.vitruv.compmodelcons.views.bindings.FeatureBinding;
-import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
-import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
-import tools.vitruv.compmodelcons.views.bindings.ValueUpdateBinding;
+import tools.vitruv.compmodelcons.views.bindings.*;
 import tools.vitruv.compmodelcons.views.conditions.ConjunctiveCondition;
 import tools.vitruv.compmodelcons.views.conditions.FeatureCondition;
 import tools.vitruv.compmodelcons.views.operations.*;
@@ -342,15 +339,22 @@ public class ViewTypeSourceGenerator {
                     .append(sourceFeature.getQualifiedFeatureAccessor())
                     .append("),\n");
         } else {
-            builder.append(indent(level + 1)).append("Optional.of()").append(",\n");
+            builder.append(indent(level + 1)).append("Optional.empty()").append(",\n");
         }
         builder.append(indent(level + 1))
                 .append(createdFeature.getQualifiedFeatureAccessor())
                 .append(",\n");
         if (feature.kind() instanceof AQRFeature.Kind.Copy copy) {
-            appendFeatureSourceOperation(builder, level + 1, copy, context);
-        } else if (feature.kind() instanceof AQRFeature.Kind.Calculate calculate) {
-            appendFeatureTransformOperation(builder, level + 1, calculate, context);
+            FeatureSource.Target target = copy.expression() != null
+                                          ? getTargetFromExpression(copy.expression(), context)
+                                          : getTargetFromFeature(copy.source(), context);
+            if (target != null) {
+                appendFeatureSourceOperation(builder, level + 1, target);
+            } else {
+                appendFeatureTransformOperation(builder, level + 1, copy.expression(), context);
+            }
+        } else if (feature.kind() instanceof AQRFeature.Kind.Calculate(XExpression expression)) {
+            appendFeatureTransformOperation(builder, level + 1, expression, context);
         } else {
             throw new UnsupportedOperationException();
         }
@@ -358,13 +362,9 @@ public class ViewTypeSourceGenerator {
         builder.append(indent(level)).append(")");
     }
 
-    private void appendFeatureSourceOperation(StringBuilder builder, int level, AQRFeature.Kind.Copy copy, List<AQRFrom> context) {
+    private void appendFeatureSourceOperation(StringBuilder builder, int level, FeatureSource.Target target) {
         importHelper.typeRef(FeatureSource.class);
         importHelper.typeRef(List.class);
-
-        FeatureSource.Target target = copy.expression() != null
-                                      ? getTargetFromExpression(copy.expression(), context)
-                                      : getTargetFromFeature(copy.source(), context);
 
         assert target != null;
 
@@ -379,8 +379,7 @@ public class ViewTypeSourceGenerator {
             }
             first = false;
 
-            GenFeature
-                    feature =
+            GenFeature feature =
                     getOriginMetamodel(current.getEContainingClass().getEPackage()).getGenFeature(
                             current);
 
@@ -391,10 +390,10 @@ public class ViewTypeSourceGenerator {
         builder.append(indent(level)).append(")");
     }
 
-    private void appendFeatureTransformOperation(StringBuilder builder, int level, AQRFeature.Kind.Calculate calculate, List<AQRFrom> context) {
+    private void appendFeatureTransformOperation(StringBuilder builder, int level, XExpression expression, List<AQRFrom> context) {
         importHelper.typeRef(FeatureTransform.class);
 
-        String name           = expressions.getMethodName(calculate.expression());
+        String name           = expressions.getMethodName(expression);
         String expressionName = "EXPRESSION_" + name;
         String doGetName      = "doGet_" + name;
         String doPutName      = "doPut_" + name;
@@ -414,17 +413,21 @@ public class ViewTypeSourceGenerator {
         declaration.append("    protected static final Function<OriginBinding, Object> ")
                 .append(expressionName)
                 .append(" = ");
-        appendExpression(builder, level + 1, calculate.expression(), context);
+        appendExpression(declaration, 2, expression, context);
         declaration.append(";\n\n");
 
         importHelper.typeRef(FeatureBinding.class);
         importHelper.typeRef(ObjectBinding.class);
         importHelper.typeRef(GetContext.class);
+        importHelper.typeRef(ValueBinding.class);
 
         declaration.append("    protected FeatureBinding ")
                 .append(doGetName)
                 .append("(ObjectBinding subjectBinding, GetContext context) {\n");
-        declaration.append("        return expression.apply(subjectBinding);\n");
+        declaration.append(
+                        "        return FeatureBinding.ofOriginBinding(subjectBinding, ValueBinding.ofDynamic(")
+                .append(expressionName)
+                .append(".apply(subjectBinding)));\n");
         declaration.append("    }\n\n");
 
         importHelper.typeRef(FeatureBinding.class);
@@ -445,11 +448,15 @@ public class ViewTypeSourceGenerator {
         importHelper.typeRef(ObjectBinding.class);
         importHelper.typeRef(EChange.class);
         importHelper.typeRef(GetContext.class);
+        importHelper.typeRef(ValueBinding.class);
 
         declaration.append("    protected FeatureBinding ")
                 .append(doUpdatingGetName)
                 .append("(FeatureBinding previous, ObjectBinding subjectBinding, EChange<EObject> originChange, GetContext context) {\n");
-        declaration.append("        return expression.apply(subjectBinding);\n");
+        declaration.append(
+                        "        return FeatureBinding.ofOriginBinding(subjectBinding, ValueBinding.ofDynamic(")
+                .append(expressionName)
+                .append(".apply(subjectBinding)));\n");
         declaration.append("    }");
 
         declarations.add(declaration.toString());
