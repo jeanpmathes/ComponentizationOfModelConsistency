@@ -290,7 +290,7 @@ class ViewChangePropagationSpecificationAdapterTest {
                     List.of(new Root.Target(viewInfo.rootClass.getEAllContainments().getFirst(),
                             new Project(viewInfo.nonRootClass,
                                     new Source(originInfo.nonRootClass),
-                                    List.of(new FeatureProject(Optional.of(originInfo.nameAttribute),
+                                        List.of(new FeatureProject(Optional.of(0),
                                             viewInfo.nameAttribute,
                                             new FeatureSource(FeatureSource.Target.ofFirst(
                                                     originInfo.nameAttribute))

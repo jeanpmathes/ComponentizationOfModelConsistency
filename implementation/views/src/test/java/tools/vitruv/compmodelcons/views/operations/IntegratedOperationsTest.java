@@ -103,8 +103,7 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
                                                           new Project(simpleClass,
                                                                       new Source(restaurantClass),
                                                                       List.of(new FeatureProject(
-                                                                              Optional.of(
-                                                                                      numEmployees),
+                                                                              Optional.of(0),
                                                                               employeeCount,
                                                                               new FeatureSource(
                                                                                       FeatureSource.Target.ofFirst(

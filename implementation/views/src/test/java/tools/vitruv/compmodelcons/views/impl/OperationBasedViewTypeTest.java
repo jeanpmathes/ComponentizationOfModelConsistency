@@ -176,8 +176,7 @@ class OperationBasedViewTypeTest {
                                                 viewNonRootClass,
                                                 new Source(Pcm_mockupPackage.eINSTANCE.getComponent()),
                                                 List.of(
-                                                        new FeatureProject(Optional.of(
-                                                                Pcm_mockupPackage.eINSTANCE.getIdentified_Id()),
+                                                        new FeatureProject(Optional.of(0),
                                                                 nonRootIdAttribute,
                                                                 new FeatureSource(FeatureSource.Target.ofFirst(
                                                                         Pcm_mockupPackage.eINSTANCE.getIdentified_Id())))
@@ -241,8 +240,7 @@ class OperationBasedViewTypeTest {
                                                 viewComponentClass,
                                                 new Source(Pcm_mockupPackage.eINSTANCE.getComponent()),
                                                 List.of(
-                                                        new FeatureProject(Optional.of(
-                                                                Pcm_mockupPackage.eINSTANCE.getComponent_ProvidedInterface()),
+                                                        new FeatureProject(Optional.of(0),
                                                                 viewComponent2InterfaceReference,
                                                                 new FeatureSource(FeatureSource.Target.ofFirst(
                                                                         (Pcm_mockupPackage.eINSTANCE.getComponent_ProvidedInterface()))))

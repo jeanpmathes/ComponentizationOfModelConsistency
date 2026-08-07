@@ -20,19 +20,14 @@ import java.util.List;
 import java.util.Optional;
 
 public class FeatureProject {
-    private final boolean hasKnownSource;
-    private final EClass sourceObjectClass;
+    private final Optional<Integer> sourceIndex;
     private final EStructuralFeature createdFeature;
     private final boolean isReference;
     private final FeatureOriginOperation origin;
 
-    public FeatureProject(Optional<EStructuralFeature> sourceFeature, EStructuralFeature createdFeature, FeatureOriginOperation origin) {
-        this.hasKnownSource = sourceFeature.isPresent();
-        if (sourceFeature.isPresent() && sourceFeature.get().getEType() instanceof EClass eClass) {
-            this.sourceObjectClass = eClass;
-        } else {
-            this.sourceObjectClass = null;
-        }
+    public FeatureProject(Optional<Integer> sourceIndex, EStructuralFeature createdFeature,
+                          FeatureOriginOperation origin) {
+        this.sourceIndex = sourceIndex;
         this.createdFeature = createdFeature;
         this.isReference = createdFeature instanceof EReference;
         this.origin = origin;
@@ -64,27 +59,59 @@ public class FeatureProject {
     }
 
     public FeatureBinding doPut(EChange<EObject> change, FeatureBinding feature, ObjectBinding subject, PutContext context) {
-        if (!hasKnownSource) {
-            throw new UnsupportedOperationException("Cannot put changes on a feature that has no known source");
-        }
-
         FeatureProjectBindingImpl binding = (FeatureProjectBindingImpl) feature;
 
+        FeatureBinding originBinding = null;
+
+        if (sourceIndex.isPresent()) {
+            originBinding = put(sourceIndex.get(), change, binding, subject, context);
+        } else {
+            final int numberOfOriginObjects = binding.originBinding().originSubjectObjects().size();
+            for (int i = 0; i < numberOfOriginObjects; i++) {
+                originBinding = put(i, change, binding, subject, context);
+                if (originBinding != null) {
+                    break;
+                }
+            }
+        }
+
+        if (originBinding == null) {
+            throw new UnsupportedOperationException("Failed to put change on feature: " + change);
+        }
+
+        return new FeatureProjectBindingImpl(originBinding,
+                                             subject.viewObject(),
+                                             ValueBinding.ofFeature(subject.viewObject(),
+                                                                    createdFeature
+                                             )
+        );
+    }
+
+    private FeatureBinding put(int index, EChange<EObject> change, FeatureProjectBindingImpl binding, ObjectBinding subject, PutContext context) {
         ValueUpdateBinding value = switch (change) {
-            case ReplaceSingleValuedFeatureEChange<EObject, ?, ?> replaceSingleValuedFeatureEChange ->
-                    new ValueUpdateBinding.Replace(translateViewToOrigin(replaceSingleValuedFeatureEChange.getNewValue(), context));
-            case InsertInListEChange<EObject, ?, ?> insertInListEChange ->
-                    new ValueUpdateBinding.Insert(translateViewToOrigin(insertInListEChange.getNewValue(), context), insertInListEChange.getIndex());
-            case RemoveFromListEChange<EObject, ?, ?> removeFromListEChange ->
-                    new ValueUpdateBinding.Remove(translateViewToOrigin(removeFromListEChange.getOldValue(), context), removeFromListEChange.getIndex());
+            case ReplaceSingleValuedFeatureEChange<EObject, ?, ?> replaceSingleValuedFeatureEChange -> new ValueUpdateBinding.Replace(
+                    translateViewToOrigin(index,
+                                          replaceSingleValuedFeatureEChange.getNewValue(),
+                                          context
+                    ));
+            case InsertInListEChange<EObject, ?, ?> insertInListEChange -> new ValueUpdateBinding.Insert(
+                    translateViewToOrigin(index,
+                                          insertInListEChange.getNewValue(), context
+                    ),
+                    insertInListEChange.getIndex()
+            );
+            case RemoveFromListEChange<EObject, ?, ?> removeFromListEChange -> new ValueUpdateBinding.Remove(
+                    translateViewToOrigin(index,
+                                          removeFromListEChange.getOldValue(), context
+                    ),
+                    removeFromListEChange.getIndex()
+            );
             case UnsetFeature<EObject, ?> ignored -> new ValueUpdateBinding.Unset();
             default ->
                     throw new IllegalArgumentException("Unsupported change type: " + change.getClass().getSimpleName());
         };
 
-        FeatureBinding originBinding = origin.doPut(change, binding.originBinding(), subject, value, context);
-
-        return new FeatureProjectBindingImpl(originBinding, subject.viewObject(), ValueBinding.ofFeature(subject.viewObject(), createdFeature));
+        return origin.doPut(change, binding.originBinding(), subject, value, context);
     }
 
     private Object translateOriginToView(Object originValue, GetContext context) {
@@ -102,18 +129,11 @@ public class FeatureProject {
         return originValue;
     }
 
-    private Object translateViewToOrigin(Object viewValue, PutContext context) {
+    private Object translateViewToOrigin(int index, Object viewValue, PutContext context) {
         if (isReference && viewValue instanceof EObject eObject) {
-            if (sourceObjectClass == null) {
-                throw new UnsupportedOperationException();
-            }
-
             return context.getCorrespondences()
                     .getCorrespondingOriginObjectsForViewObject(eObject)
-                    .stream()
-                    .filter(originObject -> originObject.eClass().equals(sourceObjectClass))
-                    .findFirst()
-                    .orElseThrow();
+                    .get(index);
         }
 
         return viewValue;

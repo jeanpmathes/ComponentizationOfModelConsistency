@@ -153,7 +153,8 @@ class FeatureProjectTest extends AbstractOperationTest {
 
         // Operation Setup
         FeatureOriginOperation originOperation = mock(FeatureOriginOperation.class);
-        FeatureProject operation = new FeatureProject(Optional.of(restaurantsReference), mappedReference, originOperation);
+        FeatureProject operation =
+                new FeatureProject(Optional.of(0), mappedReference, originOperation);
 
         // Action
         when(originOperation.doGet(simpleBinding, context)).thenReturn(FeatureBinding.ofOriginObject(store, new ValueBinding.Many(restaurants)));
@@ -188,7 +189,8 @@ class FeatureProjectTest extends AbstractOperationTest {
 
         // Operation Setup
         FeatureOriginOperation originOperation = mock(FeatureOriginOperation.class);
-        FeatureProject operation = new FeatureProject(Optional.of(numEmployees), numberAttribute, originOperation);
+        FeatureProject operation =
+                new FeatureProject(Optional.of(0), numberAttribute, originOperation);
 
         // Pre-Action Get
         when(originOperation.doGet(simpleBinding, context)).thenReturn(FeatureBinding.ofOriginObject(restaurant, ValueBinding.of(42)));
@@ -233,7 +235,8 @@ class FeatureProjectTest extends AbstractOperationTest {
 
         // Operation Setup
         FeatureOriginOperation originOperation = mock(FeatureOriginOperation.class);
-        FeatureProject operation = new FeatureProject(Optional.of(restaurantsReference), mappedReference, originOperation);
+        FeatureProject operation =
+                new FeatureProject(Optional.of(0), mappedReference, originOperation);
 
         // Pre-Action Get
         when(originOperation.doGet(simpleBinding, context)).thenReturn(FeatureBinding.ofOriginObject(store, new ValueBinding.Many(restaurants)));

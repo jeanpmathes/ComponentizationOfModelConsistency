@@ -328,15 +328,18 @@ public class ViewTypeSourceGenerator {
         importHelper.typeRef(FeatureProject.class);
         importHelper.typeRef(Optional.class);
 
+        FeatureSource.Target target = null;
+
         builder.append(indent(level)).append("new FeatureProject(\n");
         if (feature.kind() instanceof AQRFeature.Kind.Copy copy) {
-            Metamodel originMetamodel =
-                    getOriginMetamodel(copy.source().getEContainingClass().getEPackage());
-            GenFeature sourceFeature = originMetamodel.getGenFeature(copy.source());
-
+            target = copy.expression() != null
+                     ? getTargetFromExpression(copy.expression(), context)
+                     : getTargetFromFeature(copy.source(), context);
+        }
+        if (target != null) {
             builder.append(indent(level + 1))
                     .append("Optional.of(")
-                    .append(sourceFeature.getQualifiedFeatureAccessor())
+                    .append(target.index())
                     .append("),\n");
         } else {
             builder.append(indent(level + 1)).append("Optional.empty()").append(",\n");
@@ -345,9 +348,6 @@ public class ViewTypeSourceGenerator {
                 .append(createdFeature.getQualifiedFeatureAccessor())
                 .append(",\n");
         if (feature.kind() instanceof AQRFeature.Kind.Copy copy) {
-            FeatureSource.Target target = copy.expression() != null
-                                          ? getTargetFromExpression(copy.expression(), context)
-                                          : getTargetFromFeature(copy.source(), context);
             if (target != null) {
                 appendFeatureSourceOperation(builder, level + 1, target);
             } else {
@@ -371,7 +371,7 @@ public class ViewTypeSourceGenerator {
         builder.append(indent(level)).append("new FeatureSource(\n");
         builder.append(indent(level + 1)).append("new FeatureSource.Target(\n");
         builder.append(indent(level + 2)).append(target.index()).append(",\n");
-        builder.append(indent(level + 2)).append("List.of(");
+        builder.append(indent(level + 2)).append("List.of(\n");
         boolean first = true;
         for (EStructuralFeature current : target.features()) {
             if (!first) {
@@ -463,7 +463,7 @@ public class ViewTypeSourceGenerator {
     }
 
     private void appendExpression(StringBuilder builder, int level, XExpression expression, List<AQRFrom> parameters) {
-        builder.append(indent(level)).append("originBinding -> {\n");
+        builder.append("originBinding -> {\n");
         builder.append(indent(level + 1))
                 .append("var originObjects = originBinding.originObjects();\n");
         builder.append(indent(level + 1))

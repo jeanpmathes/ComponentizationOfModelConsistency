@@ -30,14 +30,13 @@ public class FeatureSource implements FeatureOriginOperation {
         }
     }
 
-    @Override
-    public FeatureBinding doGet(ObjectBinding subjectBinding, GetContext context) {
+    @Override public FeatureBinding doGet(ObjectBinding subjectBinding, GetContext context) {
         return target.get(subjectBinding);
     }
 
     public FeatureBinding doPut(EChange<EObject> viewChange, FeatureBinding feature, ObjectBinding subjectBinding, ValueUpdateBinding value, PutContext context) {
-        EObject subject = subjectBinding.originObjects().get(target.index());
-        Optional<Target.Access> access = target.access(subjectBinding);
+        EObject                 subject = subjectBinding.originObjects().get(target.index());
+        Optional<Target.Access> access  = target.access(subjectBinding);
 
         if (access.isEmpty()) {
             throw new IllegalArgumentException(
@@ -47,19 +46,19 @@ public class FeatureSource implements FeatureOriginOperation {
         Object object = null;
 
         switch (value) {
-            case ValueUpdateBinding.Unset ignored ->
-                    access.get().eObject().eUnset(access.get().eStructuralFeature());
+            case ValueUpdateBinding.Unset ignored -> access.get()
+                    .eObject()
+                    .eUnset(access.get().eStructuralFeature());
             case ValueUpdateBinding.Replace(Object newValue) -> {
                 access.get().eObject().eSet(access.get().eStructuralFeature(), newValue);
                 object = newValue;
             }
             case ValueUpdateBinding.Insert(Object inserted, int index) -> {
                 //noinspection unchecked
-                var
-                        list =
-                        ((List<Object>) access.get()
-                                .eObject()
-                                .eGet(access.get().eStructuralFeature()));
+                var list = ((List<Object>) access.get()
+                        .eObject()
+                        .eGet(access.get().eStructuralFeature())
+                );
                 if (index != -1) {
                     if (index >= list.size() || list.get(index) != inserted) {
                         list.add(index, inserted);
@@ -71,11 +70,10 @@ public class FeatureSource implements FeatureOriginOperation {
             }
             case ValueUpdateBinding.Remove(Object removed, int index) -> {
                 //noinspection unchecked
-                var
-                        list =
-                        ((List<Object>) access.get()
-                                .eObject()
-                                .eGet(access.get().eStructuralFeature()));
+                var list = ((List<Object>) access.get()
+                        .eObject()
+                        .eGet(access.get().eStructuralFeature())
+                );
                 if (index != -1 && list.get(index) == removed) {
                     list.remove(index);
                 } else {
@@ -84,7 +82,7 @@ public class FeatureSource implements FeatureOriginOperation {
                 object = removed;
             }
             default -> throw new IllegalArgumentException("Unsupported value update type: " +
-                    value.getClass().getSimpleName());
+                                                                  value.getClass().getSimpleName());
         }
 
         if (isSourceFeatureAContainmentFeature && object instanceof EObject eObject) {
@@ -92,7 +90,11 @@ public class FeatureSource implements FeatureOriginOperation {
         }
 
         return FeatureBinding.ofOriginObject(subject,
-                ValueBinding.ofFeature(access.get().eObject(), access.get().eStructuralFeature()));
+                                             ValueBinding.ofFeature(access.get().eObject(),
+                                                                    access.get()
+                                                                            .eStructuralFeature()
+                                             )
+        );
     }
 
     @Override
@@ -129,10 +131,12 @@ public class FeatureSource implements FeatureOriginOperation {
         public FeatureBinding get(ObjectBinding subjectBinding) {
             EObject subject = subjectBinding.originObjects().get(index);
 
-            return FeatureBinding.ofOriginObject(subject, access(subjectBinding)
-                    .map(access -> ValueBinding.ofFeature(access.eObject(),
-                            access.eStructuralFeature()))
-                    .orElseGet(ValueBinding.Unset::new));
+            return FeatureBinding.ofOriginObject(subject,
+                                                 access(subjectBinding).map(access -> ValueBinding.ofFeature(
+                                                         access.eObject(),
+                                                         access.eStructuralFeature()
+                                                 )).orElseGet(ValueBinding.Unset::new)
+            );
         }
 
         private record Access(EObject eObject, EStructuralFeature eStructuralFeature) {
