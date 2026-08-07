@@ -59,13 +59,7 @@ public class FeatureSource implements FeatureOriginOperation {
                         .eObject()
                         .eGet(access.get().eStructuralFeature())
                 );
-                if (index != -1) {
-                    if (index >= list.size() || list.get(index) != inserted) {
-                        list.add(index, inserted);
-                    }
-                } else {
-                    list.add(inserted);
-                }
+                ValueUpdateBinding.insert(list, inserted, index);
                 object = inserted;
             }
             case ValueUpdateBinding.Remove(Object removed, int index) -> {
@@ -74,11 +68,7 @@ public class FeatureSource implements FeatureOriginOperation {
                         .eObject()
                         .eGet(access.get().eStructuralFeature())
                 );
-                if (index != -1 && list.get(index) == removed) {
-                    list.remove(index);
-                } else {
-                    list.remove(removed);
-                }
+                ValueUpdateBinding.remove(list, removed, index);
                 object = removed;
             }
             default -> throw new IllegalArgumentException("Unsupported value update type: " +
