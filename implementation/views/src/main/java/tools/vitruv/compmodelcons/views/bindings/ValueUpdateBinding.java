@@ -23,9 +23,9 @@ public interface ValueUpdateBinding {
         if (index != -1) {
             if (index >= list.size() || list.get(index) != inserted) {
                 list.add(index, inserted);
-            } else {
-                list.add(inserted);
             }
+        } else {
+            list.add(inserted);
         }
     }
 

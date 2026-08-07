@@ -20,17 +20,16 @@ import java.util.List;
 import java.util.Optional;
 
 public class FeatureProject {
-    private final Optional<Integer> sourceIndex;
+    private final Optional<Integer>  sourceIndex;
     private final EStructuralFeature createdFeature;
-    private final boolean isReference;
+    private final boolean            isReference;
     private final FeatureOriginOperation origin;
 
-    public FeatureProject(Optional<Integer> sourceIndex, EStructuralFeature createdFeature,
-                          FeatureOriginOperation origin) {
+    public FeatureProject(Optional<Integer> sourceIndex, EStructuralFeature createdFeature, FeatureOriginOperation origin) {
         this.sourceIndex = sourceIndex;
         this.createdFeature = createdFeature;
         this.isReference = createdFeature instanceof EReference;
-        this.origin = origin;
+        this.origin      = origin;
     }
 
     public EStructuralFeature getCreatedFeature() {
@@ -47,12 +46,14 @@ public class FeatureProject {
         if (originFeature.value() instanceof ValueBinding.Single(Object value)) {
             Object translated = translateOriginToView(value, context);
             subject.viewObject().eSet(createdFeature, translated);
-            return new FeatureProjectBindingImpl(originFeature, subject.viewObject(), new ValueBinding.Single(translated));
+            return new FeatureProjectBindingImpl(originFeature, subject.viewObject(),
+                                                 new ValueBinding.Single(translated));
         }
         if (originFeature.value() instanceof ValueBinding.Many(List<?> values)) {
             List<?> translated = values.stream().map(value -> translateOriginToView(value, context)).toList();
             subject.viewObject().eSet(createdFeature, translated);
-            return new FeatureProjectBindingImpl(originFeature, subject.viewObject(), new ValueBinding.Many(translated));
+            return new FeatureProjectBindingImpl(originFeature, subject.viewObject(),
+                                                 new ValueBinding.Many(translated));
         }
 
         throw new UnsupportedOperationException();
@@ -79,33 +80,20 @@ public class FeatureProject {
             throw new UnsupportedOperationException("Failed to put change on feature: " + change);
         }
 
-        return new FeatureProjectBindingImpl(originBinding,
-                                             subject.viewObject(),
-                                             ValueBinding.ofFeature(subject.viewObject(),
-                                                                    createdFeature
-                                             )
-        );
+        return new FeatureProjectBindingImpl(originBinding, subject.viewObject(),
+                                             ValueBinding.ofFeature(subject.viewObject(), createdFeature));
     }
 
     private FeatureBinding put(int index, EChange<EObject> change, FeatureProjectBindingImpl binding, ObjectBinding subject, PutContext context) {
         ValueUpdateBinding value = switch (change) {
             case ReplaceSingleValuedFeatureEChange<EObject, ?, ?> replaceSingleValuedFeatureEChange -> new ValueUpdateBinding.Replace(
-                    translateViewToOrigin(index,
-                                          replaceSingleValuedFeatureEChange.getNewValue(),
-                                          context
-                    ));
+                    translateViewToOrigin(index, replaceSingleValuedFeatureEChange.getNewValue(), context));
             case InsertInListEChange<EObject, ?, ?> insertInListEChange -> new ValueUpdateBinding.Insert(
-                    translateViewToOrigin(index,
-                                          insertInListEChange.getNewValue(), context
-                    ),
-                    insertInListEChange.getIndex()
-            );
+                    translateViewToOrigin(index, insertInListEChange.getNewValue(), context),
+                    insertInListEChange.getIndex());
             case RemoveFromListEChange<EObject, ?, ?> removeFromListEChange -> new ValueUpdateBinding.Remove(
-                    translateViewToOrigin(index,
-                                          removeFromListEChange.getOldValue(), context
-                    ),
-                    removeFromListEChange.getIndex()
-            );
+                    translateViewToOrigin(index, removeFromListEChange.getOldValue(), context),
+                    removeFromListEChange.getIndex());
             case UnsetFeature<EObject, ?> ignored -> new ValueUpdateBinding.Unset();
             default ->
                     throw new IllegalArgumentException("Unsupported change type: " + change.getClass().getSimpleName());
@@ -116,7 +104,8 @@ public class FeatureProject {
 
     private Object translateOriginToView(Object originValue, GetContext context) {
         if (originValue instanceof EObject eObject) {
-            var candidates = context.getCorrespondences().getCorrespondingViewObjectForPartialOriginObjects(eObject, (EClass) createdFeature.getEType());
+            var candidates = context.getCorrespondences()
+                    .getCorrespondingViewObjectForPartialOriginObjects(eObject, (EClass) createdFeature.getEType());
             if (candidates.isEmpty()) {
                 throw new IllegalStateException("Could not find view object for origin object " + eObject);
             }
@@ -131,9 +120,7 @@ public class FeatureProject {
 
     private Object translateViewToOrigin(int index, Object viewValue, PutContext context) {
         if (isReference && viewValue instanceof EObject eObject) {
-            return context.getCorrespondences()
-                    .getCorrespondingOriginObjectsForViewObject(eObject)
-                    .get(index);
+            return context.getCorrespondences().getCorrespondingOriginObjectsForViewObject(eObject).get(index);
         }
 
         return viewValue;
@@ -146,8 +133,7 @@ public class FeatureProject {
     private record FeatureProjectBindingImpl(FeatureBinding originBinding, EObject viewSubjectObject,
                                              ValueBinding value) implements FeatureBinding {
 
-        @Override
-        public List<EObject> originSubjectObjects() {
+        @Override public List<EObject> originSubjectObjects() {
             return originBinding.originSubjectObjects();
         }
     }

@@ -39,52 +39,39 @@ public class FeatureSource implements FeatureOriginOperation {
         Optional<Target.Access> access  = target.access(subjectBinding);
 
         if (access.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Cannot put a change on a feature that is not accessible");
+            throw new IllegalArgumentException("Cannot put a change on a feature that is not accessible");
         }
 
         Object object = null;
 
         switch (value) {
-            case ValueUpdateBinding.Unset ignored -> access.get()
-                    .eObject()
-                    .eUnset(access.get().eStructuralFeature());
+            case ValueUpdateBinding.Unset ignored -> access.get().eObject().eUnset(access.get().eStructuralFeature());
             case ValueUpdateBinding.Replace(Object newValue) -> {
                 access.get().eObject().eSet(access.get().eStructuralFeature(), newValue);
                 object = newValue;
             }
             case ValueUpdateBinding.Insert(Object inserted, int index) -> {
                 //noinspection unchecked
-                var list = ((List<Object>) access.get()
-                        .eObject()
-                        .eGet(access.get().eStructuralFeature())
-                );
+                var list = ((List<Object>) access.get().eObject().eGet(access.get().eStructuralFeature()));
                 ValueUpdateBinding.insert(list, inserted, index);
                 object = inserted;
             }
             case ValueUpdateBinding.Remove(Object removed, int index) -> {
                 //noinspection unchecked
-                var list = ((List<Object>) access.get()
-                        .eObject()
-                        .eGet(access.get().eStructuralFeature())
-                );
+                var list = ((List<Object>) access.get().eObject().eGet(access.get().eStructuralFeature()));
                 ValueUpdateBinding.remove(list, removed, index);
                 object = removed;
             }
-            default -> throw new IllegalArgumentException("Unsupported value update type: " +
-                                                                  value.getClass().getSimpleName());
+            default -> throw new IllegalArgumentException(
+                    "Unsupported value update type: " + value.getClass().getSimpleName());
         }
 
         if (isSourceFeatureAContainmentFeature && object instanceof EObject eObject) {
             context.trackOriginObjectAttachmentChange(eObject);
         }
 
-        return FeatureBinding.ofOriginObject(subject,
-                                             ValueBinding.ofFeature(access.get().eObject(),
-                                                                    access.get()
-                                                                            .eStructuralFeature()
-                                             )
-        );
+        return FeatureBinding.ofOriginObject(subject, ValueBinding.ofFeature(access.get().eObject(),
+                                                                             access.get().eStructuralFeature()));
     }
 
     @Override
@@ -121,12 +108,9 @@ public class FeatureSource implements FeatureOriginOperation {
         public FeatureBinding get(ObjectBinding subjectBinding) {
             EObject subject = subjectBinding.originObjects().get(index);
 
-            return FeatureBinding.ofOriginObject(subject,
-                                                 access(subjectBinding).map(access -> ValueBinding.ofFeature(
-                                                         access.eObject(),
-                                                         access.eStructuralFeature()
-                                                 )).orElseGet(ValueBinding.Unset::new)
-            );
+            return FeatureBinding.ofOriginObject(subject, access(subjectBinding).map(
+                            access -> ValueBinding.ofFeature(access.eObject(), access.eStructuralFeature()))
+                    .orElseGet(ValueBinding.Unset::new));
         }
 
         private record Access(EObject eObject, EStructuralFeature eStructuralFeature) {
