@@ -102,7 +102,7 @@ class OperationBasedViewTypeTest {
                 return new Root(viewRootClass,
                         Optional.of(
                                 new Project(viewRootClass,
-                                        new Source(Pcm_mockupPackage.eINSTANCE.getRepository()),
+                                            new Source(Pcm_mockupPackage.eINSTANCE.getRepository(), null),
                                             List.of(), Project.OnPut.NO_OP
                                 )),
                         List.of(
@@ -110,7 +110,7 @@ class OperationBasedViewTypeTest {
                                         nonRootContainment,
                                         new Project(
                                                 viewNonRootClass,
-                                                new Source(Pcm_mockupPackage.eINSTANCE.getComponent()),
+                                                new Source(Pcm_mockupPackage.eINSTANCE.getComponent(), null),
                                                 List.of(),
                                                 Project.OnPut.NO_OP
                                         )
@@ -165,7 +165,7 @@ class OperationBasedViewTypeTest {
                 return new Root(viewRootClass,
                         Optional.of(
                                 new Project(viewRootClass,
-                                        new Source(Pcm_mockupPackage.eINSTANCE.getRepository()),
+                                            new Source(Pcm_mockupPackage.eINSTANCE.getRepository(), null),
                                             List.of(),
                                             Project.OnPut.NO_OP
                                 )),
@@ -174,7 +174,7 @@ class OperationBasedViewTypeTest {
                                         nonRootContainment,
                                         new Project(
                                                 viewNonRootClass,
-                                                new Source(Pcm_mockupPackage.eINSTANCE.getComponent()),
+                                                new Source(Pcm_mockupPackage.eINSTANCE.getComponent(), null),
                                                 List.of(
                                                         new FeatureProject(Optional.of(0),
                                                                 nonRootIdAttribute,
@@ -229,7 +229,7 @@ class OperationBasedViewTypeTest {
                 return new Root(viewRootClass,
                         Optional.of(
                                 new Project(viewRootClass,
-                                        new Source(Pcm_mockupPackage.eINSTANCE.getRepository()),
+                                            new Source(Pcm_mockupPackage.eINSTANCE.getRepository(), null),
                                             List.of(),
                                             Project.OnPut.NO_OP
                                 )),
@@ -238,7 +238,7 @@ class OperationBasedViewTypeTest {
                                         viewComponentContainment,
                                         new Project(
                                                 viewComponentClass,
-                                                new Source(Pcm_mockupPackage.eINSTANCE.getComponent()),
+                                                new Source(Pcm_mockupPackage.eINSTANCE.getComponent(), null),
                                                 List.of(
                                                         new FeatureProject(Optional.of(0),
                                                                 viewComponent2InterfaceReference,
@@ -252,7 +252,7 @@ class OperationBasedViewTypeTest {
                                         viewInterfaceContainment,
                                         new Project(
                                                 viewInterfaceClass,
-                                                new Source(Pcm_mockupPackage.eINSTANCE.getPInterface()),
+                                                new Source(Pcm_mockupPackage.eINSTANCE.getPInterface(), null),
                                                 List.of(),
                                                 Project.OnPut.NO_OP
                                         )

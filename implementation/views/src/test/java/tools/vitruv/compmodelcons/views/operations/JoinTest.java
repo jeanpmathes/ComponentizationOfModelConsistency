@@ -25,7 +25,7 @@ class JoinTest extends AbstractOperationTest {
 
         // Operation Setup
         OriginOperation originOperation = mock(OriginOperation.class);
-        Join operation = new Join(restaurantClass, originOperation, Join.Type.INNER, Condition.TRUE);
+        Join operation = new Join(restaurantClass, null, originOperation, Join.Type.INNER, Condition.TRUE);
 
         // Action
         when(originOperation.doGet(context)).thenReturn(restaurantBindings);
@@ -52,7 +52,7 @@ class JoinTest extends AbstractOperationTest {
 
         // Operation Setup
         OriginOperation originOperation = mock(OriginOperation.class);
-        Join operation = new Join(storeClass, originOperation, Join.Type.INNER, Condition.TRUE);
+        Join operation = new Join(storeClass, null, originOperation, Join.Type.INNER, Condition.TRUE);
 
         // Pre-Action Get
         when(originOperation.doGet(context)).thenReturn(List.of(OriginBinding.of(restaurants.getFirst())));
@@ -90,7 +90,7 @@ class JoinTest extends AbstractOperationTest {
 
         // Operation Setup
         OriginOperation originOperation = mock(OriginOperation.class);
-        Join operation = new Join(storeClass, originOperation, Join.Type.INNER, Condition.TRUE);
+        Join operation = new Join(storeClass, null, originOperation, Join.Type.INNER, Condition.TRUE);
 
         // Pre-Action Get
         when(originOperation.doGet(context)).thenReturn(List.of(OriginBinding.of(restaurants.getFirst())));

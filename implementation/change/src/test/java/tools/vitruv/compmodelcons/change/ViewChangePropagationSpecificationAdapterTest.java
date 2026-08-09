@@ -284,12 +284,12 @@ class ViewChangePropagationSpecificationAdapterTest {
         protected Root createStructure() {
             return new Root(viewInfo.rootClass,
                     Optional.of(new Project(viewInfo.rootClass,
-                            new Source(originInfo.rootClass),
+                                            new Source(originInfo.rootClass, null),
                                             List.of(), Project.OnPut.NO_OP
                     )),
                     List.of(new Root.Target(viewInfo.rootClass.getEAllContainments().getFirst(),
                             new Project(viewInfo.nonRootClass,
-                                    new Source(originInfo.nonRootClass),
+                                        new Source(originInfo.nonRootClass, null),
                                         List.of(new FeatureProject(Optional.of(0),
                                             viewInfo.nameAttribute,
                                             new FeatureSource(FeatureSource.Target.ofFirst(

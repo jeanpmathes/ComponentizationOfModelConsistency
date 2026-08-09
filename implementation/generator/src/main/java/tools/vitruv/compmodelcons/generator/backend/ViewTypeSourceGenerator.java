@@ -165,7 +165,7 @@ public class ViewTypeSourceGenerator {
         builder.append(indent(level + 1))
                 .append(targetClass.getQualifiedClassifierAccessor())
                 .append(",\n");
-        appendQueryOperations(builder, level + 1, Objects.requireNonNull(target.source()));
+        appendQueryOperations(builder, level + 1, targetClass, Objects.requireNonNull(target.source()));
 
         List<AQRFrom> context = target.source().allFroms().toList();
 
@@ -206,7 +206,7 @@ public class ViewTypeSourceGenerator {
         builder.append(indent(level)).append(")\n");
     }
 
-    private void appendQueryOperations(StringBuilder builder, int level, AQRSource source) {
+    private void appendQueryOperations(StringBuilder builder, int level, GenClass targetClass, AQRSource source) {
         if (source.condition() != null) {
             importHelper.typeRef(Filter.class);
 
@@ -214,18 +214,18 @@ public class ViewTypeSourceGenerator {
             appendExpression(builder, level + 1, source.condition(), source.allFroms().toList());
             builder.append(",\n");
 
-            appendQueryOperations(builder, level + 1, source, source.joins().size() - 1);
+            appendQueryOperations(builder, level + 1, targetClass, source, source.joins().size() - 1);
             builder.append("\n");
 
             builder.append(indent(level)).append(")");
         } else {
-            appendQueryOperations(builder, level, source, source.joins().size() - 1);
+            appendQueryOperations(builder, level, targetClass, source, source.joins().size() - 1);
         }
     }
 
-    private void appendQueryOperations(StringBuilder builder, int level, AQRSource source, int joinIndex) {
+    private void appendQueryOperations(StringBuilder builder, int level, GenClass targetClass, AQRSource source, int joinIndex) {
         if (joinIndex < 0) {
-            appendSourceOperation(builder, level, source.from());
+            appendSourceOperation(builder, level, targetClass, source.from());
         } else {
             importHelper.typeRef(Join.class);
 
@@ -237,12 +237,15 @@ public class ViewTypeSourceGenerator {
             Metamodel originMetamodel = getOriginMetamodel(join.from().clazz().getEPackage());
             GenClass sourceClass = originMetamodel.getGenClass(join.from().clazz());
 
+            String factoryMethodName = getSourceObjectFactoryMethodName(sourceClass, targetClass, joinIndex + 1);
+
             builder.append(indent(level)).append("new Join(\n");
-            builder.append(indent(level + 1))
-                    .append(sourceClass.getQualifiedClassifierAccessor())
-                    .append(",\n");
-            appendQueryOperations(builder, level + 1, source, joinIndex - 1);
+            builder.append(indent(level + 1)).append(sourceClass.getQualifiedClassifierAccessor()).append(",\n");
+            builder.append(indent(level + 1)).append("this::").append(factoryMethodName).append(",\n");
+            appendQueryOperations(builder, level + 1, targetClass, source, joinIndex - 1);
             builder.append(",\n");
+
+            createSourceObjectFactoryMethod(factoryMethodName, sourceClass);
 
             builder.append(indent(level + 1));
             switch (join.type()) {
@@ -309,16 +312,35 @@ public class ViewTypeSourceGenerator {
         }
     }
 
-    private void appendSourceOperation(StringBuilder builder, int level, AQRFrom from) {
+    private void appendSourceOperation(StringBuilder builder, int level, GenClass targetClass, AQRFrom from) {
         Metamodel originMetamodel = getOriginMetamodel(from.clazz().getEPackage());
         GenClass sourceClass = originMetamodel.getGenClass(from.clazz());
 
         importHelper.typeRef(Source.class);
 
-        builder.append(indent(level))
-                .append("new Source(")
-                .append(sourceClass.getQualifiedClassifierAccessor())
-                .append(")");
+        String factoryMethodName = getSourceObjectFactoryMethodName(sourceClass, targetClass, 0);
+
+        builder.append(indent(level)).append("new Source(\n");
+        builder.append(indent(level + 1)).append(sourceClass.getQualifiedClassifierAccessor()).append(",\n");
+        builder.append(indent(level + 1)).append("this::").append(factoryMethodName).append("\n");
+        builder.append(indent(level)).append(")");
+
+        createSourceObjectFactoryMethod(factoryMethodName, sourceClass);
+    }
+
+    private String getSourceObjectFactoryMethodName(GenClass sourceClass, GenClass targetClass, int index) {
+        return "create" + sourceClass.getInterfaceName() + "For" + targetClass.getInterfaceName() + index;
+    }
+
+    private void createSourceObjectFactoryMethod(String methodName, GenClass sourceClass) {
+
+        String declaration =
+                "    protected EObject " + methodName + "(EObject viewObject) {\n" +
+                        "        return " + sourceClass.getGenPackage().getQualifiedEFactoryInstanceAccessor() +
+                        ".create(" + sourceClass.getQualifiedClassifierAccessor() + ");\n" +
+                        "    }";
+
+        declarations.add(declaration);
     }
 
     private void appendFeatureProjectOperation(StringBuilder builder, int level, GenClass targetClass, AQRFeature feature, List<AQRFrom> context) {

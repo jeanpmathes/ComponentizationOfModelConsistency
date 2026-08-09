@@ -22,26 +22,27 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class Join implements OriginOperation {
-    private final EClass     sourceClass;
-    private final boolean    isRoot;
-    private final EReference container;
-    private final OriginOperation origin;
-    private final Type       type;
-    private final Condition  condition;
+    private final EClass              sourceClass;
+    private final SourceObjectFactory sourceObjectFactory;
+    private final boolean             isRoot;
+    private final EReference          container;
+    private final OriginOperation     origin;
+    private final Type                type;
+    private final Condition           condition;
 
-    public Join(EClass sourceClass, OriginOperation origin, Type type, Condition condition) {
-        this.sourceClass = sourceClass;
-        this.isRoot    = DynamicModels.isRoot(sourceClass);
-        this.container = isRoot ? null : DynamicModels.getUnambiguousContainer(sourceClass);
-        this.origin    = origin;
-        this.type      = type;
-        this.condition = condition;
+    public Join(EClass sourceClass, SourceObjectFactory sourceObjectFactory, OriginOperation origin, Type type, Condition condition) {
+        this.sourceClass         = sourceClass;
+        this.sourceObjectFactory = SourceObjectFactory.requireNonNullElseDefault(sourceObjectFactory, sourceClass);
+        this.isRoot              = DynamicModels.isRoot(sourceClass);
+        this.container           = isRoot ? null : DynamicModels.getUnambiguousContainer(sourceClass);
+        this.origin              = origin;
+        this.type                = type;
+        this.condition           = condition;
     }
 
     @Override public List<OriginBinding> doGet(GetContext context) {
         return origin.doGet(context).stream().flatMap(originBinding -> {
-            Stream<OriginBinding> result = context.getOriginObjects(sourceClass)
-                    .stream()
+            Stream<OriginBinding> result = context.getOriginObjects(sourceClass).stream()
                     .map(joined -> (OriginBinding) new JoinOriginBindingImpl(originBinding, joined))
                     .filter(condition::evaluate);
 
@@ -54,19 +55,19 @@ public class Join implements OriginOperation {
         return iterator.hasNext() ? Streams.stream(iterator) : Stream.of(defaultFunction.get());
     }
 
-    @Override
-    public OriginBinding doPut(EChange<EObject> viewChange, OriginBinding target, PutContext context) {
+    @Override public OriginBinding doPut(EChange<EObject> viewChange, OriginBinding target, PutContext context) {
         if (viewChange instanceof CreateEObject<EObject> createEObject) {
             assert target.originObjects().isEmpty();
 
             OriginBinding originBinding = origin.doPut(viewChange, target, context);
 
-            EObject created = sourceClass.getEPackage().getEFactoryInstance().create(sourceClass);
-            context.getCorrespondences()
-                    .joinCorrespondence(originBinding.originObjects(),
-                                        List.of(created),
-                                        createEObject.getAffectedElement()
-                    );
+            // In the case of a self-join (from X join X) always creating is not actually correct.
+            // Instead, we would need to check whether the view object already has an origin object in the correspondences
+            // that would satisfy this join as well.
+
+            EObject created = sourceObjectFactory.createOriginObject(createEObject.getAffectedElement());
+            context.getCorrespondences().joinCorrespondence(originBinding.originObjects(), List.of(created),
+                                                            createEObject.getAffectedElement());
             Source.attachedCreatedOriginObject(created, sourceClass, isRoot, container, context);
 
             return new JoinOriginBindingImpl(originBinding, created);
@@ -76,11 +77,8 @@ public class Join implements OriginOperation {
             JoinOriginBindingImpl binding = (JoinOriginBindingImpl) target;
 
             EObject deleted = binding.originObject();
-            context.getCorrespondences()
-                    .unjoinCorrespondence(binding.originObjects(),
-                                          List.of(deleted),
-                                          deleteEObject.getAffectedElement()
-                    );
+            context.getCorrespondences().unjoinCorrespondence(binding.originObjects(), List.of(deleted),
+                                                              deleteEObject.getAffectedElement());
             Source.detachDeletedOriginObject(deleted, sourceClass, isRoot, container, context);
 
             origin.doPut(viewChange, binding.originBinding(), context);
@@ -92,14 +90,11 @@ public class Join implements OriginOperation {
             JoinOriginBindingImpl binding  = (JoinOriginBindingImpl) target;
             EObject               inserted = binding.originObject();
 
-            OriginBinding originBinding =
-                    origin.doPut(viewChange, binding.originBinding(), context);
+            OriginBinding originBinding = origin.doPut(viewChange, binding.originBinding(), context);
 
             if (isRoot) {
-                context.moveRootToOtherOriginModel(sourceClass.getEPackage(),
-                                                   inserted,
-                                                   insertRootEObject.getResource().getURI()
-                );
+                context.moveRootToOtherOriginModel(sourceClass.getEPackage(), inserted,
+                                                   insertRootEObject.getResource().getURI());
             }
 
             return new JoinOriginBindingImpl(originBinding, inserted);
@@ -109,8 +104,7 @@ public class Join implements OriginOperation {
             JoinOriginBindingImpl binding = (JoinOriginBindingImpl) target;
             EObject removed = binding.originObject();
 
-            OriginBinding originBinding =
-                    origin.doPut(viewChange, binding.originBinding(), context);
+            OriginBinding originBinding = origin.doPut(viewChange, binding.originBinding(), context);
 
             if (isRoot) {
                 context.moveRootToDefaultOriginModel(sourceClass.getEPackage(), removed);

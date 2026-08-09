@@ -16,14 +16,16 @@ import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
 import java.util.List;
 
 public class Source implements OriginOperation {
-    private final EClass sourceClass;
-    private final boolean isRoot;
-    private final EReference container;
+    private final EClass              sourceClass;
+    private final SourceObjectFactory sourceObjectFactory;
+    private final boolean             isRoot;
+    private final EReference          container;
 
-    public Source(EClass sourceClass) {
-        this.sourceClass = sourceClass;
-        this.isRoot = DynamicModels.isRoot(sourceClass);
-        this.container = isRoot ? null : DynamicModels.getUnambiguousContainer(sourceClass);
+    public Source(EClass sourceClass, SourceObjectFactory sourceObjectFactory) {
+        this.sourceClass         = sourceClass;
+        this.sourceObjectFactory = SourceObjectFactory.requireNonNullElseDefault(sourceObjectFactory, sourceClass);
+        this.isRoot              = DynamicModels.isRoot(sourceClass);
+        this.container           = isRoot ? null : DynamicModels.getUnambiguousContainer(sourceClass);
     }
 
     public static void attachedCreatedOriginObject(EObject created, EClass sourceClass, boolean isRoot, EReference container, PutContext context) {
@@ -64,17 +66,15 @@ public class Source implements OriginOperation {
         }
     }
 
-    @Override
-    public List<OriginBinding> doGet(GetContext context) {
+    @Override public List<OriginBinding> doGet(GetContext context) {
         return context.getOriginObjects(sourceClass).stream().map(OriginBinding::of).toList();
     }
 
-    @Override
-    public OriginBinding doPut(EChange<EObject> viewChange, OriginBinding target, PutContext context) {
+    @Override public OriginBinding doPut(EChange<EObject> viewChange, OriginBinding target, PutContext context) {
         if (viewChange instanceof CreateEObject<EObject> createEObject) {
             assert target.originObjects().isEmpty();
 
-            EObject created = sourceClass.getEPackage().getEFactoryInstance().create(sourceClass);
+            EObject created = sourceObjectFactory.createOriginObject(createEObject.getAffectedElement());
             context.getCorrespondences().addCorrespondence(List.of(created), createEObject.getAffectedElement());
 
             attachedCreatedOriginObject(created, sourceClass, isRoot, container, context);
@@ -95,7 +95,8 @@ public class Source implements OriginOperation {
             EObject inserted = target.originObjects().getFirst();
 
             if (isRoot) {
-                context.moveRootToOtherOriginModel(sourceClass.getEPackage(), inserted, insertRootEObject.getResource().getURI());
+                context.moveRootToOtherOriginModel(sourceClass.getEPackage(), inserted,
+                                                   insertRootEObject.getResource().getURI());
             }
 
             return OriginBinding.of(inserted);

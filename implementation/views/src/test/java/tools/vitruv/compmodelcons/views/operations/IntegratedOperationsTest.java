@@ -35,7 +35,7 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
         // Operation Setup
         Root operation = new Root(emptyClass,
                                   Optional.of(new Project(emptyClass,
-                                                          new Source(restaurantClass),
+                                                          new Source(restaurantClass, null),
                                                           List.of(),
                                                           Project.OnPut.NO_OP
                                   )),
@@ -101,7 +101,7 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
                                   Optional.empty(),
                                   List.of(new Root.Target(simpleContainment,
                                                           new Project(simpleClass,
-                                                                      new Source(restaurantClass),
+                                                                      new Source(restaurantClass, null),
                                                                       List.of(new FeatureProject(
                                                                               Optional.of(0),
                                                                               employeeCount,
@@ -160,9 +160,11 @@ public class IntegratedOperationsTest extends AbstractOperationTest {
                                   List.of(new Root.Target(joinedContainment,
                                                           new Project(joinedClass,
                                                                       new Join(reviewClass,
+                                                                               null,
                                                                                new Join(foodClass,
-                                                                                        new Source(
-                                                                                                restaurantClass),
+                                                                                        null,
+                                                                                        new Source(restaurantClass,
+                                                                                                   null),
                                                                                         Join.Type.INNER,
                                                                                         Condition.TRUE
                                                                                ),

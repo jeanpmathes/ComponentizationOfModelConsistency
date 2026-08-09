@@ -22,7 +22,7 @@ public class SourceTest extends AbstractOperationTest {
         List<EObject> restaurants = context.getOriginObjects(restaurantClass);
 
         // Operation Setup
-        Source source = new Source(restaurantClass);
+        Source source = new Source(restaurantClass, null);
 
         // Action
         List<OriginBinding> result = source.doGet(context);
@@ -44,7 +44,7 @@ public class SourceTest extends AbstractOperationTest {
         EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
-        Source operation = new Source(storeClass);
+        Source operation = new Source(storeClass, null);
 
         // Pre-Action Get
         operation.doGet(context);
@@ -73,7 +73,7 @@ public class SourceTest extends AbstractOperationTest {
         EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
-        Source operation = new Source(storeClass);
+        Source operation = new Source(storeClass, null);
 
         // Pre-Action Get
         List<OriginBinding> results = operation.doGet(context);
@@ -103,7 +103,7 @@ public class SourceTest extends AbstractOperationTest {
         EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
-        Source operation = new Source(storeClass);
+        Source operation = new Source(storeClass, null);
 
         // Pre-Action Get
         operation.doGet(context);
@@ -141,7 +141,7 @@ public class SourceTest extends AbstractOperationTest {
         EObject root = DynamicModels.createEObject(rootClass);
 
         // Operation Setup
-        Source operation = new Source(storeClass);
+        Source operation = new Source(storeClass, null);
 
         // Pre-Action Get
         operation.doGet(context);
@@ -174,7 +174,7 @@ public class SourceTest extends AbstractOperationTest {
         EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
-        Source operation = new Source(storeClass);
+        Source operation = new Source(storeClass, null);
 
         // Pre-Action Get
         List<OriginBinding> results = operation.doGet(context);
@@ -210,7 +210,7 @@ public class SourceTest extends AbstractOperationTest {
         EObject root = DynamicModels.createEObject(rootClass);
 
         // Operation Setup
-        Source operation = new Source(storeClass);
+        Source operation = new Source(storeClass, null);
 
         // Pre-Action Get
         List<OriginBinding> results = operation.doGet(context);
@@ -241,7 +241,7 @@ public class SourceTest extends AbstractOperationTest {
         EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
-        Source operation = new Source(restaurantClass);
+        Source operation = new Source(restaurantClass, null);
 
         // Pre-Action Get
         operation.doGet(context);
@@ -281,7 +281,7 @@ public class SourceTest extends AbstractOperationTest {
         EObject root = DynamicModels.createEObject(rootClass);
 
         // Operation Setup
-        Source operation = new Source(restaurantClass);
+        Source operation = new Source(restaurantClass, null);
 
         // Pre-Action Get
         operation.doGet(context);
@@ -316,7 +316,7 @@ public class SourceTest extends AbstractOperationTest {
         EClass emptyClass = DynamicModels.createEClass(viewType);
 
         // Operation Setup
-        Source operation = new Source(restaurantClass);
+        Source operation = new Source(restaurantClass, null);
 
         // Pre-Action Get
         List<OriginBinding> results = operation.doGet(context);
@@ -353,7 +353,7 @@ public class SourceTest extends AbstractOperationTest {
         EObject root = DynamicModels.createEObject(rootClass);
 
         // Operation Setup
-        Source operation = new Source(restaurantClass);
+        Source operation = new Source(restaurantClass, null);
 
         // Pre-Action Get
         List<OriginBinding> results = operation.doGet(context);
