@@ -1,23 +1,28 @@
 package tools.vitruv.compmodelcons.views.internal.impl;
 
+import com.google.common.collect.Streams;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
 import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.compmodelcons.views.internal.OriginResourceAccess;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 public class ResourceAccessWrappingOriginResourceAccess extends AbstractOriginResourceAccess implements OriginResourceAccess {
     private final ResourceAccess resourceAccess;
+    private final Resource[] additionalResources;
 
-    public ResourceAccessWrappingOriginResourceAccess(ResourceAccess resourceAccess) {
+    public ResourceAccessWrappingOriginResourceAccess(ResourceAccess resourceAccess, Resource... additionalResources) {
         this.resourceAccess = resourceAccess;
+        this.additionalResources = additionalResources;
         rebuildResourceMapping();
     }
 
     @Override
     protected Collection<EObject> getRoots() {
-        return resourceAccess.getModelResources().stream()
+        return Streams.concat(resourceAccess.getModelResources().stream(), Arrays.stream(additionalResources))
                 .flatMap(resource -> resource.getContents().stream())
                 .distinct()
                 .toList();

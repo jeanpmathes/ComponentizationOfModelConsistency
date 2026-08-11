@@ -10,10 +10,10 @@ import tools.vitruv.compmodelcons.change.*;
 import java.util.List;
 import java.util.function.Function;
 
-public class NullViewChangePropagationSpecificationImpl implements ChangePropagationViewTypeSpecification {
+public class NullViewChangePropagatingSpecificationImpl implements ChangePropagatingViewTypeSpecification {
     private final MetamodelDescriptor metamodelDescriptor;
 
-    public NullViewChangePropagationSpecificationImpl(MetamodelDescriptor metamodelDescriptor) {
+    public NullViewChangePropagatingSpecificationImpl(MetamodelDescriptor metamodelDescriptor) {
         this.metamodelDescriptor = metamodelDescriptor;
     }
 
@@ -28,7 +28,7 @@ public class NullViewChangePropagationSpecificationImpl implements ChangePropaga
     }
 
     @Override
-    public ChangePropagationView createView(int originMetamodelIndex, ResourceAccess resourceAccess, Function<String, URI> uriFactory, CorrespondenceResolvingContext correspondenceContext) {
+    public ChangePropagationView createView(int originMetamodelIndex, ResourceAccess resourceAccess, CorrespondenceModelAccess correspondenceModelAccess, Function<String, URI> uriFactory, CorrespondenceResolvingContext correspondenceContext) {
         return new DirectModelAccessView(metamodelDescriptor, resourceAccess);
     }
 

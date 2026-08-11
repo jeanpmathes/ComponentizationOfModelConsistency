@@ -32,7 +32,7 @@ import tools.vitruv.framework.views.changederivation.StateBasedChangeResolutionS
 import java.util.*;
 import java.util.function.Function;
 
-public abstract class ChangeSpecificationAwareViewType extends OperationBasedViewType implements ChangePropagationViewTypeSpecification {
+public abstract class ChangeSpecificationAwareViewType extends OperationBasedViewType implements ChangePropagatingViewTypeSpecification {
     public ChangeSpecificationAwareViewType(String name, List<EPackage> originMetamodels, EPackage viewTypeMetamodel) {
         super(name, originMetamodels, viewTypeMetamodel);
     }
@@ -48,8 +48,8 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
     }
 
     @Override
-    public ChangePropagationView createView(int originMetamodelIndex, ResourceAccess resourceAccess, Function<String, URI> uriFactory, CorrespondenceResolvingContext correspondenceContext) {
-        return new ChangePropagationViewImpl(originMetamodelIndex, resourceAccess, createUri(uriFactory), Optional.of(correspondenceContext));
+    public ChangePropagationView createView(int originMetamodelIndex, ResourceAccess resourceAccess, CorrespondenceModelAccess correspondenceModelAccess, Function<String, URI> uriFactory, CorrespondenceResolvingContext correspondenceContext) {
+        return new ChangePropagationViewImpl(originMetamodelIndex, resourceAccess, correspondenceModelAccess, createUri(uriFactory), Optional.of(correspondenceContext));
     }
 
     private URI getIdModelURI(ResourceAccess resourceAccess) {
@@ -59,17 +59,20 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
     private class ChangePropagationViewImpl implements ChangePropagationView {
         private final int originMetamodelIndex;
         private final ResourceAccess resourceAccess;
+        private final CorrespondenceModelAccess correspondenceModelAccess;
         private final OriginResourceAccess originResourceAccess;
         private final ViewResourceAccess viewResourceAccess;
         private final InternalViewImpl internalView;
         private final URI viewUri;
         private final CorrespondenceResolverImpl correspondenceResolver;
 
-        public ChangePropagationViewImpl(int originMetamodelIndex, ResourceAccess resourceAccess, URI viewUri, Optional<CorrespondenceResolvingContext> correspondenceContext) {
+        public ChangePropagationViewImpl(int originMetamodelIndex, ResourceAccess resourceAccess, CorrespondenceModelAccess correspondenceModelAccess, URI viewUri, Optional<CorrespondenceResolvingContext> correspondenceContext) {
             this.originMetamodelIndex = originMetamodelIndex;
             this.resourceAccess = resourceAccess;
-            this.originResourceAccess = new ResourceAccessWrappingOriginResourceAccess(resourceAccess);
-            this.viewUri = this.originResourceAccess.getViewUriHint(getOriginMetamodels().get(originMetamodelIndex), getMetamodel()).orElse(viewUri);
+            this.correspondenceModelAccess = correspondenceModelAccess;
+            this.originResourceAccess = new ResourceAccessWrappingOriginResourceAccess(resourceAccess, correspondenceModelAccess.getResource());
+            this.viewUri = this.originResourceAccess
+                    .getViewUriHint(getOriginMetamodels().get(originMetamodelIndex), getMetamodel()).orElse(viewUri);
             this.viewResourceAccess = new ViewResourceAccessImpl(this.viewUri);
             this.internalView = new InternalViewImpl(getStructure(), viewResourceAccess, originResourceAccess);
 
@@ -84,7 +87,8 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
         }
 
         private ViewIdModel loadViewIdModel(CorrespondenceResolvingContext correspondenceContext) {
-            Resource resource = correspondenceContext.resourceAccess().getModelResource(getIdModelURI(correspondenceContext.resourceAccess()));
+            Resource resource = correspondenceContext.resourceAccess()
+                                                     .getModelResource(getIdModelURI(correspondenceContext.resourceAccess()));
 
             if (resource.getContents().isEmpty()) {
                 resource.getContents().add(ViewIdModelFactory.eINSTANCE.createViewIdModel());
@@ -101,7 +105,9 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                 try {
                     viewObjectToViewId.put(hierarchicalIdResolver.getEObject(new HierarchicalId(viewId.getHierarchicalId())), viewId);
                 } catch (IllegalStateException e) {
-                    throw new RuntimeException("Could not resolve view id " + viewId.getHierarchicalId() + ", working in resource set " + viewResourceAccess.getResourceSet(), e);
+                    throw new RuntimeException(
+                            "Could not resolve view id " + viewId.getHierarchicalId() + ", working in resource set " +
+                                    viewResourceAccess.getResourceSet(), e);
                 }
             }
 
@@ -133,7 +139,9 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                 @Override
                 public void persistAsRoot(EObject eObject, URI uri) {
                     if (!uri.fileExtension().equals(getMetamodel().getNsPrefix())) {
-                        throw new IllegalArgumentException("View roots must be persisted using the view type metamodel's file extension (" + getMetamodel().getNsPrefix() + "), but was " + uri.fileExtension());
+                        throw new IllegalArgumentException(
+                                "View roots must be persisted using the view type metamodel's file extension (" +
+                                        getMetamodel().getNsPrefix() + "), but was " + uri.fileExtension());
                     }
                     viewResourceAccess.registerRoot(eObject, uri);
                 }
@@ -152,7 +160,7 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                     StateBasedChangeResolutionStrategy stateBasedChangeResolutionStrategy = getStateBasedChangeResolutionStrategy();
 
                     List<EChange<EObject>> result;
-                    try (ChangePropagationViewImpl changedView = new ChangePropagationViewImpl(originMetamodelIndex, changedOrigin, viewUri, Optional.empty())) {
+                    try (ChangePropagationViewImpl changedView = new ChangePropagationViewImpl(originMetamodelIndex, changedOrigin, correspondenceModelAccess, viewUri, Optional.empty())) {
                         result = deriveAndApplyChangesToReach(changedView, stateBasedChangeResolutionStrategy);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
@@ -174,7 +182,8 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                 }
             }
 
-            throw new UnsupportedOperationException("Unsupported change determination mode: " + changeDeterminationMode);
+            throw new UnsupportedOperationException(
+                    "Unsupported change determination mode: " + changeDeterminationMode);
         }
 
         @Override
@@ -190,7 +199,8 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
             Map<URI, Resource> localResourceMap = getResources();
             Map<URI, Resource> changedResourceMap = changedView.getResources();
 
-            List<URI> uris = Sets.union(localResourceMap.keySet(), changedResourceMap.keySet()).stream().sorted(Comparator.comparing(URI::toString)).toList();
+            List<URI> uris = Sets.union(localResourceMap.keySet(), changedResourceMap.keySet()).stream()
+                                 .sorted(Comparator.comparing(URI::toString)).toList();
             List<VitruviusChange<HierarchicalId>> changes = new ArrayList<>();
 
             for (URI uri : uris) {
@@ -217,9 +227,11 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                 return List.of();
             }
 
-            VitruviusChange<HierarchicalId> change = VitruviusChangeFactory.getInstance().createCompositeChange(changes);
+            VitruviusChange<HierarchicalId> change = VitruviusChangeFactory.getInstance()
+                                                                           .createCompositeChange(changes);
 
-            return VitruviusChangeResolverFactory.forHierarchicalIds(viewResourceAccess.getResourceSet()).resolveAndApply(change).getEChanges();
+            return VitruviusChangeResolverFactory.forHierarchicalIds(viewResourceAccess.getResourceSet())
+                                                 .resolveAndApply(change).getEChanges();
         }
 
         private Map<URI, Resource> getResources() {
@@ -258,9 +270,10 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
 
             @Override
             public boolean canResolveCorrespondenceEObject(EObject correspondenceObject) {
-                return correspondenceObject.eClass().getEPackage().equals(ViewIdModelFactory.eINSTANCE.getViewIdModelPackage())
-                        && correspondenceObject instanceof ViewId viewId
-                        && viewObjectToViewId.inverse().containsKey(viewId);
+                return correspondenceObject.eClass().getEPackage()
+                                           .equals(ViewIdModelFactory.eINSTANCE.getViewIdModelPackage()) &&
+                        correspondenceObject instanceof ViewId viewId &&
+                        viewObjectToViewId.inverse().containsKey(viewId);
             }
 
             @Override

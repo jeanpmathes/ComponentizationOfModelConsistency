@@ -15,23 +15,29 @@ import tools.vitruv.dsls.reactions.runtime.helper.PersistenceHelper;
 import java.util.List;
 import java.util.function.Function;
 
-public class ViewChangePropagationSpecificationAdapter extends AbstractChangePropagationSpecification implements ChangePropagationSpecification {
-    private final ChangePropagationViewTypeSpecification sourceViewType;
+/**
+ * This adapter allows using a view-based change propagation specification as a change propagation specification.
+ * It combines a {@link ChangePropagationSpecification} with a source and target {@link ChangePropagatingViewTypeSpecification}.
+ */
+public class ViewBasedChangePropagationSpecificationAdapter extends AbstractChangePropagationSpecification implements
+        ChangePropagationSpecification {
+    private final ChangePropagatingViewTypeSpecification sourceViewType;
     private final int sourceViewTypeMetamodelIndex;
     private final ChangePropagationSpecificationWrappingStrategy specification;
-    private final ChangePropagationViewTypeSpecification targetViewType;
+    private final ChangePropagatingViewTypeSpecification targetViewType;
     private final int targetViewTypeMetamodelIndex;
     private final ChangeDeterminationMode changeDeterminationMode;
 
-    public ViewChangePropagationSpecificationAdapter(ChangePropagationViewTypeSpecification sourceViewType, int sourceViewTypeMetamodelIndex, ChangePropagationSpecificationWrappingStrategy specification, ChangePropagationViewTypeSpecification targetViewType, int targetViewTypeMetamodelIndex, ChangeDeterminationMode changeDeterminationMode) {
-        super(sourceViewType.getOriginMetamodelDescriptors().get(sourceViewTypeMetamodelIndex), targetViewType.getOriginMetamodelDescriptors().get(targetViewTypeMetamodelIndex));
+    public ViewBasedChangePropagationSpecificationAdapter(ChangePropagatingViewTypeSpecification sourceViewType, int sourceViewTypeMetamodelIndex, ChangePropagationSpecificationWrappingStrategy specification, ChangePropagatingViewTypeSpecification targetViewType, int targetViewTypeMetamodelIndex, ChangeDeterminationMode changeDeterminationMode) {
+        super(sourceViewType.getOriginMetamodelDescriptors().get(sourceViewTypeMetamodelIndex), targetViewType
+                .getOriginMetamodelDescriptors().get(targetViewTypeMetamodelIndex));
 
         if (!sourceViewType.getViewTypeMetamodelDescriptor().equals(specification.getSourceMetamodelDescriptor())) {
             throw new IllegalArgumentException("The view type of the source does not match the source metamodel of the change propagation specification");
         }
 
         if (!specification.getTargetMetamodelDescriptor().equals(targetViewType.getViewTypeMetamodelDescriptor())) {
-            throw new IllegalArgumentException("The target metamodel of the change propagation specification does not match the origina metamodel of the target");
+            throw new IllegalArgumentException("The target metamodel of the change propagation specification does not match the original metamodel of the target");
         }
 
         this.sourceViewType = sourceViewType;
@@ -50,18 +56,18 @@ public class ViewChangePropagationSpecificationAdapter extends AbstractChangePro
     @Override
     public void propagateChanges(List<EChange<EObject>> originChanges, EditableCorrespondenceModelView<Correspondence> correspondenceModel, ResourceAccess changedOrigin, ModelSnapshot previousState) {
         Function<String, URI> uriFactory = changedOrigin.getModelResources().stream()
-                .filter(resource -> resource.getURI().isFile())
-                .findAny()
-                .map(resource -> resource.getContents().getFirst())
-                .map(eObject -> (Function<String, URI>) ((string) -> PersistenceHelper.getURIFromSourceProjectFolder(eObject, string)))
-                .orElseThrow();
+                                                        .filter(resource -> resource.getURI().isFile()).findAny()
+                                                        .map(resource -> resource.getContents().getFirst())
+                                                        .map(eObject -> (Function<String, URI>) ((string) -> PersistenceHelper.getURIFromSourceProjectFolder(eObject, string)))
+                                                        .orElseThrow();
 
         CorrespondenceResolvingContext correspondenceContext = new CorrespondenceResolvingContextImpl(changedOrigin);
 
-        try (
-                ModelSnapshot unchangedOrigin = previousState.copy();
-                ChangePropagationView sourceView = sourceViewType.createView(sourceViewTypeMetamodelIndex, unchangedOrigin, uriFactory, correspondenceContext);
-                ChangePropagationView targetView = targetViewType.createView(targetViewTypeMetamodelIndex, changedOrigin, uriFactory, correspondenceContext)
+        try (CorrespondenceModelAccess changedCorrespondenceModel = new CorrespondenceModelAccess(correspondenceModel);
+             ModelSnapshot unchangedOrigin = previousState.copy();
+             CorrespondenceModelAccess unchangedCorrespondenceModel = changedCorrespondenceModel.copy(unchangedOrigin);
+             ChangePropagationView sourceView = sourceViewType.createView(sourceViewTypeMetamodelIndex, unchangedOrigin, unchangedCorrespondenceModel, uriFactory, correspondenceContext);
+             ChangePropagationView targetView = targetViewType.createView(targetViewTypeMetamodelIndex, changedOrigin, changedCorrespondenceModel, uriFactory, correspondenceContext)
         ) {
             List<EChange<EObject>> viewChanges = sourceView.fitAndDetermineChanges(changedOrigin, originChanges, changeDeterminationMode);
 

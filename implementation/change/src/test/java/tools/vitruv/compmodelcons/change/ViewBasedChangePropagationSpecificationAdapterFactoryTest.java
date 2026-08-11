@@ -8,11 +8,10 @@ import tools.vitruv.dsls.reactions.runtime.reactions.AbstractReactionsChangeProp
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-class ViewChangePropagationSpecificationAdapterFactoryTest {
+class ViewBasedChangePropagationSpecificationAdapterFactoryTest {
 
     @Test
     void testCreateInternalWithEmptyOptionals() {
@@ -30,8 +29,8 @@ class ViewChangePropagationSpecificationAdapterFactoryTest {
 
     @Test
     void testCreateInternalWithMultipleMetamodels() {
-        ChangePropagationViewTypeSpecification sourceViewType = mock(ChangePropagationViewTypeSpecification.class);
-        ChangePropagationViewTypeSpecification targetViewType = mock(ChangePropagationViewTypeSpecification.class);
+        ChangePropagatingViewTypeSpecification sourceViewType = mock(ChangePropagatingViewTypeSpecification.class);
+        ChangePropagatingViewTypeSpecification targetViewType = mock(ChangePropagatingViewTypeSpecification.class);
 
         MetamodelDescriptor sourceMetamodel = mock(MetamodelDescriptor.class);
         MetamodelDescriptor targetMetamodel = mock(MetamodelDescriptor.class);
@@ -67,8 +66,8 @@ class ViewChangePropagationSpecificationAdapterFactoryTest {
 
     @Test
     void testCreateRemoteWithMultipleMetamodels() {
-        ChangePropagationViewTypeSpecification sourceViewType = mock(ChangePropagationViewTypeSpecification.class);
-        ChangePropagationViewTypeSpecification targetViewType = mock(ChangePropagationViewTypeSpecification.class);
+        ChangePropagatingViewTypeSpecification sourceViewType = mock(ChangePropagatingViewTypeSpecification.class);
+        ChangePropagatingViewTypeSpecification targetViewType = mock(ChangePropagatingViewTypeSpecification.class);
 
         MetamodelDescriptor sourceMetamodel = mock(MetamodelDescriptor.class);
         MetamodelDescriptor targetMetamodel = mock(MetamodelDescriptor.class);

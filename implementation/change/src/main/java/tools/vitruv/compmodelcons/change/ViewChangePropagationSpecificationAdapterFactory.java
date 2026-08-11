@@ -4,7 +4,7 @@ import com.google.common.collect.Sets;
 import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.change.propagation.ChangePropagationSpecification;
 import tools.vitruv.compmodelcons.change.impl.InternalReactionsChangePropagationSpecificationWrappingStrategy;
-import tools.vitruv.compmodelcons.change.impl.NullViewChangePropagationSpecificationImpl;
+import tools.vitruv.compmodelcons.change.impl.NullViewChangePropagatingSpecificationImpl;
 import tools.vitruv.compmodelcons.change.impl.RemoteChangePropagationSpecificationWrappingStrategy;
 import tools.vitruv.dsls.reactions.runtime.reactions.AbstractReactionsChangePropagationSpecification;
 
@@ -24,7 +24,7 @@ public class ViewChangePropagationSpecificationAdapterFactory {
         ignoredNsUris.add(nsUri);
     }
 
-    private List<ChangePropagationSpecification> create(Optional<ChangePropagationViewTypeSpecification> sourceViewType, ChangePropagationSpecification specification, Optional<ChangePropagationViewTypeSpecification> targetViewType, BiFunction<Integer, Integer, ChangePropagationSpecification> producer) {
+    private List<ChangePropagationSpecification> create(Optional<ChangePropagatingViewTypeSpecification> sourceViewType, ChangePropagationSpecification specification, Optional<ChangePropagatingViewTypeSpecification> targetViewType, BiFunction<Integer, Integer, ChangePropagationSpecification> producer) {
         List<MetamodelDescriptor> sourceMetamodels = getMetamodelDescriptors(sourceViewType,
                                                                              specification.getSourceMetamodelDescriptor()
         );
@@ -60,22 +60,22 @@ public class ViewChangePropagationSpecificationAdapterFactory {
         return result;
     }
 
-    private List<MetamodelDescriptor> getMetamodelDescriptors(Optional<ChangePropagationViewTypeSpecification> viewTypeSpecification, MetamodelDescriptor inner) {
-        return viewTypeSpecification.map(ChangePropagationViewTypeSpecification::getOriginMetamodelDescriptors)
+    private List<MetamodelDescriptor> getMetamodelDescriptors(Optional<ChangePropagatingViewTypeSpecification> viewTypeSpecification, MetamodelDescriptor inner) {
+        return viewTypeSpecification.map(ChangePropagatingViewTypeSpecification::getOriginMetamodelDescriptors)
                 .orElse(List.of(inner));
     }
 
-    public List<ChangePropagationSpecification> createInternal(Optional<ChangePropagationViewTypeSpecification> sourceViewType, AbstractReactionsChangePropagationSpecification specification, Optional<ChangePropagationViewTypeSpecification> targetViewType, ChangeDeterminationMode changeDeterminationMode) {
+    public List<ChangePropagationSpecification> createInternal(Optional<ChangePropagatingViewTypeSpecification> sourceViewType, AbstractReactionsChangePropagationSpecification specification, Optional<ChangePropagatingViewTypeSpecification> targetViewType, ChangeDeterminationMode changeDeterminationMode) {
         return create(sourceViewType,
                       specification,
                       targetViewType,
-                      (sourceMetamodelIndex, targetMetamodelIndex) -> new ViewChangePropagationSpecificationAdapter(
-                              sourceViewType.orElse(new NullViewChangePropagationSpecificationImpl(
+                      (sourceMetamodelIndex, targetMetamodelIndex) -> new ViewBasedChangePropagationSpecificationAdapter(
+                              sourceViewType.orElse(new NullViewChangePropagatingSpecificationImpl(
                                       specification.getSourceMetamodelDescriptor())),
                               sourceMetamodelIndex,
                               new InternalReactionsChangePropagationSpecificationWrappingStrategy(
                                       specification),
-                              targetViewType.orElse(new NullViewChangePropagationSpecificationImpl(
+                              targetViewType.orElse(new NullViewChangePropagatingSpecificationImpl(
                                       specification.getTargetMetamodelDescriptor())),
                               targetMetamodelIndex,
                               changeDeterminationMode
@@ -83,16 +83,16 @@ public class ViewChangePropagationSpecificationAdapterFactory {
         );
     }
 
-    public List<ChangePropagationSpecification> createRemote(Optional<ChangePropagationViewTypeSpecification> sourceViewType, ChangePropagationSpecification specification, Optional<ChangePropagationViewTypeSpecification> targetViewType, ChangeDeterminationMode changeDeterminationMode) {
+    public List<ChangePropagationSpecification> createRemote(Optional<ChangePropagatingViewTypeSpecification> sourceViewType, ChangePropagationSpecification specification, Optional<ChangePropagatingViewTypeSpecification> targetViewType, ChangeDeterminationMode changeDeterminationMode) {
         return create(sourceViewType,
                       specification,
                       targetViewType,
-                      (sourceMetamodelIndex, targetMetamodelIndex) -> new ViewChangePropagationSpecificationAdapter(
-                              sourceViewType.orElse(new NullViewChangePropagationSpecificationImpl(
+                      (sourceMetamodelIndex, targetMetamodelIndex) -> new ViewBasedChangePropagationSpecificationAdapter(
+                              sourceViewType.orElse(new NullViewChangePropagatingSpecificationImpl(
                                       specification.getSourceMetamodelDescriptor())),
                               sourceMetamodelIndex,
                               new RemoteChangePropagationSpecificationWrappingStrategy(specification),
-                              targetViewType.orElse(new NullViewChangePropagationSpecificationImpl(
+                              targetViewType.orElse(new NullViewChangePropagatingSpecificationImpl(
                                       specification.getTargetMetamodelDescriptor())),
                               targetMetamodelIndex,
                               changeDeterminationMode
