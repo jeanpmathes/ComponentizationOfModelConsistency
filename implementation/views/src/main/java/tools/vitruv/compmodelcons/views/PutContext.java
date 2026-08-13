@@ -13,9 +13,11 @@ public interface PutContext extends GetContext {
 
     void moveRootToDefaultOriginModel(EPackage originPackage, EObject originObject);
 
-    void trackUnattachedCreatedOriginObject(EObject originObject);
+    void notifyOriginObjectCreated(EObject originObject);
 
-    void trackUndetachedDeletedOriginObject(EObject originObject);
+    void notifyUnattachedCreatedOriginObject(EObject originObject);
 
-    void trackOriginObjectAttachmentChange(EObject originObject);
+    void notifyUndetachedDeletedOriginObject(EObject originObject);
+
+    void notifyOriginObjectAttachmentChange(EObject originObject);
 }

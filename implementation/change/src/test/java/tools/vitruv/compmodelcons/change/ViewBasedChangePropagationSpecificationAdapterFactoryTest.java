@@ -5,26 +5,33 @@ import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.change.propagation.ChangePropagationSpecification;
 import tools.vitruv.dsls.reactions.runtime.reactions.AbstractReactionsChangePropagationSpecification;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ViewBasedChangePropagationSpecificationAdapterFactoryTest {
 
+    final MetamodelDescriptor a = MetamodelDescriptor.with("a");
+    final MetamodelDescriptor b = MetamodelDescriptor.with("b");
+    final MetamodelDescriptor ab = MetamodelDescriptor.with(Set.of("a", "b"));
+    final MetamodelDescriptor c = MetamodelDescriptor.with("c");
+    final MetamodelDescriptor d = MetamodelDescriptor.with("d");
+    final MetamodelDescriptor cd = MetamodelDescriptor.with(Set.of("c", "d"));
+    final MetamodelDescriptor x = MetamodelDescriptor.with("x");
+    final MetamodelDescriptor y = MetamodelDescriptor.with("y");
+
     @Test
     void testCreateInternalWithEmptyOptionals() {
         AbstractReactionsChangePropagationSpecification specification = mock(AbstractReactionsChangePropagationSpecification.class);
-        MetamodelDescriptor sourceMetamodel = mock(MetamodelDescriptor.class);
-        MetamodelDescriptor targetMetamodel = mock(MetamodelDescriptor.class);
-        when(specification.getSourceMetamodelDescriptor()).thenReturn(sourceMetamodel);
-        when(specification.getTargetMetamodelDescriptor()).thenReturn(targetMetamodel);
+        when(specification.getSourceMetamodelDescriptor()).thenReturn(a);
+        when(specification.getTargetMetamodelDescriptor()).thenReturn(b);
 
-        List<ChangePropagationSpecification> result = ViewChangePropagationSpecificationAdapterFactory.INSTANCE.createInternal(
-                Optional.empty(), specification, Optional.empty(), ChangeDeterminationMode.CHANGE_DERIVATION);
+        ChangePropagationSpecification result = ViewChangePropagationSpecificationAdapterFactory.INSTANCE.createInternal(Optional.empty(), specification, Optional.empty(), ChangeDeterminationMode.CHANGE_DERIVATION);
 
-        assertEquals(1, result.size());
+        assertEquals(a, result.getSourceMetamodelDescriptor());
+        assertEquals(b, result.getTargetMetamodelDescriptor());
     }
 
     @Test
@@ -32,36 +39,32 @@ class ViewBasedChangePropagationSpecificationAdapterFactoryTest {
         ChangePropagatingViewTypeSpecification sourceViewType = mock(ChangePropagatingViewTypeSpecification.class);
         ChangePropagatingViewTypeSpecification targetViewType = mock(ChangePropagatingViewTypeSpecification.class);
 
-        MetamodelDescriptor sourceMetamodel = mock(MetamodelDescriptor.class);
-        MetamodelDescriptor targetMetamodel = mock(MetamodelDescriptor.class);
-        when(sourceViewType.getViewTypeMetamodelDescriptor()).thenReturn(sourceMetamodel);
-        when(targetViewType.getViewTypeMetamodelDescriptor()).thenReturn(targetMetamodel);
-
-        when(sourceViewType.getOriginMetamodelDescriptors()).thenReturn(List.of(mock(MetamodelDescriptor.class), mock(MetamodelDescriptor.class)));
-        when(targetViewType.getOriginMetamodelDescriptors()).thenReturn(List.of(mock(MetamodelDescriptor.class), mock(MetamodelDescriptor.class), mock(MetamodelDescriptor.class)));
+        when(sourceViewType.getViewTypeMetamodelDescriptor()).thenReturn(x);
+        when(targetViewType.getViewTypeMetamodelDescriptor()).thenReturn(y);
+        when(sourceViewType.getOriginMetamodelDescriptor()).thenReturn(ab);
+        when(targetViewType.getOriginMetamodelDescriptor()).thenReturn(cd);
 
         AbstractReactionsChangePropagationSpecification specification = mock(AbstractReactionsChangePropagationSpecification.class);
-        when(specification.getSourceMetamodelDescriptor()).thenReturn(sourceMetamodel);
-        when(specification.getTargetMetamodelDescriptor()).thenReturn(targetMetamodel);
+        when(specification.getSourceMetamodelDescriptor()).thenReturn(x);
+        when(specification.getTargetMetamodelDescriptor()).thenReturn(y);
 
-        List<ChangePropagationSpecification> result = ViewChangePropagationSpecificationAdapterFactory.INSTANCE.createInternal(
+        ChangePropagationSpecification result = ViewChangePropagationSpecificationAdapterFactory.INSTANCE.createInternal(
                 Optional.of(sourceViewType), specification, Optional.of(targetViewType), ChangeDeterminationMode.CHANGE_DERIVATION);
 
-        assertEquals(2 * 3, result.size());
+        assertEquals(ab, result.getSourceMetamodelDescriptor());
+        assertEquals(cd, result.getTargetMetamodelDescriptor());
     }
 
     @Test
     void testCreateRemoteWithEmptyOptionals() {
-        ChangePropagationSpecification specification = mock(ChangePropagationSpecification.class);
-        MetamodelDescriptor sourceMetamodel = mock(MetamodelDescriptor.class);
-        MetamodelDescriptor targetMetamodel = mock(MetamodelDescriptor.class);
-        when(specification.getSourceMetamodelDescriptor()).thenReturn(sourceMetamodel);
-        when(specification.getTargetMetamodelDescriptor()).thenReturn(targetMetamodel);
+        AbstractReactionsChangePropagationSpecification specification = mock(AbstractReactionsChangePropagationSpecification.class);
+        when(specification.getSourceMetamodelDescriptor()).thenReturn(a);
+        when(specification.getTargetMetamodelDescriptor()).thenReturn(b);
 
-        List<ChangePropagationSpecification> result = ViewChangePropagationSpecificationAdapterFactory.INSTANCE.createRemote(
-                Optional.empty(), specification, Optional.empty(), ChangeDeterminationMode.UPDATING_GET);
+        ChangePropagationSpecification result = ViewChangePropagationSpecificationAdapterFactory.INSTANCE.createRemote(Optional.empty(), specification, Optional.empty(), ChangeDeterminationMode.CHANGE_DERIVATION);
 
-        assertEquals(1, result.size());
+        assertEquals(a, result.getSourceMetamodelDescriptor());
+        assertEquals(b, result.getTargetMetamodelDescriptor());
     }
 
     @Test
@@ -69,21 +72,19 @@ class ViewBasedChangePropagationSpecificationAdapterFactoryTest {
         ChangePropagatingViewTypeSpecification sourceViewType = mock(ChangePropagatingViewTypeSpecification.class);
         ChangePropagatingViewTypeSpecification targetViewType = mock(ChangePropagatingViewTypeSpecification.class);
 
-        MetamodelDescriptor sourceMetamodel = mock(MetamodelDescriptor.class);
-        MetamodelDescriptor targetMetamodel = mock(MetamodelDescriptor.class);
-        when(sourceViewType.getViewTypeMetamodelDescriptor()).thenReturn(sourceMetamodel);
-        when(targetViewType.getViewTypeMetamodelDescriptor()).thenReturn(targetMetamodel);
+        when(sourceViewType.getViewTypeMetamodelDescriptor()).thenReturn(x);
+        when(targetViewType.getViewTypeMetamodelDescriptor()).thenReturn(y);
+        when(sourceViewType.getOriginMetamodelDescriptor()).thenReturn(ab);
+        when(targetViewType.getOriginMetamodelDescriptor()).thenReturn(cd);
 
-        when(sourceViewType.getOriginMetamodelDescriptors()).thenReturn(List.of(mock(MetamodelDescriptor.class)));
-        when(targetViewType.getOriginMetamodelDescriptors()).thenReturn(List.of(mock(MetamodelDescriptor.class), mock(MetamodelDescriptor.class)));
+        AbstractReactionsChangePropagationSpecification specification = mock(AbstractReactionsChangePropagationSpecification.class);
+        when(specification.getSourceMetamodelDescriptor()).thenReturn(x);
+        when(specification.getTargetMetamodelDescriptor()).thenReturn(y);
 
-        ChangePropagationSpecification specification = mock(ChangePropagationSpecification.class);
-        when(specification.getSourceMetamodelDescriptor()).thenReturn(sourceMetamodel);
-        when(specification.getTargetMetamodelDescriptor()).thenReturn(targetMetamodel);
+        ChangePropagationSpecification result = ViewChangePropagationSpecificationAdapterFactory.INSTANCE.createRemote(
+                Optional.of(sourceViewType), specification, Optional.of(targetViewType), ChangeDeterminationMode.CHANGE_DERIVATION);
 
-        List<ChangePropagationSpecification> result = ViewChangePropagationSpecificationAdapterFactory.INSTANCE.createRemote(
-                Optional.of(sourceViewType), specification, Optional.of(targetViewType), ChangeDeterminationMode.UPDATING_GET);
-
-        assertEquals(2, result.size());
+        assertEquals(ab, result.getSourceMetamodelDescriptor());
+        assertEquals(cd, result.getTargetMetamodelDescriptor());
     }
 }

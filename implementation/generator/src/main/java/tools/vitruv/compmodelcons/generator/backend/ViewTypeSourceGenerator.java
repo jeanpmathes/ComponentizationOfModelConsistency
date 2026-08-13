@@ -211,6 +211,7 @@ public class ViewTypeSourceGenerator {
             importHelper.typeRef(Filter.class);
 
             builder.append(indent(level)).append("new Filter(\n");
+            builder.append(indent(level + 1));
             appendExpression(builder, level + 1, source.condition(), source.allFroms().toList());
             builder.append(",\n");
 

@@ -6,6 +6,7 @@ import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface OriginResourceAccess extends AutoCloseable {
@@ -15,7 +16,7 @@ public interface OriginResourceAccess extends AutoCloseable {
 
     Collection<Resource> getResources(EPackage ePackage);
 
-    Optional<URI> getViewUriHint(EPackage originPackage, EPackage viewtypePackage);
+    Optional<URI> getViewUriHint(List<EPackage> originPackages, EPackage viewtypePackage);
 
     void refreshResourceMapping();
 }

@@ -128,7 +128,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         result = operation.doPut(change, result, simpleBinding, new ValueUpdateBinding.Insert(insertedRestaurant, index), spyContext);
 
         // Assertions
-        verify(spyContext, times(1)).trackOriginObjectAttachmentChange(insertedRestaurant);
+        verify(spyContext, times(1)).notifyOriginObjectAttachmentChange(insertedRestaurant);
         assertEquals(new ValueBinding.Many(Streams.concat(Stream.of(insertedRestaurant), restaurants.stream()).toList()), result.value());
         assertEquals(Streams.concat(Stream.of(insertedRestaurant), restaurants.stream()).toList(), store.eGet(restaurantsReference));
     }
@@ -169,7 +169,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         result = operation.doPut(change, result, simpleBinding, new ValueUpdateBinding.Remove(removedRestaurant, 0), spyContext);
 
         // Assertions
-        verify(spyContext, times(1)).trackOriginObjectAttachmentChange(removedRestaurant);
+        verify(spyContext, times(1)).notifyOriginObjectAttachmentChange(removedRestaurant);
         assertEquals(new ValueBinding.Many(restaurants.stream().filter(entry -> entry != removedRestaurant).toList()), result.value());
         assertEquals(restaurants.stream().filter(entry -> entry != removedRestaurant).toList(), store.eGet(restaurantsReference));
     }

@@ -9,9 +9,9 @@ import java.util.List;
 public interface ChangePropagationView extends AutoCloseable {
     ResourceAccess getViewResourceAccess();
 
+    List<EChange<EObject>> fitAndDetermineChanges(ResourceAccess changedOrigin, CorrespondenceModelAccess changedCorrespondenceModel, List<EChange<EObject>> originChanges, ChangeDeterminationMode changeDeterminationMode);
+
     CorrespondenceResolver getCorrespondenceResolver();
 
     void commit();
-
-    List<EChange<EObject>> fitAndDetermineChanges(ResourceAccess changedOrigin, List<EChange<EObject>> originChanges, ChangeDeterminationMode changeDeterminationMode);
 }

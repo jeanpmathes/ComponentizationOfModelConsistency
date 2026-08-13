@@ -5,6 +5,7 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
+import tools.vitruv.change.interaction.UserInteractor;
 import tools.vitruv.change.propagation.ChangePropagationSpecification;
 import tools.vitruv.change.propagation.ModelSnapshot;
 
@@ -28,8 +29,8 @@ public abstract class AbstractChangePropagationSpecificationWrappingStrategy imp
     }
 
     @Override
-    public boolean doesHandleChange(EChange<EObject> eChange, EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
-        return specification.doesHandleChange(eChange, correspondenceModel);
+    public void setUserInteractor(UserInteractor userInteractor) {
+        specification.setUserInteractor(userInteractor);
     }
 
     @Override

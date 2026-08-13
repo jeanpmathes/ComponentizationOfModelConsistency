@@ -30,13 +30,14 @@ public class FeatureSource implements FeatureOriginOperation {
         }
     }
 
-    @Override public FeatureBinding doGet(ObjectBinding subjectBinding, GetContext context) {
+    @Override
+    public FeatureBinding doGet(ObjectBinding subjectBinding, GetContext context) {
         return target.get(subjectBinding);
     }
 
     public FeatureBinding doPut(EChange<EObject> viewChange, FeatureBinding feature, ObjectBinding subjectBinding, ValueUpdateBinding value, PutContext context) {
-        EObject                 subject = subjectBinding.originObjects().get(target.index());
-        Optional<Target.Access> access  = target.access(subjectBinding);
+        EObject subject = subjectBinding.originObjects().get(target.index());
+        Optional<Target.Access> access = target.access(subjectBinding);
 
         if (access.isEmpty()) {
             throw new IllegalArgumentException("Cannot put a change on a feature that is not accessible");
@@ -67,11 +68,11 @@ public class FeatureSource implements FeatureOriginOperation {
         }
 
         if (isSourceFeatureAContainmentFeature && object instanceof EObject eObject) {
-            context.trackOriginObjectAttachmentChange(eObject);
+            context.notifyOriginObjectAttachmentChange(eObject);
         }
 
-        return FeatureBinding.ofOriginObject(subject, ValueBinding.ofFeature(access.get().eObject(),
-                                                                             access.get().eStructuralFeature()));
+        return FeatureBinding.ofOriginObject(subject, ValueBinding.ofFeature(access.get().eObject(), access.get()
+                                                                                                           .eStructuralFeature()));
     }
 
     @Override
@@ -86,7 +87,7 @@ public class FeatureSource implements FeatureOriginOperation {
 
         private Optional<Access> access(ObjectBinding subjectBinding) {
             EObject current = subjectBinding.originObjects().get(index);
-            EStructuralFeature currentFeature = features.get(index);
+            EStructuralFeature currentFeature = features.getFirst();
 
             for (int featureIndex = 0; featureIndex < features.size() - 1; featureIndex++) {
                 if (current.eIsSet(currentFeature)) {
@@ -108,8 +109,8 @@ public class FeatureSource implements FeatureOriginOperation {
         public FeatureBinding get(ObjectBinding subjectBinding) {
             EObject subject = subjectBinding.originObjects().get(index);
 
-            return FeatureBinding.ofOriginObject(subject, access(subjectBinding).map(
-                            access -> ValueBinding.ofFeature(access.eObject(), access.eStructuralFeature()))
+            return FeatureBinding.ofOriginObject(subject, access(subjectBinding)
+                    .map(access -> ValueBinding.ofFeature(access.eObject(), access.eStructuralFeature()))
                     .orElseGet(ValueBinding.Unset::new));
         }
 

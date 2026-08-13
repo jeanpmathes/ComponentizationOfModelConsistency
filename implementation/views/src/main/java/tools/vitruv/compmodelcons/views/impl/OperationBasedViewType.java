@@ -50,7 +50,7 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
     }
 
     private String getViewResourceName() {
-        return String.format("%s.default.view", getName());
+        return String.format("default.%s", getMetamodel().getNsPrefix());
     }
 
     protected abstract Root createStructure();
@@ -178,7 +178,7 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
 
             originResourceAccess = new ViewWrappingOriginResourceAccessImpl(createSourceModelsView());
             viewResourceAccess = new ViewResourceAccessImpl(createPlaceholderViewUri());
-            internalView = new InternalViewImpl(getStructure(), viewResourceAccess, originResourceAccess);
+            internalView = new InternalViewImpl(getStructure(), viewResourceAccess, originResourceAccess, DefaultViewObserver.INSTANCE);
 
             update();
         }

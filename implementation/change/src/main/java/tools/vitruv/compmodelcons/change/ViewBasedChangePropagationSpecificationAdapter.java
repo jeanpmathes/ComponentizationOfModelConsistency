@@ -3,8 +3,10 @@ package tools.vitruv.compmodelcons.change;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
+import tools.vitruv.change.interaction.UserInteractor;
 import tools.vitruv.change.propagation.ChangePropagationSpecification;
 import tools.vitruv.change.propagation.ModelSnapshot;
 import tools.vitruv.change.propagation.impl.AbstractChangePropagationSpecification;
@@ -19,18 +21,15 @@ import java.util.function.Function;
  * This adapter allows using a view-based change propagation specification as a change propagation specification.
  * It combines a {@link ChangePropagationSpecification} with a source and target {@link ChangePropagatingViewTypeSpecification}.
  */
-public class ViewBasedChangePropagationSpecificationAdapter extends AbstractChangePropagationSpecification implements
-        ChangePropagationSpecification {
+public class ViewBasedChangePropagationSpecificationAdapter extends AbstractChangePropagationSpecification implements ChangePropagationSpecification {
     private final ChangePropagatingViewTypeSpecification sourceViewType;
-    private final int sourceViewTypeMetamodelIndex;
     private final ChangePropagationSpecificationWrappingStrategy specification;
     private final ChangePropagatingViewTypeSpecification targetViewType;
-    private final int targetViewTypeMetamodelIndex;
+
     private final ChangeDeterminationMode changeDeterminationMode;
 
-    public ViewBasedChangePropagationSpecificationAdapter(ChangePropagatingViewTypeSpecification sourceViewType, int sourceViewTypeMetamodelIndex, ChangePropagationSpecificationWrappingStrategy specification, ChangePropagatingViewTypeSpecification targetViewType, int targetViewTypeMetamodelIndex, ChangeDeterminationMode changeDeterminationMode) {
-        super(sourceViewType.getOriginMetamodelDescriptors().get(sourceViewTypeMetamodelIndex), targetViewType
-                .getOriginMetamodelDescriptors().get(targetViewTypeMetamodelIndex));
+    public ViewBasedChangePropagationSpecificationAdapter(ChangePropagatingViewTypeSpecification sourceViewType, MetamodelDescriptor sourceMetamodel, ChangePropagationSpecificationWrappingStrategy specification, ChangePropagatingViewTypeSpecification targetViewType, MetamodelDescriptor targetMetamodel, ChangeDeterminationMode changeDeterminationMode) {
+        super(sourceMetamodel, targetMetamodel);
 
         if (!sourceViewType.getViewTypeMetamodelDescriptor().equals(specification.getSourceMetamodelDescriptor())) {
             throw new IllegalArgumentException("The view type of the source does not match the source metamodel of the change propagation specification");
@@ -41,16 +40,14 @@ public class ViewBasedChangePropagationSpecificationAdapter extends AbstractChan
         }
 
         this.sourceViewType = sourceViewType;
-        this.sourceViewTypeMetamodelIndex = sourceViewTypeMetamodelIndex;
         this.specification = specification;
         this.targetViewType = targetViewType;
-        this.targetViewTypeMetamodelIndex = targetViewTypeMetamodelIndex;
         this.changeDeterminationMode = changeDeterminationMode;
     }
 
     @Override
     public boolean doesHandleChange(EChange<EObject> eChange, EditableCorrespondenceModelView<Correspondence> correspondenceModel) {
-        return specification.doesHandleChange(eChange, correspondenceModel);
+        return true;
     }
 
     @Override
@@ -66,17 +63,21 @@ public class ViewBasedChangePropagationSpecificationAdapter extends AbstractChan
         try (CorrespondenceModelAccess changedCorrespondenceModel = new CorrespondenceModelAccess(correspondenceModel);
              ModelSnapshot unchangedOrigin = previousState.copy();
              CorrespondenceModelAccess unchangedCorrespondenceModel = changedCorrespondenceModel.copy(unchangedOrigin);
-             ChangePropagationView sourceView = sourceViewType.createView(sourceViewTypeMetamodelIndex, unchangedOrigin, unchangedCorrespondenceModel, uriFactory, correspondenceContext);
-             ChangePropagationView targetView = targetViewType.createView(targetViewTypeMetamodelIndex, changedOrigin, changedCorrespondenceModel, uriFactory, correspondenceContext)
+             ChangePropagationView sourceView = sourceViewType.createView(unchangedOrigin, unchangedCorrespondenceModel, uriFactory, this, correspondenceContext);
+             ChangePropagationView targetView = targetViewType.createView(changedOrigin, changedCorrespondenceModel, uriFactory, this, correspondenceContext)
         ) {
-            List<EChange<EObject>> viewChanges = sourceView.fitAndDetermineChanges(changedOrigin, originChanges, changeDeterminationMode);
+            List<EChange<EObject>> viewChanges = sourceView.fitAndDetermineChanges(changedOrigin, changedCorrespondenceModel, originChanges, changeDeterminationMode);
 
             var context = new ViewChangePropagationContext(sourceView, sourceViewType, targetView, targetViewType);
+
+            originChanges.forEach(change -> notifyChangePropagationStarted(this, change));
+
             // For full correctness, the previous state would need to include the unchanged state of the two views as well.
             // However, no one is using that anyway, so why bother?
             specification.propagateChanges(viewChanges, correspondenceModel, context, null);
-
             targetView.commit();
+
+            originChanges.forEach(change -> notifyChangePropagationStopped(this, change));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -85,5 +86,11 @@ public class ViewBasedChangePropagationSpecificationAdapter extends AbstractChan
     @Override
     public void propagateChange(EChange<EObject> eChange, EditableCorrespondenceModelView<Correspondence> editableCorrespondenceModelView, ResourceAccess resourceAccess) {
         throw new UnsupportedOperationException("This method should not be called, use propagateChanges instead");
+    }
+
+    @Override
+    public void setUserInteractor(UserInteractor userInteractor) {
+        super.setUserInteractor(userInteractor);
+        specification.setUserInteractor(userInteractor);
     }
 }

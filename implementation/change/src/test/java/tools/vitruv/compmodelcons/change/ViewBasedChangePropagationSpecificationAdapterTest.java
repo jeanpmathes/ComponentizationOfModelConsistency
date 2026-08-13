@@ -77,15 +77,6 @@ class ViewBasedChangePropagationSpecificationAdapterTest {
     }
 
     @Test
-    void testConstructorWithMatchingMetamodels() {
-        var specification = mock(ChangePropagationSpecification.class);
-        when(specification.getSourceMetamodelDescriptor()).thenReturn(sourceViewType.getViewTypeMetamodelDescriptor());
-        when(specification.getTargetMetamodelDescriptor()).thenReturn(targetViewType.getViewTypeMetamodelDescriptor());
-        var wrappingStrategy = new RemoteChangePropagationSpecificationWrappingStrategy(specification);
-        new ViewBasedChangePropagationSpecificationAdapter(sourceViewType, 0, wrappingStrategy, targetViewType, 0, ChangeDeterminationMode.CHANGE_DERIVATION);
-    }
-
-    @Test
     void testConstructorWithMismatchingSourceMetamodel() {
         var specification = mock(ChangePropagationSpecification.class);
         when(specification.getSourceMetamodelDescriptor()).thenReturn(sourceViewType.getViewTypeMetamodelDescriptor());
@@ -95,15 +86,15 @@ class ViewBasedChangePropagationSpecificationAdapterTest {
         MetamodelDescriptor otherMetamodel = MetamodelDescriptor.of(EcorePackage.eINSTANCE);
         ChangePropagatingViewTypeSpecification otherViewType = mock(ChangePropagatingViewTypeSpecification.class);
         when(otherViewType.getViewTypeMetamodelDescriptor()).thenReturn(otherMetamodel);
-        when(otherViewType.getOriginMetamodelDescriptors()).thenReturn(List.of(MetamodelDescriptor.of(sourceOriginInfo.metamodel)));
+        when(otherViewType.getOriginMetamodelDescriptor()).thenReturn(otherMetamodel);
 
-        assertThrows(IllegalArgumentException.class, () -> new ViewBasedChangePropagationSpecificationAdapter(otherViewType, 0, wrappingStrategy, targetViewType, 0, ChangeDeterminationMode.CHANGE_DERIVATION));
+        assertThrows(IllegalArgumentException.class, () -> new ViewBasedChangePropagationSpecificationAdapter(otherViewType, otherViewType.getOriginMetamodelDescriptor(), wrappingStrategy, targetViewType, targetViewType.getOriginMetamodelDescriptor(), ChangeDeterminationMode.CHANGE_DERIVATION));
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void testPropagateChanges() throws IOException {
-        var adapter = getViewChangePropagationSpecificationAdapter();
+        ViewBasedChangePropagationSpecificationAdapter adapter = getViewChangePropagationSpecificationAdapter();
 
         Path projectPath = tempDirectory.resolve("project");
         Files.createDirectories(projectPath);
@@ -142,7 +133,7 @@ class ViewBasedChangePropagationSpecificationAdapterTest {
     private ViewBasedChangePropagationSpecificationAdapter getViewChangePropagationSpecificationAdapter() {
         ChangePropagationSpecification functionalSpecification = new TestChangePropagationSpecification(sourceViewType.getViewTypeMetamodelDescriptor(), targetViewType.getViewTypeMetamodelDescriptor());
         var wrappingStrategy = new RemoteChangePropagationSpecificationWrappingStrategy(functionalSpecification);
-        return new ViewBasedChangePropagationSpecificationAdapter(sourceViewType, 0, wrappingStrategy, targetViewType, 0, ChangeDeterminationMode.CHANGE_DERIVATION);
+        return new ViewBasedChangePropagationSpecificationAdapter(sourceViewType, sourceViewType.getOriginMetamodelDescriptor(), wrappingStrategy, targetViewType, targetViewType.getOriginMetamodelDescriptor(), ChangeDeterminationMode.CHANGE_DERIVATION);
     }
 
     private EObject setupOrigin(ResourceSet resourceSet, Path projectPath, String fileName, MetamodelInfo info, String name) {

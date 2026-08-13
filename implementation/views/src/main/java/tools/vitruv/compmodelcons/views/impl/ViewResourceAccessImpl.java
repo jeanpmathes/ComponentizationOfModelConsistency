@@ -41,6 +41,10 @@ public class ViewResourceAccessImpl implements ViewResourceAccess {
 
     @Override
     public void registerRoot(EObject root, URI uri) {
+        if (resourceSet.getResources().stream().anyMatch(resource -> resource.getURI().equals(uri))) {
+            throw new IllegalStateException("That URI is already registered: " + uri);
+        }
+
         resourceSet.createResource(uri).getContents().add(root);
     }
 

@@ -35,15 +35,19 @@ public abstract class AbstractOriginResourceAccess implements OriginResourceAcce
     }
 
     @Override
-    public Optional<URI> getViewUriHint(EPackage originPackage, EPackage viewtypePackage) {
-        if (resources.isEmpty() || !resources.containsKey(originPackage)) {
-            return Optional.empty();
-        }
-
-        return Optional.of(resources.get(originPackage).defaultResource().getURI().trimFileExtension().appendFileExtension(viewtypePackage.getNsPrefix()));
+    public Optional<URI> getViewUriHint(List<EPackage> originPackages, EPackage viewtypePackage) {
+        return resources.entrySet().stream().filter(entry -> originPackages.contains(entry.getKey()))
+                        .filter(entry -> canDeriveNameFromPackage(entry.getKey()))
+                        .map(entry -> entry.getValue().defaultResource().getURI().trimFileExtension()
+                                           .appendFileExtension(viewtypePackage.getNsPrefix()))
+                        .min(Comparator.comparing(URI::toString));
     }
 
     protected abstract Collection<EObject> getRoots();
+
+    protected boolean canDeriveNameFromPackage(EPackage ePackage) {
+        return true;
+    }
 
     protected void rebuildResourceMapping() {
         knownDefaults.clear();
@@ -68,7 +72,8 @@ public abstract class AbstractOriginResourceAccess implements OriginResourceAcce
         Map<EPackage, Map<URI, Resource>> allResources = new HashMap<>();
         for (EObject eObject : getRoots()) {
             EPackage ePackage = eObject.eClass().getEPackage();
-            allResources.computeIfAbsent(ePackage, ignore -> new HashMap<>()).put(eObject.eResource().getURI(), eObject.eResource());
+            allResources.computeIfAbsent(ePackage, ignore -> new HashMap<>())
+                        .put(eObject.eResource().getURI(), eObject.eResource());
         }
 
         for (var entry : allResources.entrySet()) {
@@ -77,7 +82,9 @@ public abstract class AbstractOriginResourceAccess implements OriginResourceAcce
 
             Optional.ofNullable(knownDefaults.get(ePackage))
                     .flatMap(uri -> Optional.ofNullable(packageResources.get(uri)))
-                    .or(() -> packageResources.values().stream().min(Comparator.comparing(resource -> resource.getURI().toString().length())))
+                    .or(() -> packageResources.values().stream()
+                                              .min(Comparator.comparing(resource -> resource.getURI().toString()
+                                                                                            .length())))
                     .map(defaultResource -> new ResourceEntry(defaultResource, new HashSet<>(packageResources.values())))
                     .ifPresent(resourceEntry -> resources.put(ePackage, resourceEntry));
         }

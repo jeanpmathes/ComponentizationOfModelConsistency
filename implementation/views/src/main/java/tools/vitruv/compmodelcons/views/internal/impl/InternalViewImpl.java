@@ -8,6 +8,7 @@ import tools.vitruv.change.atomic.eobject.EObjectSubtractedEChange;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.change.composite.recording.ChangeRecorder;
 import tools.vitruv.compmodelcons.views.EditableViewCorrespondences;
+import tools.vitruv.compmodelcons.views.ViewObserver;
 import tools.vitruv.compmodelcons.views.impl.EditableViewCorrespondencesImpl;
 import tools.vitruv.compmodelcons.views.impl.GetContextImpl;
 import tools.vitruv.compmodelcons.views.impl.PutContextImpl;
@@ -24,14 +25,17 @@ public class InternalViewImpl implements AutoCloseable {
     private final ViewResourceAccess viewResourceAccess;
     private final OriginResourceAccess originResourceAccess;
 
+    private final ViewObserver viewObserver;
+
     private ChangeRecorder changeRecorder;
 
     private Root.ViewBinding viewBinding;
 
-    public InternalViewImpl(Root structure, ViewResourceAccess viewResourceAccess, OriginResourceAccess originResourceAccess) {
+    public InternalViewImpl(Root structure, ViewResourceAccess viewResourceAccess, OriginResourceAccess originResourceAccess, ViewObserver viewObserver) {
         this.structure = structure;
         this.viewResourceAccess = viewResourceAccess;
         this.originResourceAccess = originResourceAccess;
+        this.viewObserver = viewObserver;
 
         setupChangeRecorderAndBeginRecording();
     }
@@ -115,7 +119,7 @@ public class InternalViewImpl implements AutoCloseable {
     }
 
     private void doPut(VitruviusChange<EObject> change) {
-        var context = new PutContextImpl(originResourceAccess, viewResourceAccess, correspondences);
+        var context = new PutContextImpl(originResourceAccess, viewResourceAccess, correspondences, viewObserver);
         reorderChanges(change.getEChanges()).forEach(eChange -> viewBinding = structure.doPut(eChange, viewBinding, context));
         context.validateAttachmentState();
     }

@@ -16,6 +16,7 @@ import tools.vitruv.compmodelcons.views.EditableViewCorrespondences;
 import tools.vitruv.compmodelcons.views.bindings.FeatureBinding;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.bindings.ValueBinding;
+import tools.vitruv.compmodelcons.views.impl.DefaultViewObserver;
 import tools.vitruv.compmodelcons.views.impl.EditableViewCorrespondencesImpl;
 import tools.vitruv.compmodelcons.views.impl.PutContextImpl;
 import tools.vitruv.compmodelcons.views.internal.OriginResourceAccess;
@@ -27,8 +28,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class AbstractOperationTest {
     protected Models models;
@@ -222,7 +222,7 @@ class AbstractOperationTest {
                 }
 
                 @Override
-                public Optional<URI> getViewUriHint(EPackage originPackage, EPackage viewtypePackage) {
+                public Optional<URI> getViewUriHint(List<EPackage> originPackages, EPackage viewtypePackage) {
                     return Optional.empty();
                 }
 
@@ -267,10 +267,10 @@ class AbstractOperationTest {
                 }
 
                 @Override
-                public void close() throws Exception {
+                public void close() {
 
                 }
-            }, correspondences);
+            }, correspondences, DefaultViewObserver.INSTANCE);
         }
     }
 }

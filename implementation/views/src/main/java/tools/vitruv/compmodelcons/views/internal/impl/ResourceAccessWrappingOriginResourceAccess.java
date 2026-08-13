@@ -3,6 +3,7 @@ package tools.vitruv.compmodelcons.views.internal.impl;
 import com.google.common.collect.Streams;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.compmodelcons.views.internal.OriginResourceAccess;
@@ -26,6 +27,14 @@ public class ResourceAccessWrappingOriginResourceAccess extends AbstractOriginRe
                 .flatMap(resource -> resource.getContents().stream())
                 .distinct()
                 .toList();
+    }
+
+    @Override
+    protected boolean canDeriveNameFromPackage(EPackage ePackage) {
+        return Arrays.stream(additionalResources).noneMatch(resource -> resource.getContents().stream()
+                                                                                .anyMatch(root -> root.eClass()
+                                                                                                      .getEPackage() ==
+                                                                                        ePackage));
     }
 
     @Override

@@ -4,6 +4,7 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.composite.MetamodelDescriptor;
+import tools.vitruv.change.propagation.ChangePropagationObservable;
 import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.compmodelcons.change.*;
 
@@ -18,8 +19,8 @@ public class NullViewChangePropagatingSpecificationImpl implements ChangePropaga
     }
 
     @Override
-    public List<MetamodelDescriptor> getOriginMetamodelDescriptors() {
-        return List.of(metamodelDescriptor);
+    public MetamodelDescriptor getOriginMetamodelDescriptor() {
+        return metamodelDescriptor;
     }
 
     @Override
@@ -28,7 +29,7 @@ public class NullViewChangePropagatingSpecificationImpl implements ChangePropaga
     }
 
     @Override
-    public ChangePropagationView createView(int originMetamodelIndex, ResourceAccess resourceAccess, CorrespondenceModelAccess correspondenceModelAccess, Function<String, URI> uriFactory, CorrespondenceResolvingContext correspondenceContext) {
+    public ChangePropagationView createView(ResourceAccess resourceAccess, CorrespondenceModelAccess correspondenceModelAccess, Function<String, URI> uriFactory, ChangePropagationObservable observable, CorrespondenceResolvingContext correspondenceContext) {
         return new DirectModelAccessView(metamodelDescriptor, resourceAccess);
     }
 
@@ -50,7 +51,7 @@ public class NullViewChangePropagatingSpecificationImpl implements ChangePropaga
         }
 
         @Override
-        public List<EChange<EObject>> fitAndDetermineChanges(ResourceAccess changedOrigin, List<EChange<EObject>> originChanges, ChangeDeterminationMode changeDeterminationMode) {
+        public List<EChange<EObject>> fitAndDetermineChanges(ResourceAccess changedOrigin, CorrespondenceModelAccess changedCorrespondenceModel, List<EChange<EObject>> originChanges, ChangeDeterminationMode changeDeterminationMode) {
             return originChanges;
         }
 
