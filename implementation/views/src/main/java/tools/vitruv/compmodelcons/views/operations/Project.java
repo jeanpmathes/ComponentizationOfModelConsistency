@@ -16,18 +16,18 @@ import java.util.List;
 import java.util.Map;
 
 public class Project {
-    private final EClass          createdClass;
+    private final EClass createdClass;
     private final OriginOperation origin;
     private final List<FeatureProject> features;
-    private final OnPut           onPut;
+    private final OnPut onPut;
 
     private final Map<EStructuralFeature, Integer> featureIndices = new java.util.HashMap<>();
 
     public Project(EClass createdClass, OriginOperation origin, List<FeatureProject> features, OnPut onPut) {
         this.createdClass = createdClass;
-        this.origin   = origin;
+        this.origin = origin;
         this.features = List.copyOf(features);
-        this.onPut    = onPut;
+        this.onPut = onPut;
 
         for (int index = 0; index < features.size(); index++) {
             featureIndices.put(features.get(index).getCreatedFeature(), index);
@@ -40,25 +40,29 @@ public class Project {
 
             context.getCorrespondences().addCorrespondence(originBinding.originObjects(), result);
 
-            return (ObjectBinding) new ProjectObjectBindingImpl(originBinding,
-                                                                result,
-                                                                createUninitializedFeatureBindings()
-            );
+            return (ObjectBinding) new ProjectObjectBindingImpl(originBinding, result, createUninitializedFeatureBindings());
         }).toList();
     }
 
-    public ObjectBinding doPut(EChange<EObject> viewChange, ObjectBinding target, PutContext context) {
-        if (!target.viewObject().eClass().equals(createdClass)) {
-            throw new IllegalArgumentException(
-                    "Cannot put a change on an object that is not of the created class");
+    public void completeGetByCallingGetOnFeatures(ObjectBinding subject, GetContext context) {
+        ProjectObjectBindingImpl projected = (ProjectObjectBindingImpl) subject;
+
+        for (int index = 0; index < projected.featureBindings.size(); index++) {
+            projected.featureBindings.set(index, features.get(index).doGet(subject, context));
+        }
+    }
+
+    public ObjectBinding doPut(EChange<EObject> viewChange, ObjectBinding subject, PutContext context) {
+        if (!subject.viewObject().eClass().equals(createdClass)) {
+            throw new IllegalArgumentException("Cannot put a change on an object that is not of the created class");
         }
 
-        EObject       viewObject   = target.viewObject();
-        OriginBinding peeledTarget = OriginBinding.of(target.originObjects());
+        EObject viewObject = subject.viewObject();
+        OriginBinding peeledTarget = OriginBinding.of(subject.originObjects());
         List<FeatureBinding> featureBindings;
 
-        if (!target.originObjects().isEmpty()) {
-            ProjectObjectBindingImpl binding = (ProjectObjectBindingImpl) target;
+        if (!subject.originObjects().isEmpty()) {
+            ProjectObjectBindingImpl binding = (ProjectObjectBindingImpl) subject;
             peeledTarget = binding.originBinding;
             featureBindings = new ArrayList<>(binding.featureBindings);
         } else {
@@ -67,44 +71,26 @@ public class Project {
 
         if (viewChange instanceof FeatureEChange<EObject, ?> featureEChange) {
             int featureIndex = featureIndices.get(featureEChange.getAffectedFeature());
-            featureBindings.set(featureIndex,
-                                features.get(featureIndex)
-                                        .doPut(viewChange,
-                                               featureBindings.get(featureIndex),
-                                               target,
-                                               context
-                                        )
-            );
-            ProjectObjectBindingImpl projected =
-                    new ProjectObjectBindingImpl(peeledTarget, viewObject, featureBindings);
-            onPut.onPut(viewChange, target, projected, context);
+            featureBindings.set(featureIndex, features.get(featureIndex)
+                                                      .doPut(viewChange, featureBindings.get(featureIndex), subject, context));
+            ProjectObjectBindingImpl projected = new ProjectObjectBindingImpl(peeledTarget, viewObject, featureBindings);
+            onPut.onPut(viewChange, subject, projected, context);
             return projected;
         } else {
             OriginBinding originBinding = origin.doPut(viewChange, peeledTarget, context);
 
-            ProjectObjectBindingImpl projected =
-                    new ProjectObjectBindingImpl(originBinding, viewObject, featureBindings);
+            ProjectObjectBindingImpl projected = new ProjectObjectBindingImpl(originBinding, viewObject, featureBindings);
 
-            if (target.originObjects().isEmpty()) {
-                initializeFeatureBindings(projected.featureBindings, projected, context);
+            if (subject.originObjects().isEmpty()) {
+                for (int index = 0; index < featureBindings.size(); index++) {
+                    featureBindings.set(index, features.get(index).initializeBindingFromView(projected, context));
+                }
             }
 
-            onPut.onPut(viewChange, target, projected, context);
+            onPut.onPut(viewChange, subject, projected, context);
 
             return projected;
         }
-    }
-
-    public void completeGetByCallingGetOnFeatures(ObjectBinding subject, GetContext context) {
-        ProjectObjectBindingImpl projected = (ProjectObjectBindingImpl) subject;
-
-        initializeFeatureBindings(projected.featureBindings, projected, context);
-    }
-
-    public interface OnPut {
-        OnPut NO_OP = (change, oldBinding, newBinding, context) -> {
-        };
-        void onPut(EChange<EObject> change, OriginBinding oldBinding, OriginBinding newBinding, PutContext context);
     }
 
     public Root.ViewBinding doUpdatingGet(Root.ViewBinding previous, EChange<EObject> originChange, GetContext context) {
@@ -121,18 +107,17 @@ public class Project {
         return result;
     }
 
-    private void initializeFeatureBindings(List<FeatureBinding> featureBindings, ObjectBinding subject, GetContext context) {
-        for (int index = 0; index < featureBindings.size(); index++) {
-            featureBindings.set(index, features.get(index).doGet(subject, context));
-        }
+    public interface OnPut {
+        OnPut NO_OP = (change, oldBinding, newBinding, context) -> {
+        };
+        void onPut(EChange<EObject> change, OriginBinding oldBinding, OriginBinding newBinding, PutContext context);
     }
 
-    private record ProjectObjectBindingImpl(OriginBinding originBinding,
-                                            EObject viewObject,
-                                            List<FeatureBinding> featureBindings
-    ) implements ObjectBinding {
+    private record ProjectObjectBindingImpl(OriginBinding originBinding, EObject viewObject,
+                                            List<FeatureBinding> featureBindings) implements ObjectBinding {
 
-        @Override public List<EObject> originObjects() {
+        @Override
+        public List<EObject> originObjects() {
             return originBinding.originObjects();
         }
     }

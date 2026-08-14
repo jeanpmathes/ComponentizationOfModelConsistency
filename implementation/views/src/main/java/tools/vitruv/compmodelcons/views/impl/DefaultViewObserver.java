@@ -10,4 +10,9 @@ public class DefaultViewObserver implements ViewObserver {
     public void originObjectCreated(EObject eObject) {
 
     }
+
+    @Override
+    public void originObjectDeleted(EObject eObject) {
+
+    }
 }

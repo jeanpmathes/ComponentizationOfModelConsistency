@@ -54,18 +54,29 @@ public class PutContextImpl extends GetContextImpl implements PutContext {
     @Override
     public void notifyOriginObjectCreated(EObject originObject) {
         viewObserver.originObjectCreated(originObject);
+
+        if (originObject.eResource() == null) {
+            notifyUnattachedCreatedOriginObject(originObject);
+        }
     }
 
     @Override
-    public void notifyUnattachedCreatedOriginObject(EObject originObject) {
+    public void notifyOriginObjectDeleted(EObject originObject) {
+        viewObserver.originObjectDeleted(originObject);
+
+        if (originObject.eResource() != null) {
+            notifyUndetachedDeletedOriginObject(originObject);
+        }
+    }
+
+    private void notifyUnattachedCreatedOriginObject(EObject originObject) {
         unattachedCreatedOriginObjects.add(originObject);
         undetachedDeletedOriginObjects.remove(originObject);
     }
 
-    @Override
-    public void notifyUndetachedDeletedOriginObject(EObject originObject) {
-        undetachedDeletedOriginObjects.add(originObject);
+    private void notifyUndetachedDeletedOriginObject(EObject originObject) {
         unattachedCreatedOriginObjects.remove(originObject);
+        undetachedDeletedOriginObjects.add(originObject);
     }
 
     @Override
@@ -78,6 +89,10 @@ public class PutContextImpl extends GetContextImpl implements PutContext {
     }
 
     public void validateAttachmentState() {
+        // Any hooks and overrides might change attachment in code, so we check again just to be sure.
+        unattachedCreatedOriginObjects.removeIf(originObject -> originObject.eResource() != null);
+        undetachedDeletedOriginObjects.removeIf(originObject -> originObject.eResource() == null);
+
         if (!unattachedCreatedOriginObjects.isEmpty()) {
             throw new IllegalStateException("Failed to attach all created objects in the origin models, possibly because of ambiguous containment");
         }

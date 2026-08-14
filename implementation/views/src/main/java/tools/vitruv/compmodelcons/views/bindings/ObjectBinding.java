@@ -5,20 +5,6 @@ import org.eclipse.emf.ecore.EObject;
 import java.util.List;
 
 public interface ObjectBinding extends OriginBinding {
-    static ObjectBinding ofOriginObject(EObject eObject) {
-        return new ObjectBinding() {
-            @Override
-            public List<EObject> originObjects() {
-                return List.of(eObject);
-            }
-
-            @Override
-            public EObject viewObject() {
-                throw new UnsupportedOperationException();
-            }
-        };
-    }
-
     static ObjectBinding empty() {
         return new ObjectBinding() {
             @Override

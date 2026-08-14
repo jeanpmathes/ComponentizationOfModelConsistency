@@ -15,9 +15,7 @@ public interface PutContext extends GetContext {
 
     void notifyOriginObjectCreated(EObject originObject);
 
-    void notifyUnattachedCreatedOriginObject(EObject originObject);
-
-    void notifyUndetachedDeletedOriginObject(EObject originObject);
+    void notifyOriginObjectDeleted(EObject originObject);
 
     void notifyOriginObjectAttachmentChange(EObject originObject);
 }

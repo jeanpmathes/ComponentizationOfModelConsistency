@@ -2,6 +2,7 @@ package tools.vitruv.compmodelcons.views.operations;
 
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.change.atomic.eobject.DeleteEObject;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
@@ -25,6 +26,12 @@ public class Filter implements OriginOperation {
 
     @Override
     public OriginBinding doPut(EChange<EObject> viewChange, OriginBinding target, PutContext context) {
+        if (viewChange instanceof DeleteEObject<EObject> deleteEObject && !filter.evaluate(target)) {
+            context.getCorrespondences()
+                   .removeCorrespondence(target.originObjects(), deleteEObject.getAffectedElement());
+            return OriginBinding.empty();
+        }
+
         return origin.doPut(viewChange, target, context);
     }
 

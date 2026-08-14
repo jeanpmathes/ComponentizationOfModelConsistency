@@ -29,8 +29,6 @@ public class Source implements OriginOperation {
     }
 
     public static void attachedCreatedOriginObject(EObject created, EClass sourceClass, boolean isRoot, EReference container, PutContext context) {
-        context.notifyOriginObjectCreated(created);
-
         if (isRoot) {
             context.addRootToDefaultOriginModel(sourceClass.getEPackage(), created);
         } else if (container != null) {
@@ -42,12 +40,10 @@ public class Source implements OriginOperation {
                 } else {
                     candidates.getFirst().eSet(container, created);
                 }
-            } else {
-                context.notifyUnattachedCreatedOriginObject(created);
             }
-        } else {
-            context.notifyUnattachedCreatedOriginObject(created);
         }
+
+        context.notifyOriginObjectCreated(created);
     }
 
     public static void detachDeletedOriginObject(EObject deleted, EClass sourceClass, boolean isRoot, EReference container, PutContext context) {
@@ -63,9 +59,9 @@ public class Source implements OriginOperation {
                     deleted.eContainer().eUnset(container);
                 }
             }
-        } else {
-            context.notifyUndetachedDeletedOriginObject(deleted);
         }
+
+        context.notifyOriginObjectDeleted(deleted);
     }
 
     @Override public List<OriginBinding> doGet(GetContext context) {

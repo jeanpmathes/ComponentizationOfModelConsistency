@@ -59,6 +59,11 @@ public class FeatureProject {
         throw new UnsupportedOperationException();
     }
 
+    public FeatureBinding initializeBindingFromView(ObjectBinding subject, PutContext context) {
+        FeatureBinding originFeature = origin.doGet(subject, context);
+        return new FeatureProjectBindingImpl(originFeature, subject.viewObject(), ValueBinding.ofFeature(subject.viewObject(), createdFeature));
+    }
+
     public FeatureBinding doPut(EChange<EObject> change, FeatureBinding feature, ObjectBinding subject, PutContext context) {
         FeatureProjectBindingImpl binding = (FeatureProjectBindingImpl) feature;
 

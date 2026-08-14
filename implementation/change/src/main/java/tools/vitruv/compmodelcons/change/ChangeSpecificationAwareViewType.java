@@ -74,7 +74,7 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
             this.viewResourceAccess = new ViewResourceAccessImpl(this.viewUri);
 
             this.internalView = new InternalViewImpl(getStructure(), viewResourceAccess, originResourceAccess,
-                                                     observable != null ? observable::notifyObjectCreated
+                                                     observable != null ? new ViewObserver(observable)
                                                                         : DefaultViewObserver.INSTANCE);
 
             this.internalView.update();
@@ -242,6 +242,19 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
 
             viewResourceAccess.close();
             originResourceAccess.close();
+        }
+
+        private static final class ViewObserver extends DefaultViewObserver {
+            private final ChangePropagationObservable observable;
+
+            private ViewObserver(ChangePropagationObservable observable) {
+                this.observable = observable;
+            }
+
+            @Override
+            public void originObjectCreated(EObject eObject) {
+                observable.notifyObjectCreated(eObject);
+            }
         }
 
         private class CorrespondenceResolverImpl implements CorrespondenceResolver {
