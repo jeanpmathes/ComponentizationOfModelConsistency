@@ -169,14 +169,13 @@ public class ViewTypeSourceGenerator {
     for (AQRFeature feature : aqr
         .root()
         .features()) {
-      if (feature instanceof AQRFeature.Reference reference &&
-          feature.kind() instanceof AQRFeature.Kind.Generate) {
+      if (feature instanceof AQRFeature.Reference reference
+          && feature.kind() instanceof AQRFeature.Kind.Generate) {
         builder.append(first ? "\n" : ",\n");
         first = false;
 
-        GenFeature containment = viewtypeMetamodel.getGenFeature(rootClass.getEcoreClass(),
-                                                                 reference.name()
-                                                                );
+        GenFeature containment =
+            viewtypeMetamodel.getGenFeature(rootClass.getEcoreClass(), reference.name());
 
         builder
             .append("                ")
@@ -257,9 +256,8 @@ public class ViewTypeSourceGenerator {
     declaration
         .append("    protected void ")
         .append(onPutMethodName)
-        .append(
-            "(EChange<EObject> change, OriginBinding oldBinding, OriginBinding newBinding, " +
-                "PutContext context) {\n");
+        .append("(EChange<EObject> change, OriginBinding oldBinding, OriginBinding newBinding, "
+                    + "PutContext context) {\n");
     declaration.append("    }");
 
     declarations.add(declaration.toString());
@@ -460,28 +458,24 @@ public class ViewTypeSourceGenerator {
 
   private String getSourceObjectFactoryMethodName(GenClass sourceClass, GenClass targetClass,
                                                   int index) {
-    return "create" + sourceClass.getInterfaceName() + "For" + targetClass.getInterfaceName() +
-        index;
+    return "create" + sourceClass.getInterfaceName() + "For" + targetClass.getInterfaceName()
+        + index;
   }
 
   private void createSourceObjectFactoryMethod(String methodName, GenClass sourceClass) {
 
     String declaration =
-        "    protected EObject " + methodName + "(EObject viewObject) {\n" +
-            "        return " + sourceClass
+        "    protected EObject " + methodName + "(EObject viewObject) {\n" + "        return "
+            + sourceClass
             .getGenPackage()
-            .getQualifiedEFactoryInstanceAccessor() +
-            ".create(" + sourceClass.getQualifiedClassifierAccessor() + ");\n" +
-            "    }";
+            .getQualifiedEFactoryInstanceAccessor() + ".create("
+            + sourceClass.getQualifiedClassifierAccessor() + ");\n" + "    }";
 
     declarations.add(declaration);
   }
 
   private void appendFeatureProjectOperation(StringBuilder builder, int level, GenClass targetClass,
                                              AQRFeature feature, List<AQRFrom> context) {
-    GenFeature createdFeature =
-        viewtypeMetamodel.getGenFeature(targetClass.getEcoreClass(), feature.name());
-
     importHelper.typeRef(FeatureProject.class);
     importHelper.typeRef(Optional.class);
 
@@ -491,10 +485,10 @@ public class ViewTypeSourceGenerator {
         .append(indent(level))
         .append("new FeatureProject(\n");
     if (feature.kind() instanceof AQRFeature.Kind.Copy copy) {
-      target = copy.expression() != null
-               ? getTargetFromExpression(copy.expression(), context)
-               : getTargetFromFeature(copy.source(), context);
+      target = copy.expression() != null ? getTargetFromExpression(copy.expression(), context)
+                                         : getTargetFromFeature(copy.source(), context);
     }
+
     if (target != null) {
       builder
           .append(indent(level + 1))
@@ -507,6 +501,10 @@ public class ViewTypeSourceGenerator {
           .append("Optional.empty()")
           .append(",\n");
     }
+
+    GenFeature createdFeature =
+        viewtypeMetamodel.getGenFeature(targetClass.getEcoreClass(), feature.name());
+
     builder
         .append(indent(level + 1))
         .append(createdFeature.getQualifiedFeatureAccessor())
@@ -555,11 +553,9 @@ public class ViewTypeSourceGenerator {
       }
       first = false;
 
-      GenFeature feature =
-          getOriginMetamodel(current
-                                 .getEContainingClass()
-                                 .getEPackage()).getGenFeature(
-              current);
+      GenFeature feature = getOriginMetamodel(current
+                                                  .getEContainingClass()
+                                                  .getEPackage()).getGenFeature(current);
 
       builder
           .append(indent(level + 3))
@@ -582,10 +578,8 @@ public class ViewTypeSourceGenerator {
     importHelper.typeRef(FeatureTransform.class);
 
     String name = expressions.getMethodName(expression);
-    String expressionName = "EXPRESSION_" + name;
     String doGetName = "doGet_" + name;
     String doPutName = "doPut_" + name;
-    String doUpdatingGetName = "doUpdatingGet_" + name;
 
     builder
         .append(indent(level))
@@ -599,15 +593,12 @@ public class ViewTypeSourceGenerator {
         .append(indent(level + 1))
         .append("this::")
         .append(doPutName)
-        .append(",\n");
-    builder
-        .append(indent(level + 1))
-        .append("this::")
-        .append(doUpdatingGetName)
         .append("\n");
     builder
         .append(indent(level))
         .append(")");
+
+    String expressionName = "EXPRESSION_" + name;
 
     StringBuilder declaration = new StringBuilder();
 
@@ -649,28 +640,9 @@ public class ViewTypeSourceGenerator {
         .append("    protected FeatureBinding ")
         .append(doPutName)
         .append(
-            "(EChange<EObject> viewChange, FeatureBinding feature, ObjectBinding subjectBinding, " +
-                "ValueUpdateBinding value, PutContext context) {\n");
+            "(EChange<EObject> viewChange, FeatureBinding feature, ObjectBinding subjectBinding, "
+                + "ValueUpdateBinding value, PutContext context) {\n");
     declaration.append("        throw new UnsupportedOperationException();\n");
-    declaration.append("    }\n\n");
-
-    importHelper.typeRef(FeatureBinding.class);
-    importHelper.typeRef(ObjectBinding.class);
-    importHelper.typeRef(EChange.class);
-    importHelper.typeRef(GetContext.class);
-    importHelper.typeRef(ValueBinding.class);
-
-    declaration
-        .append("    protected FeatureBinding ")
-        .append(doUpdatingGetName)
-        .append(
-            "(FeatureBinding previous, ObjectBinding subjectBinding, EChange<EObject> " +
-                "originChange, GetContext context) {\n");
-    declaration
-        .append(
-            "        return FeatureBinding.ofOriginBinding(subjectBinding, ValueBinding.ofDynamic(")
-        .append(expressionName)
-        .append(".apply(subjectBinding)));\n");
     declaration.append("    }");
 
     declarations.add(declaration.toString());
@@ -748,12 +720,10 @@ public class ViewTypeSourceGenerator {
         for (int index = 0; index < parameters.size(); index++) {
           AQRFrom parameter = parameters.get(index);
 
-          if (Objects.equals(formalParameter.getName(), parameter.alias()) ||
-              (parameters.size() == 1 &&
-                  formalParameter
-                      .getName()
-                      .equals(Constants.ExpressionSelfReference)
-              )) {
+          if (Objects.equals(formalParameter.getName(), parameter.alias()) || (
+              parameters.size() == 1 && formalParameter
+                  .getName()
+                  .equals(Constants.ExpressionSelfReference))) {
             return new FeatureSource.Target(index, features.reversed());
           }
         }
@@ -792,11 +762,8 @@ public class ViewTypeSourceGenerator {
   }
 
   public String getFileName() {
-    return String.format("%s/%s%s",
-                         NamingGenerator.getPackagePath(aqr),
-                         getClassName(),
-                         JavaFileGenerator.JAVA_FILE_EXTENSION
-                        );
+    return String.format("%s/%s%s", NamingGenerator.getPackagePath(aqr), getClassName(),
+                         JavaFileGenerator.JAVA_FILE_EXTENSION);
   }
 
   private String getPackageName() {

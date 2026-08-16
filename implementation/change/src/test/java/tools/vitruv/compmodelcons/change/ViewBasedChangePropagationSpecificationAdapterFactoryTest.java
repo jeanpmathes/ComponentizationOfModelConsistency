@@ -32,8 +32,7 @@ class ViewBasedChangePropagationSpecificationAdapterFactoryTest {
     ChangePropagationSpecification result =
         ViewChangePropagationSpecificationAdapterFactory.INSTANCE.createInternal(Optional.empty(),
                                                                                  specification,
-                                                                                 Optional.empty(),
-                                                                                 ChangeDeterminationMode.CHANGE_DERIVATION);
+                                                                                 Optional.empty());
 
     assertEquals(a, result.getSourceMetamodelDescriptor());
     assertEquals(b, result.getTargetMetamodelDescriptor());
@@ -58,8 +57,7 @@ class ViewBasedChangePropagationSpecificationAdapterFactoryTest {
 
     ChangePropagationSpecification result =
         ViewChangePropagationSpecificationAdapterFactory.INSTANCE.createInternal(
-            Optional.of(sourceViewType), specification, Optional.of(targetViewType),
-            ChangeDeterminationMode.CHANGE_DERIVATION);
+            Optional.of(sourceViewType), specification, Optional.of(targetViewType));
 
     assertEquals(ab, result.getSourceMetamodelDescriptor());
     assertEquals(cd, result.getTargetMetamodelDescriptor());
@@ -75,8 +73,7 @@ class ViewBasedChangePropagationSpecificationAdapterFactoryTest {
     ChangePropagationSpecification result =
         ViewChangePropagationSpecificationAdapterFactory.INSTANCE.createRemote(Optional.empty(),
                                                                                specification,
-                                                                               Optional.empty(),
-                                                                               ChangeDeterminationMode.CHANGE_DERIVATION);
+                                                                               Optional.empty());
 
     assertEquals(a, result.getSourceMetamodelDescriptor());
     assertEquals(b, result.getTargetMetamodelDescriptor());
@@ -101,8 +98,7 @@ class ViewBasedChangePropagationSpecificationAdapterFactoryTest {
 
     ChangePropagationSpecification result =
         ViewChangePropagationSpecificationAdapterFactory.INSTANCE.createRemote(
-            Optional.of(sourceViewType), specification, Optional.of(targetViewType),
-            ChangeDeterminationMode.CHANGE_DERIVATION);
+            Optional.of(sourceViewType), specification, Optional.of(targetViewType));
 
     assertEquals(ab, result.getSourceMetamodelDescriptor());
     assertEquals(cd, result.getTargetMetamodelDescriptor());

@@ -121,11 +121,6 @@ public class Project {
     }
   }
 
-  public Root.ViewBinding doUpdatingGet(Root.ViewBinding previous, EChange<EObject> originChange,
-                                        GetContext context) {
-    return null;
-  }
-
   private List<FeatureBinding> createUninitializedFeatureBindings() {
     List<FeatureBinding> result = new ArrayList<>(features.size());
 

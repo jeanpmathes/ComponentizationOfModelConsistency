@@ -144,10 +144,4 @@ public class Source implements OriginOperation {
 
     throw new IllegalArgumentException("Inappropriate change type: " + viewChange.getClass());
   }
-
-  @Override
-  public List<OriginBinding> doUpdatingGet(List<OriginBinding> previous,
-                                           EChange<EObject> originChange, GetContext context) {
-    return List.of();
-  }
 }

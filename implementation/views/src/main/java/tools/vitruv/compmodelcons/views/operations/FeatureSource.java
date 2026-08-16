@@ -103,12 +103,6 @@ public class FeatureSource implements FeatureOriginOperation {
                                                                              .eStructuralFeature()));
   }
 
-  @Override
-  public FeatureBinding doUpdatingGet(FeatureBinding previous, ObjectBinding subjectBinding,
-                                      EChange<EObject> originChange, GetContext context) {
-    return null;
-  }
-
   public record Target(int index, List<EStructuralFeature> features) {
     public static Target ofFirst(EStructuralFeature feature) {
       return new Target(0, List.of(feature));

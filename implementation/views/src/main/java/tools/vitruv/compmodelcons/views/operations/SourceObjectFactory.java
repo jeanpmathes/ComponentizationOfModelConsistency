@@ -13,5 +13,6 @@ public interface SourceObjectFactory {
         .getEFactoryInstance()
         .create(sourceClass));
   }
+
   EObject createOriginObject(EObject viewObject);
 }

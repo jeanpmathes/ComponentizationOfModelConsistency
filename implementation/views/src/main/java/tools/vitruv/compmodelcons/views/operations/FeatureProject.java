@@ -161,11 +161,6 @@ public class FeatureProject {
     return viewValue;
   }
 
-  public FeatureBinding doGet(FeatureBinding previous, EChange<EObject> originChange,
-                              GetContext context) {
-    return null;
-  }
-
   private record FeatureProjectBindingImpl(FeatureBinding originBinding, EObject viewSubjectObject,
                                            ValueBinding value) implements FeatureBinding {
 

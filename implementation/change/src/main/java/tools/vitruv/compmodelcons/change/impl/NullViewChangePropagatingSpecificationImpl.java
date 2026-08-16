@@ -8,7 +8,6 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.change.propagation.ChangePropagationObservable;
 import tools.vitruv.change.utils.ResourceAccess;
-import tools.vitruv.compmodelcons.change.ChangeDeterminationMode;
 import tools.vitruv.compmodelcons.change.ChangePropagatingViewTypeSpecification;
 import tools.vitruv.compmodelcons.change.ChangePropagationView;
 import tools.vitruv.compmodelcons.change.CorrespondenceModelAccess;
@@ -62,8 +61,7 @@ public class NullViewChangePropagatingSpecificationImpl
     @Override
     public List<EChange<EObject>> fitAndDetermineChanges(ResourceAccess changedOrigin,
                                                          CorrespondenceModelAccess changedCorrespondenceModel,
-                                                         List<EChange<EObject>> originChanges,
-                                                         ChangeDeterminationMode changeDeterminationMode) {
+                                                         List<EChange<EObject>> originChanges) {
       return originChanges;
     }
 

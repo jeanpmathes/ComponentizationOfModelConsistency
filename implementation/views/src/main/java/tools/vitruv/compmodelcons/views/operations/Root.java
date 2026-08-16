@@ -257,12 +257,6 @@ public class Root {
       throw new UnsupportedOperationException(
           "Modification of the default, uncorresponding root is not supported");
     }
-
-    @Override
-    public List<OriginBinding> doUpdatingGet(List<OriginBinding> previous,
-                                             EChange<EObject> originChange, GetContext context) {
-      return List.of();
-    }
   }
 
   public static class ViewBinding {

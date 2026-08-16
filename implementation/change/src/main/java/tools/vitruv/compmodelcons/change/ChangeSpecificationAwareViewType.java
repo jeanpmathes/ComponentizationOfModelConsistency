@@ -166,31 +166,21 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
     }
 
     @Override
-    public List<EChange<EObject>> fitAndDetermineChanges(ResourceAccess changedOrigin,
-                                                         CorrespondenceModelAccess changedCorrespondenceModel,
-                                                         List<EChange<EObject>> originChanges,
-                                                         ChangeDeterminationMode changeDeterminationMode) {
+    public List<EChange<EObject>> fitAndDetermineChanges(
+        ResourceAccess changedOrigin,
+        CorrespondenceModelAccess changedCorrespondenceModel,
+        List<EChange<EObject>> originChanges) {
       List<EChange<EObject>> viewChanges;
 
-      switch (changeDeterminationMode) {
-        case CHANGE_DERIVATION -> {
-          StateBasedChangeResolutionStrategy stateBasedChangeResolutionStrategy =
-              getStateBasedChangeResolutionStrategy();
-
-          try (ChangePropagationViewImpl changedView = new ChangePropagationViewImpl(changedOrigin,
-                                                                                     changedCorrespondenceModel,
-                                                                                     viewUri, null,
-                                                                                     null)
-          ) {
-            viewChanges =
-                deriveAndApplyChangesToReach(changedView, stateBasedChangeResolutionStrategy);
-          } catch (Exception e) {
-            throw new RuntimeException(e);
-          }
-        }
-
-        default -> throw new UnsupportedOperationException(
-            "Unsupported change determination mode: " + changeDeterminationMode);
+      try (ChangePropagationViewImpl changedView
+               = new ChangePropagationViewImpl(changedOrigin,
+                                               changedCorrespondenceModel,
+                                               viewUri, null, null)
+      ) {
+        viewChanges =
+            deriveAndApplyChangesToReach(changedView, getStateBasedChangeResolutionStrategy());
+      } catch (Exception e) {
+        throw new RuntimeException(e);
       }
 
       if (correspondenceResolver != null) {

@@ -136,12 +136,6 @@ public class Join implements OriginOperation {
     throw new IllegalArgumentException("Inappropriate change type: " + viewChange.getClass());
   }
 
-  @Override
-  public List<OriginBinding> doUpdatingGet(List<OriginBinding> previous,
-                                           EChange<EObject> originChange, GetContext context) {
-    return List.of();
-  }
-
   public enum Type {
     INNER,
     LEFT

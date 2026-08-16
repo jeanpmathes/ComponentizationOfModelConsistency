@@ -11,7 +11,4 @@ public interface OriginOperation {
   List<OriginBinding> doGet(GetContext context);
 
   OriginBinding doPut(EChange<EObject> viewChange, OriginBinding target, PutContext context);
-
-  List<OriginBinding> doUpdatingGet(List<OriginBinding> previous, EChange<EObject> originChange,
-                                    GetContext context);
 }

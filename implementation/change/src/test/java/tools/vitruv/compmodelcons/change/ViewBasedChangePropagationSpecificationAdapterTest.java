@@ -112,8 +112,7 @@ class ViewBasedChangePropagationSpecificationAdapterTest {
                                                                           otherViewType.getOriginMetamodelDescriptor(),
                                                                           wrappingStrategy,
                                                                           targetViewType,
-                                                                          targetViewType.getOriginMetamodelDescriptor(),
-                                                                          ChangeDeterminationMode.CHANGE_DERIVATION));
+                                                                          targetViewType.getOriginMetamodelDescriptor()));
   }
 
   @Test
@@ -180,8 +179,7 @@ class ViewBasedChangePropagationSpecificationAdapterTest {
     return new ViewBasedChangePropagationSpecificationAdapter(sourceViewType,
                                                               sourceViewType.getOriginMetamodelDescriptor(),
                                                               wrappingStrategy, targetViewType,
-                                                              targetViewType.getOriginMetamodelDescriptor(),
-                                                              ChangeDeterminationMode.CHANGE_DERIVATION);
+                                                              targetViewType.getOriginMetamodelDescriptor());
   }
 
   private EObject setupOrigin(ResourceSet resourceSet, Path projectPath, String fileName,

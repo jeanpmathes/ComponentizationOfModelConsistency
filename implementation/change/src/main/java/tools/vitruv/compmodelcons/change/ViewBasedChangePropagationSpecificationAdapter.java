@@ -28,13 +28,10 @@ public class ViewBasedChangePropagationSpecificationAdapter
   private final ChangePropagationSpecificationWrappingStrategy specification;
   private final ChangePropagatingViewTypeSpecification targetViewType;
 
-  private final ChangeDeterminationMode changeDeterminationMode;
-
   ViewBasedChangePropagationSpecificationAdapter(
       ChangePropagatingViewTypeSpecification sourceViewType, MetamodelDescriptor sourceMetamodel,
       ChangePropagationSpecificationWrappingStrategy specification,
-      ChangePropagatingViewTypeSpecification targetViewType, MetamodelDescriptor targetMetamodel,
-      ChangeDeterminationMode changeDeterminationMode) {
+      ChangePropagatingViewTypeSpecification targetViewType, MetamodelDescriptor targetMetamodel) {
     super(sourceMetamodel, targetMetamodel);
 
     if (!sourceViewType
@@ -56,7 +53,6 @@ public class ViewBasedChangePropagationSpecificationAdapter
     this.sourceViewType = sourceViewType;
     this.specification = specification;
     this.targetViewType = targetViewType;
-    this.changeDeterminationMode = changeDeterminationMode;
   }
 
   private static Function<String, URI> createUriFactory(ResourceAccess changedOrigin,
@@ -116,7 +112,7 @@ public class ViewBasedChangePropagationSpecificationAdapter
     ) {
       List<EChange<EObject>> viewChanges =
           sourceView.fitAndDetermineChanges(changedOrigin, changedCorrespondenceModelAccess,
-                                            originChanges, changeDeterminationMode);
+                                            originChanges);
 
       var context =
           new ViewChangePropagationContext(sourceView, sourceViewType, targetView, targetViewType);

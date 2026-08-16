@@ -39,14 +39,4 @@ public class Filter implements OriginOperation {
 
     return origin.doPut(viewChange, target, context);
   }
-
-  @Override
-  public List<OriginBinding> doUpdatingGet(List<OriginBinding> previous,
-                                           EChange<EObject> originChange, GetContext context) {
-    return origin
-        .doUpdatingGet(previous, originChange, context)
-        .stream()
-        .filter(filter::evaluate)
-        .toList();
-  }
 }

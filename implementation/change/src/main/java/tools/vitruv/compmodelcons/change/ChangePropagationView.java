@@ -8,10 +8,10 @@ import tools.vitruv.change.utils.ResourceAccess;
 public interface ChangePropagationView extends AutoCloseable {
   ResourceAccess getViewResourceAccess();
 
-  List<EChange<EObject>> fitAndDetermineChanges(ResourceAccess changedOrigin,
-                                                CorrespondenceModelAccess changedCorrespondenceModel,
-                                                List<EChange<EObject>> originChanges,
-                                                ChangeDeterminationMode changeDeterminationMode);
+  List<EChange<EObject>> fitAndDetermineChanges(
+      ResourceAccess changedOrigin,
+      CorrespondenceModelAccess changedCorrespondenceModel,
+      List<EChange<EObject>> originChanges);
 
   CorrespondenceResolver getCorrespondenceResolver();
 
