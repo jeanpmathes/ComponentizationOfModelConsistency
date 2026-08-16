@@ -14,6 +14,9 @@ import tools.vitruv.compmodelcons.views.bindings.FeatureBinding;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
 
+/**
+ * Projects an {@see OriginOperation} into a view class.
+ */
 public class Project {
   private final EClass createdClass;
   private final OriginOperation origin;

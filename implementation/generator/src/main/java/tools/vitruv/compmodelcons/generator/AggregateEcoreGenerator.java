@@ -15,6 +15,10 @@ import org.eclipse.emf.mwe2.ecore.EcoreGenerator;
 import org.eclipse.emf.mwe2.runtime.workflow.IWorkflowComponent;
 import org.eclipse.emf.mwe2.runtime.workflow.IWorkflowContext;
 
+/**
+ * Useful replacement for the standard {@link EcoreGenerator} for when not all metamodels are known
+ * at the time of writing the build description. Can be used nearly as a drop-in replacement.
+ */
 public class AggregateEcoreGenerator implements IWorkflowComponent {
   private final List<EcoreGenerator> generators = new ArrayList<>();
 

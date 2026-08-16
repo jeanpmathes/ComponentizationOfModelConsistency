@@ -3,7 +3,7 @@ package tools.vitruv.compmodelcons.views.bindings;
 import java.util.List;
 import org.eclipse.emf.ecore.EObject;
 
-public interface FeatureBinding {
+public interface FeatureBinding extends FeatureOriginBinding {
   static FeatureBinding ofOriginObject(EObject eObject, ValueBinding value) {
     return new FeatureBinding() {
       @Override
@@ -23,28 +23,5 @@ public interface FeatureBinding {
     };
   }
 
-  static FeatureBinding ofOriginBinding(OriginBinding originBinding, ValueBinding value) {
-    return new FeatureBinding() {
-      @Override
-      public List<EObject> originSubjectObjects() {
-        return originBinding.originObjects();
-      }
-
-      @Override
-      public EObject viewSubjectObject() {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public ValueBinding value() {
-        return value;
-      }
-    };
-  }
-
-  List<EObject> originSubjectObjects();
-
   EObject viewSubjectObject();
-
-  ValueBinding value();
 }

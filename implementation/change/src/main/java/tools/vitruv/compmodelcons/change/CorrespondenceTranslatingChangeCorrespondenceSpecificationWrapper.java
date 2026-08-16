@@ -9,7 +9,7 @@ import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
 import tools.vitruv.change.interaction.UserInteractor;
 import tools.vitruv.change.propagation.ModelRepositorySnapshot;
 
-public interface ChangePropagationSpecificationWrappingStrategy {
+public interface CorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper {
   MetamodelDescriptor getSourceMetamodelDescriptor();
 
   MetamodelDescriptor getTargetMetamodelDescriptor();

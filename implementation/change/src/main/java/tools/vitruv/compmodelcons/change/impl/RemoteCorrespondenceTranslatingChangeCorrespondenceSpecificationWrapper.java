@@ -10,13 +10,13 @@ import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.view.CorrespondenceModelView;
 import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
 import tools.vitruv.change.propagation.ChangePropagationSpecification;
-import tools.vitruv.compmodelcons.change.AbstractChangePropagationSpecificationWrappingStrategy;
+import tools.vitruv.compmodelcons.change.AbstractCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper;
 import tools.vitruv.compmodelcons.change.CorrespondenceResolver;
 import tools.vitruv.compmodelcons.change.ViewChangePropagationContext;
 
-public class RemoteChangePropagationSpecificationWrappingStrategy
-    extends AbstractChangePropagationSpecificationWrappingStrategy {
-  public RemoteChangePropagationSpecificationWrappingStrategy(
+public class RemoteCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper
+    extends AbstractCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper {
+  public RemoteCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper(
       ChangePropagationSpecification specification) {
     super(specification);
   }

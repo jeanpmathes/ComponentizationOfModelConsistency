@@ -28,12 +28,23 @@ import tools.vitruv.framework.views.impl.AbstractViewType;
 import tools.vitruv.framework.views.impl.IdentityMappingViewType;
 import tools.vitruv.framework.views.impl.ModifiableView;
 
+/**
+ * A Vitruvius {@link ViewType} based on operations.
+ * Compare {@link IdentityMappingViewType}, which has a similar structure.
+ */
 public abstract class OperationBasedViewType extends AbstractViewType<AllSelector, HierarchicalId> {
   private final List<EPackage> originMetamodels;
   private final IdentityMappingViewType sourceModelsViewType;
 
   private Root structure;
 
+  /**
+   * Creates a new view type.
+   *
+   * @param name              the name of the view type
+   * @param originMetamodels  the metamodels of the origin models
+   * @param viewTypeMetamodel the metamodel of the view type
+   */
   public OperationBasedViewType(String name, List<EPackage> originMetamodels,
                                 EPackage viewTypeMetamodel) {
     super(name, viewTypeMetamodel);
@@ -47,10 +58,22 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
     return originMetamodels;
   }
 
+  /**
+   * Creates an URI that can be used for the in-memory resource of the view if no other URI is
+   * available.
+   *
+   * @return the URI
+   */
   public URI createPlaceholderViewUri() {
     return URI.createURI(String.format("view:/%s", getViewResourceName()));
   }
 
+  /**
+   * Create an URI for a resource using a given factory.
+   *
+   * @param uriFactory the factory to use
+   * @return the URI
+   */
   public URI createUri(Function<String, URI> uriFactory) {
     return uriFactory.apply(getViewResourceName());
   }
@@ -59,8 +82,19 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
     return String.format("default.%s", getMetamodel().getNsPrefix());
   }
 
+  /**
+   * Override this method to create the operation-based structure of the view.
+   * This method is called only once.
+   *
+   * @return the structure of the view
+   */
   protected abstract Root createStructure();
 
+  /**
+   * Get the operation-based structure of the view.
+   *
+   * @return the structure of the view
+   */
   protected Root getStructure() {
     if (structure == null) {
       structure = createStructure();

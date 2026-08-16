@@ -25,12 +25,12 @@ import tools.vitruv.dsls.reactions.runtime.helper.PersistenceHelper;
 public class ViewBasedChangePropagationSpecificationAdapter
     extends AbstractChangePropagationSpecification implements ChangePropagationSpecification {
   private final ChangePropagatingViewTypeSpecification sourceViewType;
-  private final ChangePropagationSpecificationWrappingStrategy specification;
+  private final CorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper specification;
   private final ChangePropagatingViewTypeSpecification targetViewType;
 
   ViewBasedChangePropagationSpecificationAdapter(
       ChangePropagatingViewTypeSpecification sourceViewType, MetamodelDescriptor sourceMetamodel,
-      ChangePropagationSpecificationWrappingStrategy specification,
+      CorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper specification,
       ChangePropagatingViewTypeSpecification targetViewType, MetamodelDescriptor targetMetamodel) {
     super(sourceMetamodel, targetMetamodel);
 

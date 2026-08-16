@@ -7,15 +7,15 @@ import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.view.CorrespondenceModelView;
 import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
-import tools.vitruv.compmodelcons.change.AbstractChangePropagationSpecificationWrappingStrategy;
+import tools.vitruv.compmodelcons.change.AbstractCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper;
 import tools.vitruv.compmodelcons.change.ViewChangePropagationContext;
 import tools.vitruv.dsls.reactions.runtime.correspondence.CorrespondenceFactory;
 import tools.vitruv.dsls.reactions.runtime.correspondence.ReactionsCorrespondence;
 import tools.vitruv.dsls.reactions.runtime.reactions.AbstractReactionsChangePropagationSpecification;
 
-public class InternalReactionsChangePropagationSpecificationWrappingStrategy
-    extends AbstractChangePropagationSpecificationWrappingStrategy {
-  public InternalReactionsChangePropagationSpecificationWrappingStrategy(
+public class InternalCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper
+    extends AbstractCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper {
+  public InternalCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper(
       AbstractReactionsChangePropagationSpecification specification) {
     super(specification);
   }

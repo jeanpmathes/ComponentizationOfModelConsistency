@@ -21,7 +21,7 @@ import tools.vitruv.compmodelcons.generator.tools.Metamodel;
 import tools.vitruv.compmodelcons.generator.tools.NamingGenerator;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
-import tools.vitruv.compmodelcons.views.bindings.FeatureBinding;
+import tools.vitruv.compmodelcons.views.bindings.FeatureOriginBinding;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
 import tools.vitruv.compmodelcons.views.bindings.ValueBinding;
@@ -46,6 +46,9 @@ import tools.vitruv.neojoin.aqr.AQRJoin;
 import tools.vitruv.neojoin.aqr.AQRSource;
 import tools.vitruv.neojoin.aqr.AQRTargetClass;
 
+/**
+ * Generates an operation-based view type based on a provided NeoJoin AQR.
+ */
 public class ViewTypeSourceGenerator {
   private final JavaImportHelper importHelper = new JavaImportHelper();
   private final List<String> declarations = new ArrayList<>();
@@ -612,23 +615,23 @@ public class ViewTypeSourceGenerator {
     appendExpression(declaration, 2, expression, context);
     declaration.append(";\n\n");
 
-    importHelper.typeRef(FeatureBinding.class);
+    importHelper.typeRef(FeatureOriginBinding.class);
     importHelper.typeRef(ObjectBinding.class);
     importHelper.typeRef(GetContext.class);
     importHelper.typeRef(ValueBinding.class);
 
     declaration
-        .append("    protected FeatureBinding ")
+        .append("    protected FeatureOriginBinding ")
         .append(doGetName)
         .append("(ObjectBinding subjectBinding, GetContext context) {\n");
     declaration
-        .append(
-            "        return FeatureBinding.ofOriginBinding(subjectBinding, ValueBinding.ofDynamic(")
+        .append("        return FeatureOriginBinding.ofOriginBinding(subjectBinding, ValueBinding"
+                    + ".ofDynamic(")
         .append(expressionName)
         .append(".apply(subjectBinding)));\n");
     declaration.append("    }\n\n");
 
-    importHelper.typeRef(FeatureBinding.class);
+    importHelper.typeRef(FeatureOriginBinding.class);
     importHelper.typeRef(EChange.class);
     importHelper.typeRef(EObject.class);
     importHelper.typeRef(ObjectBinding.class);
@@ -637,11 +640,10 @@ public class ViewTypeSourceGenerator {
     importHelper.typeRef(UnsupportedOperationException.class);
 
     declaration
-        .append("    protected FeatureBinding ")
+        .append("    protected FeatureOriginBinding ")
         .append(doPutName)
-        .append(
-            "(EChange<EObject> viewChange, FeatureBinding feature, ObjectBinding subjectBinding, "
-                + "ValueUpdateBinding value, PutContext context) {\n");
+        .append("(EChange<EObject> viewChange, FeatureOriginBinding feature, ObjectBinding "
+                    + "subjectBinding, ValueUpdateBinding value, PutContext context) {\n");
     declaration.append("        throw new UnsupportedOperationException();\n");
     declaration.append("    }");
 

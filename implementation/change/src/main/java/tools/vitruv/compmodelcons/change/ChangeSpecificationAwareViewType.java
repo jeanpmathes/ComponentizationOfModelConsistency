@@ -39,6 +39,9 @@ import tools.vitruv.compmodelcons.views.internal.ViewResourceAccess;
 import tools.vitruv.compmodelcons.views.internal.impl.InternalViewImpl;
 import tools.vitruv.compmodelcons.views.internal.impl.ResourceAccessWrappingOriginResourceAccess;
 
+/**
+ * Abstract base class for view types that can participate in change propagation.
+ */
 public abstract class ChangeSpecificationAwareViewType extends OperationBasedViewType
     implements ChangePropagatingViewTypeSpecification {
   public ChangeSpecificationAwareViewType(String name, List<EPackage> originMetamodels,
@@ -71,7 +74,6 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
   }
 
   private class ChangePropagationViewImpl implements ChangePropagationView {
-    private final ResourceAccess resourceAccess;
     private final OriginResourceAccess originResourceAccess;
     private final ViewResourceAccess viewResourceAccess;
     private final InternalViewImpl internalView;
@@ -82,9 +84,9 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                                      CorrespondenceModelAccess correspondenceModelAccess,
                                      URI viewUri, ChangePropagationObservable observable,
                                      ResourceAccess actualResourceAccess) {
-      this.resourceAccess = resourceAccess;
-      this.originResourceAccess = new ResourceAccessWrappingOriginResourceAccess(resourceAccess,
-                                                                                 correspondenceModelAccess.getResource());
+      this.originResourceAccess
+          = new ResourceAccessWrappingOriginResourceAccess(resourceAccess,
+                                                           correspondenceModelAccess.getResource());
       this.viewUri = this.originResourceAccess
           .getViewUriHint(getOriginMetamodels(), getMetamodel())
           .orElse(viewUri);
@@ -157,8 +159,8 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
               .fileExtension()
               .equals(getMetamodel().getNsPrefix())) {
             throw new IllegalArgumentException(
-                "View roots must be persisted using the view type metamodel's file extension (" +
-                    getMetamodel().getNsPrefix() + "), but was " + uri.fileExtension());
+                "View roots must be persisted using the view type metamodel's file extension ("
+                    + getMetamodel().getNsPrefix() + "), but was " + uri.fileExtension());
           }
           viewResourceAccess.registerRoot(eObject, uri);
         }
@@ -341,9 +343,8 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
 
       public void ensureNoUnresolvedViewIds() {
         if (!unresolvedHierarchicalIds.isEmpty()) {
-          throw new IllegalStateException(
-              "The following view IDs could not be resolved: " +
-                  unresolvedHierarchicalIds.keySet());
+          throw new IllegalStateException("The following view IDs could not be resolved: "
+                                              + unresolvedHierarchicalIds.keySet());
         }
       }
 
@@ -360,11 +361,10 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
         return correspondenceObject
             .eClass()
             .getEPackage()
-            .equals(ViewIdModelFactory.eINSTANCE.getViewIdModelPackage()) &&
-            correspondenceObject instanceof ViewId viewId &&
-            viewObjectToViewId
-                .inverse()
-                .containsKey(viewId);
+            .equals(ViewIdModelFactory.eINSTANCE.getViewIdModelPackage())
+            && correspondenceObject instanceof ViewId viewId && viewObjectToViewId
+            .inverse()
+            .containsKey(viewId);
       }
 
       @Override

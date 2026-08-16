@@ -22,6 +22,10 @@ import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
 
+/**
+ * The root of a view operation structure, and also responsible for managing the root elements of
+ * the view.
+ */
 public class Root {
   private final EClass rootClass;
   private final boolean isRootImplicit;

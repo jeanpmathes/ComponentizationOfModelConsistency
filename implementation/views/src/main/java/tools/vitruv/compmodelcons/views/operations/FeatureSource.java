@@ -9,14 +9,23 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.FeatureBinding;
+import tools.vitruv.compmodelcons.views.bindings.FeatureOriginBinding;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.bindings.ValueBinding;
 import tools.vitruv.compmodelcons.views.bindings.ValueUpdateBinding;
 
+/**
+ * An origin operation targeting a feature of an origin object.
+ */
 public class FeatureSource implements FeatureOriginOperation {
   private final Target target;
   private final boolean isSourceFeatureAContainmentFeature;
 
+  /**
+   * Creates a new feature source operation.
+   *
+   * @param target the target of the operation
+   */
   public FeatureSource(Target target) {
     assert !target.features.isEmpty();
 
@@ -34,7 +43,7 @@ public class FeatureSource implements FeatureOriginOperation {
     return target.get(subjectBinding);
   }
 
-  public FeatureBinding doPut(EChange<EObject> viewChange, FeatureBinding feature,
+  public FeatureBinding doPut(EChange<EObject> viewChange, FeatureOriginBinding feature,
                               ObjectBinding subjectBinding, ValueUpdateBinding value,
                               PutContext context) {
     EObject subject = subjectBinding
@@ -103,6 +112,12 @@ public class FeatureSource implements FeatureOriginOperation {
                                                                              .eStructuralFeature()));
   }
 
+  /**
+   * The target of the operation.
+   *
+   * @param index    the index of the origin object in the join sequence
+   * @param features the chain of features to access, the last feature is the targeted feature
+   */
   public record Target(int index, List<EStructuralFeature> features) {
     public static Target ofFirst(EStructuralFeature feature) {
       return new Target(0, List.of(feature));

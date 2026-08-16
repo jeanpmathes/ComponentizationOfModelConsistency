@@ -1,7 +1,6 @@
 package tools.vitruv.compmodelcons.views.operations;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -21,7 +20,7 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.TypeInferringAtomicEChangeFactory;
 import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.PutContext;
-import tools.vitruv.compmodelcons.views.bindings.FeatureBinding;
+import tools.vitruv.compmodelcons.views.bindings.FeatureOriginBinding;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.bindings.ValueBinding;
 import tools.vitruv.compmodelcons.views.bindings.ValueUpdateBinding;
@@ -53,11 +52,10 @@ class FeatureSourceTest extends AbstractOperationTest {
         new FeatureSource(FeatureSource.Target.ofFirst(numEmployees));
 
     // Action
-    FeatureBinding result = operation.doGet(simpleBinding, context);
+    FeatureOriginBinding result = operation.doGet(simpleBinding, context);
 
     // Assertions
     assertEquals(new ValueBinding.Single(numEmployeesValue), result.value());
-    assertThrows(UnsupportedOperationException.class, result::viewSubjectObject);
     assertEquals(1, result
         .originSubjectObjects()
         .size());
@@ -93,7 +91,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         new FeatureSource(FeatureSource.Target.ofFirst(numEmployees));
 
     // Pre-Action Get
-    FeatureBinding result = operation.doGet(simpleBinding, context);
+    FeatureOriginBinding result = operation.doGet(simpleBinding, context);
 
     // Pre-Action Change
     simple.eSet(numberAttribute, numEmployeesValue + 3);
@@ -137,7 +135,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         new FeatureSource(FeatureSource.Target.ofFirst(restaurantsReference));
 
     // Pre-Action Get
-    FeatureBinding result = operation.doGet(simpleBinding, context);
+    FeatureOriginBinding result = operation.doGet(simpleBinding, context);
 
     // Pre-Action Change
     EObject inserted = DynamicModels.createEObject(referencedClass);
@@ -193,7 +191,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         new FeatureSource(FeatureSource.Target.ofFirst(restaurantsReference));
 
     // Pre-Action Get
-    FeatureBinding result = operation.doGet(simpleBinding, context);
+    FeatureOriginBinding result = operation.doGet(simpleBinding, context);
 
     // Pre-Action Change
     EObject removed = DynamicModels.createEObject(restaurantClass);
@@ -245,7 +243,7 @@ class FeatureSourceTest extends AbstractOperationTest {
         new FeatureSource(FeatureSource.Target.ofFirst(numEmployees));
 
     // Pre-Action Get
-    FeatureBinding result = operation.doGet(simpleBinding, context);
+    FeatureOriginBinding result = operation.doGet(simpleBinding, context);
 
     // Pre-Action Change
     simple.eUnset(numberAttribute);

@@ -10,11 +10,11 @@ import tools.vitruv.change.interaction.UserInteractor;
 import tools.vitruv.change.propagation.ChangePropagationSpecification;
 import tools.vitruv.change.propagation.ModelRepositorySnapshot;
 
-public abstract class AbstractChangePropagationSpecificationWrappingStrategy
-    implements ChangePropagationSpecificationWrappingStrategy {
+public abstract class AbstractCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper
+    implements CorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper {
   private final ChangePropagationSpecification specification;
 
-  public AbstractChangePropagationSpecificationWrappingStrategy(
+  public AbstractCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper(
       ChangePropagationSpecification specification) {
     if (specification instanceof ViewBasedChangePropagationSpecificationAdapter) {
       throw new IllegalArgumentException(

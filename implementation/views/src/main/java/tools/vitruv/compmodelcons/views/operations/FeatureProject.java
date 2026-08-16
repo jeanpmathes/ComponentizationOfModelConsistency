@@ -14,16 +14,28 @@ import tools.vitruv.change.atomic.feature.single.ReplaceSingleValuedFeatureEChan
 import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.FeatureBinding;
+import tools.vitruv.compmodelcons.views.bindings.FeatureOriginBinding;
 import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.bindings.ValueBinding;
 import tools.vitruv.compmodelcons.views.bindings.ValueUpdateBinding;
 
+/**
+ * Projects from an {@see FeatureOriginOperation} to a view feature.
+ * This maps to a view feature declaration.
+ */
 public class FeatureProject {
   private final Optional<Integer> sourceIndex;
   private final EStructuralFeature createdFeature;
   private final boolean isReference;
   private final FeatureOriginOperation origin;
 
+  /**
+   * Creates a new feature project operation.
+   *
+   * @param sourceIndex    an optional source index in the sequence of joins
+   * @param createdFeature the feature that is created by this operation
+   * @param origin         the origin operation to project from
+   */
   public FeatureProject(Optional<Integer> sourceIndex, EStructuralFeature createdFeature,
                         FeatureOriginOperation origin) {
     this.sourceIndex = sourceIndex;
@@ -37,7 +49,7 @@ public class FeatureProject {
   }
 
   public FeatureBinding doGet(ObjectBinding subject, GetContext context) {
-    FeatureBinding originFeature = origin.doGet(subject, context);
+    FeatureOriginBinding originFeature = origin.doGet(subject, context);
 
     if (originFeature.value() instanceof ValueBinding.Unset) {
       subject
@@ -70,7 +82,7 @@ public class FeatureProject {
   }
 
   public FeatureBinding initializeBindingFromView(ObjectBinding subject, PutContext context) {
-    FeatureBinding originFeature = origin.doGet(subject, context);
+    FeatureOriginBinding originFeature = origin.doGet(subject, context);
     return new FeatureProjectBindingImpl(originFeature, subject.viewObject(),
                                          ValueBinding.ofFeature(subject.viewObject(),
                                                                 createdFeature));
@@ -80,7 +92,7 @@ public class FeatureProject {
                               ObjectBinding subject, PutContext context) {
     FeatureProjectBindingImpl binding = (FeatureProjectBindingImpl) feature;
 
-    FeatureBinding originBinding = null;
+    FeatureOriginBinding originBinding = null;
 
     if (sourceIndex.isPresent()) {
       originBinding = put(sourceIndex.get(), change, binding, subject, context);
@@ -106,7 +118,8 @@ public class FeatureProject {
                                                                 createdFeature));
   }
 
-  private FeatureBinding put(int index, EChange<EObject> change, FeatureProjectBindingImpl binding,
+  private FeatureOriginBinding put(int index, EChange<EObject> change,
+                                   FeatureProjectBindingImpl binding,
                              ObjectBinding subject, PutContext context) {
     ValueUpdateBinding value = switch (change) {
       case ReplaceSingleValuedFeatureEChange<EObject, ?, ?> replaceSingleValuedFeatureEChange ->
@@ -161,9 +174,9 @@ public class FeatureProject {
     return viewValue;
   }
 
-  private record FeatureProjectBindingImpl(FeatureBinding originBinding, EObject viewSubjectObject,
+  private record FeatureProjectBindingImpl(FeatureOriginBinding originBinding,
+                                           EObject viewSubjectObject,
                                            ValueBinding value) implements FeatureBinding {
-
     @Override
     public List<EObject> originSubjectObjects() {
       return originBinding.originSubjectObjects();

@@ -11,6 +11,10 @@ import tools.vitruv.neojoin.ast.ViewTypeDefinition;
 import tools.vitruv.neojoin.jvmmodel.ExpressionHelper;
 import tools.vitruv.neojoin.jvmmodel.TypeResolutionException;
 
+/**
+ * Generates the source code for the expression-holding class created by NeoJoin.
+ * For each XBase expression in the view, this contains a method implementing that expression.
+ */
 public class ViewTypeExpressionSourceGenerator implements ExpressionResolver {
   private final ExpressionHelper expressionHelper;
 
@@ -27,8 +31,7 @@ public class ViewTypeExpressionSourceGenerator implements ExpressionResolver {
       JvmModelGenerator jvmModelGenerator,
       IGeneratorConfigProvider generatorConfigProvider,
       IJvmModelAssociations jvmModelAssociations,
-      ILogicalContainerProvider logicalContainerProvider
-                                          ) {
+      ILogicalContainerProvider logicalContainerProvider) {
     this.expressionHelper = expressionHelper;
 
     this.jvmModelGenerator = jvmModelGenerator;

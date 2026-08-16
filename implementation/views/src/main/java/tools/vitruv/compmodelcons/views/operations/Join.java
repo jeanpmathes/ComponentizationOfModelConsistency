@@ -20,6 +20,10 @@ import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
 import tools.vitruv.compmodelcons.views.conditions.Condition;
 
+/**
+ * An origin operation that joins another origin operation with elements of a specified target
+ * class.
+ */
 public class Join implements OriginOperation {
   private final EClass sourceClass;
   private final SourceObjectFactory sourceObjectFactory;

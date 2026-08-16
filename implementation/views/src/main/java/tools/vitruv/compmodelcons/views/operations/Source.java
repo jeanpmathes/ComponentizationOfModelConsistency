@@ -14,6 +14,9 @@ import tools.vitruv.compmodelcons.views.GetContext;
 import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
 
+/**
+ * An origin operation that provides the origin objects of a specified class.
+ */
 public class Source implements OriginOperation {
   private final EClass sourceClass;
   private final SourceObjectFactory sourceObjectFactory;

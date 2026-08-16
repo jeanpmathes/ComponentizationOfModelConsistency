@@ -9,6 +9,9 @@ import tools.vitruv.compmodelcons.views.PutContext;
 import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
 import tools.vitruv.compmodelcons.views.conditions.Condition;
 
+/**
+ * An origin operation that filters the outputs of an inner origin operation based on a condition.
+ */
 public class Filter implements OriginOperation {
   private final OriginOperation origin;
   private final Condition filter;
