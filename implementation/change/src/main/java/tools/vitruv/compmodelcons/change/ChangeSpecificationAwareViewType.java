@@ -4,13 +4,13 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Sets;
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.compare.utils.UseIdentifiers;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.hid.HierarchicalId;
 import tools.vitruv.change.atomic.hid.internal.HierarchicalIdResolver;
+import tools.vitruv.change.changederivation.StateBasedChangeResolutionStrategy;
 import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.change.composite.description.VitruviusChangeFactory;
@@ -18,6 +18,7 @@ import tools.vitruv.change.composite.description.VitruviusChangeResolverFactory;
 import tools.vitruv.change.propagation.ChangePropagationObservable;
 import tools.vitruv.change.propagation.ModelSnapshot;
 import tools.vitruv.change.utils.ResourceAccess;
+import tools.vitruv.compmodelcons.change.impl.RootPreservingStateBasedChangeResolutionStrategy;
 import tools.vitruv.compmodelcons.change.viewid.model.ViewId;
 import tools.vitruv.compmodelcons.change.viewid.model.ViewIdModel;
 import tools.vitruv.compmodelcons.change.viewid.model.ViewIdModelFactory;
@@ -28,8 +29,6 @@ import tools.vitruv.compmodelcons.views.internal.OriginResourceAccess;
 import tools.vitruv.compmodelcons.views.internal.ViewResourceAccess;
 import tools.vitruv.compmodelcons.views.internal.impl.InternalViewImpl;
 import tools.vitruv.compmodelcons.views.internal.impl.ResourceAccessWrappingOriginResourceAccess;
-import tools.vitruv.framework.views.changederivation.DefaultStateBasedChangeResolutionStrategy;
-import tools.vitruv.framework.views.changederivation.StateBasedChangeResolutionStrategy;
 
 import java.util.*;
 import java.util.function.Function;
@@ -180,7 +179,7 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
         }
 
         private StateBasedChangeResolutionStrategy getStateBasedChangeResolutionStrategy() {
-            return new DefaultStateBasedChangeResolutionStrategy(UseIdentifiers.WHEN_AVAILABLE);
+            return new RootPreservingStateBasedChangeResolutionStrategy();
         }
 
         private List<EChange<EObject>> deriveAndApplyChangesToReach(ChangePropagationViewImpl changedView, StateBasedChangeResolutionStrategy stateBasedChangeResolutionStrategy) {
