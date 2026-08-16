@@ -1,66 +1,86 @@
 package tools.vitruv.compmodelcons.views.impl;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+import java.util.Set;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EcoreFactory;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 class EditableViewCorrespondencesImplTest {
-    private final EditableViewCorrespondencesImpl correspondences = new EditableViewCorrespondencesImpl();
+  private final EditableViewCorrespondencesImpl correspondences =
+      new EditableViewCorrespondencesImpl();
 
-    @Test
-    public void testAddCorrespondence() {
-        EObject originObject1 = EcoreFactory.eINSTANCE.createEObject();
-        EObject originObject2 = EcoreFactory.eINSTANCE.createEObject();
-        EObject viewObject = EcoreFactory.eINSTANCE.createEObject();
+  @Test
+  public void testAddCorrespondence() {
+    EObject originObject1 = EcoreFactory.eINSTANCE.createEObject();
+    EObject originObject2 = EcoreFactory.eINSTANCE.createEObject();
+    EObject viewObject = EcoreFactory.eINSTANCE.createEObject();
 
-        correspondences.addCorrespondence(List.of(originObject1, originObject2), viewObject);
+    correspondences.addCorrespondence(List.of(originObject1, originObject2), viewObject);
 
-        assertTrue(correspondences.correspond(List.of(originObject1, originObject2), viewObject));
-        assertFalse(correspondences.correspond(List.of(originObject1), viewObject));
+    assertTrue(correspondences.correspond(List.of(originObject1, originObject2), viewObject));
+    assertFalse(correspondences.correspond(List.of(originObject1), viewObject));
 
-        assertEquals(List.of(originObject1, originObject2), correspondences.getCorrespondingOriginObjectsForViewObject(viewObject));
-        assertEquals(viewObject, correspondences.getCorrespondingViewObjectForOriginObjects(List.of(originObject1, originObject2), viewObject.eClass()));
-        assertEquals(Set.of(viewObject), correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject1, viewObject.eClass()));
-        assertEquals(Set.of(viewObject), correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject2, viewObject.eClass()));
-    }
+    assertEquals(List.of(originObject1, originObject2),
+                 correspondences.getCorrespondingOriginObjectsForViewObject(viewObject));
+    assertEquals(viewObject, correspondences.getCorrespondingViewObjectForOriginObjects(
+        List.of(originObject1, originObject2), viewObject.eClass()));
+    assertEquals(Set.of(viewObject),
+                 correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject1,
+                                                                                   viewObject.eClass()));
+    assertEquals(Set.of(viewObject),
+                 correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject2,
+                                                                                   viewObject.eClass()));
+  }
 
-    @Test
-    public void testJoinCorrespondence() {
-        EObject originObject1 = EcoreFactory.eINSTANCE.createEObject();
-        EObject originObject2 = EcoreFactory.eINSTANCE.createEObject();
-        EObject viewObject = EcoreFactory.eINSTANCE.createEObject();
+  @Test
+  public void testJoinCorrespondence() {
+    EObject originObject1 = EcoreFactory.eINSTANCE.createEObject();
+    EObject originObject2 = EcoreFactory.eINSTANCE.createEObject();
+    EObject viewObject = EcoreFactory.eINSTANCE.createEObject();
 
-        correspondences.addCorrespondence(List.of(originObject1), viewObject);
-        correspondences.joinCorrespondence(List.of(originObject1), List.of(originObject2), viewObject);
+    correspondences.addCorrespondence(List.of(originObject1), viewObject);
+    correspondences.joinCorrespondence(List.of(originObject1), List.of(originObject2), viewObject);
 
-        assertTrue(correspondences.correspond(List.of(originObject1, originObject2), viewObject));
-        assertFalse(correspondences.correspond(List.of(originObject1), viewObject));
+    assertTrue(correspondences.correspond(List.of(originObject1, originObject2), viewObject));
+    assertFalse(correspondences.correspond(List.of(originObject1), viewObject));
 
-        assertEquals(List.of(originObject1, originObject2), correspondences.getCorrespondingOriginObjectsForViewObject(viewObject));
-        assertEquals(viewObject, correspondences.getCorrespondingViewObjectForOriginObjects(List.of(originObject1, originObject2), viewObject.eClass()));
-        assertEquals(Set.of(viewObject), correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject1, viewObject.eClass()));
-        assertEquals(Set.of(viewObject), correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject2, viewObject.eClass()));
-    }
+    assertEquals(List.of(originObject1, originObject2),
+                 correspondences.getCorrespondingOriginObjectsForViewObject(viewObject));
+    assertEquals(viewObject, correspondences.getCorrespondingViewObjectForOriginObjects(
+        List.of(originObject1, originObject2), viewObject.eClass()));
+    assertEquals(Set.of(viewObject),
+                 correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject1,
+                                                                                   viewObject.eClass()));
+    assertEquals(Set.of(viewObject),
+                 correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject2,
+                                                                                   viewObject.eClass()));
+  }
 
-    @Test
-    public void testUnjoinCorrespondence() {
-        EObject originObject1 = EcoreFactory.eINSTANCE.createEObject();
-        EObject originObject2 = EcoreFactory.eINSTANCE.createEObject();
-        EObject viewObject = EcoreFactory.eINSTANCE.createEObject();
+  @Test
+  public void testUnjoinCorrespondence() {
+    EObject originObject1 = EcoreFactory.eINSTANCE.createEObject();
+    EObject originObject2 = EcoreFactory.eINSTANCE.createEObject();
+    EObject viewObject = EcoreFactory.eINSTANCE.createEObject();
 
-        correspondences.addCorrespondence(List.of(originObject1, originObject2), viewObject);
-        correspondences.unjoinCorrespondence(List.of(originObject1, originObject2), List.of(originObject2), viewObject);
+    correspondences.addCorrespondence(List.of(originObject1, originObject2), viewObject);
+    correspondences.unjoinCorrespondence(List.of(originObject1, originObject2),
+                                         List.of(originObject2), viewObject);
 
-        assertTrue(correspondences.correspond(List.of(originObject1), viewObject));
-        assertFalse(correspondences.correspond(List.of(originObject1, originObject2), viewObject));
+    assertTrue(correspondences.correspond(List.of(originObject1), viewObject));
+    assertFalse(correspondences.correspond(List.of(originObject1, originObject2), viewObject));
 
-        assertEquals(List.of(originObject1), correspondences.getCorrespondingOriginObjectsForViewObject(viewObject));
-        assertEquals(viewObject, correspondences.getCorrespondingViewObjectForOriginObjects(List.of(originObject1), viewObject.eClass()));
-        assertEquals(Set.of(viewObject), correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject1, viewObject.eClass()));
-    }
+    assertEquals(List.of(originObject1),
+                 correspondences.getCorrespondingOriginObjectsForViewObject(viewObject));
+    assertEquals(viewObject,
+                 correspondences.getCorrespondingViewObjectForOriginObjects(List.of(originObject1),
+                                                                            viewObject.eClass()));
+    assertEquals(Set.of(viewObject),
+                 correspondences.getCorrespondingViewObjectForPartialOriginObjects(originObject1,
+                                                                                   viewObject.eClass()));
+  }
 }

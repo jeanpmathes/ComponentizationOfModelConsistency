@@ -1,17 +1,19 @@
 package tools.vitruv.compmodelcons.change;
 
+import java.util.List;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.utils.ResourceAccess;
 
-import java.util.List;
-
 public interface ChangePropagationView extends AutoCloseable {
-    ResourceAccess getViewResourceAccess();
+  ResourceAccess getViewResourceAccess();
 
-    List<EChange<EObject>> fitAndDetermineChanges(ResourceAccess changedOrigin, CorrespondenceModelAccess changedCorrespondenceModel, List<EChange<EObject>> originChanges, ChangeDeterminationMode changeDeterminationMode);
+  List<EChange<EObject>> fitAndDetermineChanges(ResourceAccess changedOrigin,
+                                                CorrespondenceModelAccess changedCorrespondenceModel,
+                                                List<EChange<EObject>> originChanges,
+                                                ChangeDeterminationMode changeDeterminationMode);
 
-    CorrespondenceResolver getCorrespondenceResolver();
+  CorrespondenceResolver getCorrespondenceResolver();
 
-    void commit();
+  void commit();
 }

@@ -6,7 +6,7 @@ public record ViewChangePropagationContext(ChangePropagationView sourceView,
                                            ChangePropagatingViewTypeSpecification sourceViewType,
                                            ChangePropagationView targetView,
                                            ChangePropagatingViewTypeSpecification targetViewType) {
-    public ResourceAccess getResourceAccess() {
-        return targetView.getViewResourceAccess();
-    }
+  public ResourceAccess getResourceAccess() {
+    return targetView.getViewResourceAccess();
+  }
 }

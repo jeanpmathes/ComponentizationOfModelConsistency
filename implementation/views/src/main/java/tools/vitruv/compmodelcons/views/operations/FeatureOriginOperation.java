@@ -9,9 +9,11 @@ import tools.vitruv.compmodelcons.views.bindings.ObjectBinding;
 import tools.vitruv.compmodelcons.views.bindings.ValueUpdateBinding;
 
 public interface FeatureOriginOperation {
-    FeatureBinding doGet(ObjectBinding subjectBinding, GetContext context);
+  FeatureBinding doGet(ObjectBinding subjectBinding, GetContext context);
 
-    FeatureBinding doPut(EChange<EObject> viewChange, FeatureBinding feature, ObjectBinding subjectBinding, ValueUpdateBinding value, PutContext context);
+  FeatureBinding doPut(EChange<EObject> viewChange, FeatureBinding feature,
+                       ObjectBinding subjectBinding, ValueUpdateBinding value, PutContext context);
 
-    FeatureBinding doUpdatingGet(FeatureBinding previous, ObjectBinding subjectBinding, EChange<EObject> originChange, GetContext context);
+  FeatureBinding doUpdatingGet(FeatureBinding previous, ObjectBinding subjectBinding,
+                               EChange<EObject> originChange, GetContext context);
 }

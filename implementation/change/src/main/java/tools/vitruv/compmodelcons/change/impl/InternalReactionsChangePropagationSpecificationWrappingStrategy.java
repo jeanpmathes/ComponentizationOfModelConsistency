@@ -1,5 +1,8 @@
 package tools.vitruv.compmodelcons.change.impl;
 
+import java.util.List;
+import java.util.Set;
+import java.util.function.Supplier;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.view.CorrespondenceModelView;
@@ -10,56 +13,61 @@ import tools.vitruv.dsls.reactions.runtime.correspondence.CorrespondenceFactory;
 import tools.vitruv.dsls.reactions.runtime.correspondence.ReactionsCorrespondence;
 import tools.vitruv.dsls.reactions.runtime.reactions.AbstractReactionsChangePropagationSpecification;
 
-import java.util.List;
-import java.util.Set;
-import java.util.function.Supplier;
+public class InternalReactionsChangePropagationSpecificationWrappingStrategy
+    extends AbstractChangePropagationSpecificationWrappingStrategy {
+  public InternalReactionsChangePropagationSpecificationWrappingStrategy(
+      AbstractReactionsChangePropagationSpecification specification) {
+    super(specification);
+  }
 
-public class InternalReactionsChangePropagationSpecificationWrappingStrategy extends AbstractChangePropagationSpecificationWrappingStrategy {
-    public InternalReactionsChangePropagationSpecificationWrappingStrategy(AbstractReactionsChangePropagationSpecification specification) {
-        super(specification);
+  @Override
+  public EditableCorrespondenceModelView<Correspondence> wrapCorrespondenceModel(
+      EditableCorrespondenceModelView<Correspondence> correspondenceModel,
+      ViewChangePropagationContext context) {
+    var baseView = correspondenceModel.getEditableView(ReactionsCorrespondence.class,
+                                                       CorrespondenceFactory.eINSTANCE::createReactionsCorrespondence);
+    return new LiftedCorrespondenceModelView();
+  }
+
+  private static class LiftedCorrespondenceModelView
+      implements EditableCorrespondenceModelView<Correspondence> {
+
+    @Override
+    public Correspondence addCorrespondenceBetween(List<EObject> list, List<EObject> list1,
+                                                   String s) {
+      return null;
     }
 
     @Override
-    public EditableCorrespondenceModelView<Correspondence> wrapCorrespondenceModel(EditableCorrespondenceModelView<Correspondence> correspondenceModel, ViewChangePropagationContext context) {
-        var baseView = correspondenceModel.getEditableView(ReactionsCorrespondence.class, CorrespondenceFactory.eINSTANCE::createReactionsCorrespondence);
-        return new LiftedCorrespondenceModelView();
+    public Set<Correspondence> removeCorrespondencesBetween(List<EObject> list, List<EObject> list1,
+                                                            String s) {
+      return Set.of();
     }
 
-    private static class LiftedCorrespondenceModelView implements EditableCorrespondenceModelView<Correspondence> {
-
-        @Override
-        public Correspondence addCorrespondenceBetween(List<EObject> list, List<EObject> list1, String s) {
-            return null;
-        }
-
-        @Override
-        public Set<Correspondence> removeCorrespondencesBetween(List<EObject> list, List<EObject> list1, String s) {
-            return Set.of();
-        }
-
-        @Override
-        public <V extends Correspondence> EditableCorrespondenceModelView<V> getEditableView(Class<V> aClass, Supplier<V> supplier) {
-            return null;
-        }
-
-        @Override
-        public boolean hasCorrespondences(List<EObject> list) {
-            return false;
-        }
-
-        @Override
-        public Set<List<EObject>> getCorrespondingEObjects(List<EObject> list) {
-            return Set.of();
-        }
-
-        @Override
-        public Set<List<EObject>> getCorrespondingEObjects(List<EObject> list, String s) {
-            return Set.of();
-        }
-
-        @Override
-        public <V extends Correspondence> CorrespondenceModelView<V> getView(Class<V> aClass) {
-            return null;
-        }
+    @Override
+    public <V extends Correspondence> EditableCorrespondenceModelView<V> getEditableView(
+        Class<V> aClass, Supplier<V> supplier) {
+      return null;
     }
+
+    @Override
+    public boolean hasCorrespondences(List<EObject> list) {
+      return false;
+    }
+
+    @Override
+    public Set<List<EObject>> getCorrespondingEObjects(List<EObject> list) {
+      return Set.of();
+    }
+
+    @Override
+    public Set<List<EObject>> getCorrespondingEObjects(List<EObject> list, String s) {
+      return Set.of();
+    }
+
+    @Override
+    public <V extends Correspondence> CorrespondenceModelView<V> getView(Class<V> aClass) {
+      return null;
+    }
+  }
 }

@@ -14,26 +14,30 @@ import tools.vitruv.neojoin.QueryModelExpressionTypeConfiguration;
 import tools.vitruv.neojoin.jvmmodel.SourceTypeRegistryInitialization;
 
 public class NeoJoinVitruvBuildSetup extends NeoJoinStandaloneSetup {
-    public NeoJoinVitruvBuildSetup() {
-        super(getRegistry());
-    }
+  public NeoJoinVitruvBuildSetup() {
+    super(getRegistry());
+  }
 
-    private static EPackage.Registry getRegistry() {
-        // See Vitruv-DSL :: ReactionsLanguageStandaloneSetup
-        EcorePlugin.ExtensionProcessor.process(null);
+  private static EPackage.Registry getRegistry() {
+    // See Vitruv-DSL :: ReactionsLanguageStandaloneSetup
+    EcorePlugin.ExtensionProcessor.process(null);
 
-        return EPackage.Registry.INSTANCE;
-    }
+    return EPackage.Registry.INSTANCE;
+  }
 
-    @Override
-    protected @NonNull Module createModule() {
-        return Modules.override(super.createModule()).with(new AbstractModule() {
-            @Override
-            protected void configure() {
-                bind(IGenerator.class).to(NeoJoinVitruvGenerator.class);
-                bind(QueryModelExpressionTypeConfiguration.class).to(GeneratedQueryModelExpressionTypeConfiguration.class);
-                bind(SourceTypeRegistryInitialization.class).to(GeneratorBackedSourceTypeRegistryInitialization.class);
-            }
+  @Override
+  protected @NonNull Module createModule() {
+    return Modules
+        .override(super.createModule())
+        .with(new AbstractModule() {
+          @Override
+          protected void configure() {
+            bind(IGenerator.class).to(NeoJoinVitruvGenerator.class);
+            bind(QueryModelExpressionTypeConfiguration.class).to(
+                GeneratedQueryModelExpressionTypeConfiguration.class);
+            bind(SourceTypeRegistryInitialization.class).to(
+                GeneratorBackedSourceTypeRegistryInitialization.class);
+          }
         });
-    }
+  }
 }

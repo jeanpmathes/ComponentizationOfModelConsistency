@@ -1,5 +1,7 @@
 package tools.vitruv.compmodelcons.generator.backend;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EEnum;
@@ -16,47 +18,55 @@ import tools.vitruv.neojoin.jvmmodel.SourceTypeRegistryInitialization;
 import tools.vitruv.neojoin.jvmmodel.TypeRegistry;
 import tools.vitruv.neojoin.utils.EMFUtils;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+public class GeneratorBackedSourceTypeRegistryInitialization
+    implements SourceTypeRegistryInitialization {
+  @Override
+  public void initialize(@NonNull TypeRegistry typeRegistry, EPackage.@NonNull Registry registry,
+                         @NonNull JvmTypeReferenceBuilder typeReferenceBuilder,
+                         @NonNull ResourceSet resourceSet) {
+    Set<EPackage> remaining = new LinkedHashSet<>();
 
-public class GeneratorBackedSourceTypeRegistryInitialization implements SourceTypeRegistryInitialization {
-    @Override
-    public void initialize(@NonNull TypeRegistry typeRegistry, EPackage.@NonNull Registry registry, @NonNull JvmTypeReferenceBuilder typeReferenceBuilder, @NonNull ResourceSet resourceSet) {
-        Set<EPackage> remaining = new LinkedHashSet<>();
+    for (EPackage ePackage : EMFUtils.collectAvailablePackages(registry)) {
+      Metamodel metamodel = Metamodel.load(ePackage, resourceSet);
 
-        for (EPackage ePackage : EMFUtils.collectAvailablePackages(registry)) {
-            Metamodel metamodel = Metamodel.load(ePackage, resourceSet);
+      if (metamodel == null) {
+        remaining.add(ePackage);
+        continue;
+      }
 
-            if (metamodel == null) {
-                remaining.add(ePackage);
-                continue;
+      for (EClassifier eClassifier : ePackage.getEClassifiers()) {
+        switch (eClassifier) {
+          case EClass eClass -> {
+            String typeName = metamodel
+                .getGenClass(eClass)
+                .getQualifiedInterfaceName();
+            JvmType type = typeReferenceBuilder
+                .typeRef(typeName)
+                .getType();
+            if (type instanceof JvmGenericType genericType) {
+              typeRegistry.referenceClass(eClass, genericType);
             }
-
-            for (EClassifier eClassifier : ePackage.getEClassifiers()) {
-                switch (eClassifier) {
-                    case EClass eClass -> {
-                        String typeName = metamodel.getGenClass(eClass).getQualifiedInterfaceName();
-                        JvmType type = typeReferenceBuilder.typeRef(typeName).getType();
-                        if (type instanceof JvmGenericType genericType) {
-                            typeRegistry.referenceClass(eClass, genericType);
-                        }
-                    }
-                    case EEnum eEnum -> {
-                        String typeName = metamodel.getGenEnum(eEnum).getQualifiedInstanceClassName();
-                        JvmType type = typeReferenceBuilder.typeRef(typeName).getType();
-                        if (type instanceof JvmEnumerationType enumerationType) {
-                            typeRegistry.referenceEnum(eEnum, enumerationType);
-                        }
-                    }
-                    default -> {
-
-                    }
-                }
+          }
+          case EEnum eEnum -> {
+            String typeName = metamodel
+                .getGenEnum(eEnum)
+                .getQualifiedInstanceClassName();
+            JvmType type = typeReferenceBuilder
+                .typeRef(typeName)
+                .getType();
+            if (type instanceof JvmEnumerationType enumerationType) {
+              typeRegistry.referenceEnum(eEnum, enumerationType);
             }
-        }
+          }
+          default -> {
 
-        if (!remaining.isEmpty()) {
-            new SourceModelInferrer(typeRegistry, remaining, typeReferenceBuilder).infer();
+          }
         }
+      }
     }
+
+    if (!remaining.isEmpty()) {
+      new SourceModelInferrer(typeRegistry, remaining, typeReferenceBuilder).infer();
+    }
+  }
 }

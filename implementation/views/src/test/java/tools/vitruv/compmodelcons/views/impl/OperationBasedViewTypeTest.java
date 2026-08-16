@@ -1,9 +1,31 @@
 package tools.vitruv.compmodelcons.views.impl;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static tools.vitruv.change.testutils.metamodels.PcmMockupCreators.pcm;
+
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.*;
+import org.eclipse.emf.ecore.EAttribute;
+import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
@@ -17,400 +39,474 @@ import pcm_mockup.Component;
 import pcm_mockup.PInterface;
 import pcm_mockup.Pcm_mockupPackage;
 import pcm_mockup.Repository;
-import tools.vitruv.change.atomic.eobject.*;
+import tools.vitruv.change.atomic.eobject.CreateEObject;
+import tools.vitruv.change.atomic.eobject.DeleteEObject;
+import tools.vitruv.change.atomic.eobject.EObjectAddedEChange;
+import tools.vitruv.change.atomic.eobject.EObjectExistenceEChange;
+import tools.vitruv.change.atomic.eobject.EObjectSubtractedEChange;
 import tools.vitruv.change.atomic.feature.FeatureEChange;
 import tools.vitruv.change.atomic.root.RootEChange;
 import tools.vitruv.change.atomic.uuid.Uuid;
 import tools.vitruv.change.atomic.uuid.UuidResolver;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.compmodelcons.views.DynamicModels;
-import tools.vitruv.compmodelcons.views.operations.*;
+import tools.vitruv.compmodelcons.views.operations.FeatureProject;
+import tools.vitruv.compmodelcons.views.operations.FeatureSource;
+import tools.vitruv.compmodelcons.views.operations.Project;
+import tools.vitruv.compmodelcons.views.operations.Root;
+import tools.vitruv.compmodelcons.views.operations.Source;
 import tools.vitruv.framework.views.ChangeableViewSource;
 import tools.vitruv.framework.views.CommittableView;
 import tools.vitruv.framework.views.View;
 import tools.vitruv.framework.views.ViewType;
 import tools.vitruv.framework.views.impl.IdentityMappingViewType;
 
-import java.nio.file.Path;
-import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static tools.vitruv.change.testutils.metamodels.PcmMockupCreators.pcm;
-
 class OperationBasedViewTypeTest {
-    @TempDir
-    Path tempDir;
-    private ChangeableViewSource viewSource;
+  @TempDir
+  Path tempDir;
+  private ChangeableViewSource viewSource;
 
-    @BeforeAll
-    static void beforeAll() {
-        Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap()
-                                          .put("*", new XMIResourceFactoryImpl());
+  @BeforeAll
+  static void beforeAll() {
+    Resource.Factory.Registry.INSTANCE
+        .getExtensionToFactoryMap()
+        .put("*", new XMIResourceFactoryImpl());
+  }
+
+  @BeforeEach
+  public void beforeEach() {
+    ResourceSet resourceSet = new ResourceSetImpl();
+    UuidResolver uuidResolver = UuidResolver.create(resourceSet);
+
+    Resource
+        resource =
+        resourceSet.createResource(URI.createURI(String.format("file://%s/test.xmi",
+                                                               tempDir.toAbsolutePath())));
+
+    Repository repository = pcm.Repository();
+    uuidResolver.registerEObject(repository);
+    repository.setId("RepositoryID");
+    resource
+        .getContents()
+        .add(repository);
+
+    Component component1 = pcm.Component();
+    uuidResolver.registerEObject(component1);
+    component1.setId("ComponentID_1");
+    repository
+        .getComponents()
+        .add(component1);
+
+    Component component2 = pcm.Component();
+    uuidResolver.registerEObject(component2);
+    component2.setId("ComponentID_2");
+    repository
+        .getComponents()
+        .add(component2);
+
+    viewSource = mock(ChangeableViewSource.class);
+    when(viewSource.getViewSourceModels()).thenReturn(Set.of(resource));
+    when(viewSource.getUuidResolver()).thenReturn(uuidResolver);
+  }
+
+  @Test
+  public void testAdditionAndRemovalOfComponents() {
+    EPackage viewType = DynamicModels.createEPackage();
+    EClass viewRootClass = DynamicModels.createEClass(viewType);
+    EClass viewNonRootClass = DynamicModels.createEClass(viewType);
+    EReference
+        nonRootContainment =
+        DynamicModels.createManyContainmentEReference(viewRootClass,
+                                                      "containment",
+                                                      viewNonRootClass);
+
+    class TestViewType extends OperationBasedViewType {
+      public TestViewType() {
+        super("Test", List.of(Pcm_mockupPackage.eINSTANCE), viewType);
+      }
+
+      @Override
+      protected Root createStructure() {
+        return new Root(viewRootClass,
+                        Optional.of(
+                            new Project(viewRootClass,
+                                        new Source(Pcm_mockupPackage.eINSTANCE.getRepository(),
+                                                   null),
+                                        List.of(), Project.OnPut.NO_OP
+                            )),
+                        List.of(
+                            new Root.Target(
+                                nonRootContainment,
+                                new Project(
+                                    viewNonRootClass,
+                                    new Source(Pcm_mockupPackage.eINSTANCE.getComponent(), null),
+                                    List.of(),
+                                    Project.OnPut.NO_OP
+                                )
+                            ))
+        );
+      }
     }
 
-    @BeforeEach
-    public void beforeEach() {
-        ResourceSet resourceSet = new ResourceSetImpl();
-        UuidResolver uuidResolver = UuidResolver.create(resourceSet);
+    test(new TestViewType(), view -> {
+      Repository repository = view
+          .getRootObjects(Repository.class)
+          .iterator()
+          .next();
+      repository
+          .getComponents()
+          .add(pcm.Component());
+      repository
+          .getComponents()
+          .removeFirst();
+      repository
+          .getComponents()
+          .removeFirst();
+      repository
+          .getComponents()
+          .add(pcm.Component());
+      repository
+          .getComponents()
+          .add(pcm.Component());
+    }, view -> {
+      EObject root = view
+          .getRootObjects()
+          .iterator()
+          .next();
+      DynamicModels
+          .getList(root, nonRootContainment)
+          .add(DynamicModels.createEObject(viewNonRootClass));
+      DynamicModels
+          .getList(root, nonRootContainment)
+          .removeFirst();
+      DynamicModels
+          .getList(root, nonRootContainment)
+          .removeFirst();
+      DynamicModels
+          .getList(root, nonRootContainment)
+          .add(DynamicModels.createEObject(viewNonRootClass));
+      DynamicModels
+          .getList(root, nonRootContainment)
+          .add(DynamicModels.createEObject(viewNonRootClass));
+    });
+  }
 
-        Resource
-                resource =
-                resourceSet.createResource(URI.createURI(String.format("file://%s/test.xmi",
-                                                                       tempDir.toAbsolutePath())));
+  @Test
+  public void testChangeOfComponentId() {
+    EPackage viewType = DynamicModels.createEPackage();
+    EClass viewRootClass = DynamicModels.createEClass(viewType, "Root");
+    EClass viewNonRootClass = DynamicModels.createEClass(viewType, "NonRoot");
+    EReference
+        nonRootContainment =
+        DynamicModels.createManyContainmentEReference(viewRootClass,
+                                                      "containment",
+                                                      viewNonRootClass);
+    EAttribute
+        nonRootIdAttribute =
+        DynamicModels.createEAttribute(viewNonRootClass,
+                                       "id",
+                                       EcorePackage.eINSTANCE.getEString());
 
-        Repository repository = pcm.Repository();
-        uuidResolver.registerEObject(repository);
-        repository.setId("RepositoryID");
-        resource.getContents().add(repository);
+    class TestViewType extends OperationBasedViewType {
+      public TestViewType() {
+        super("Test", List.of(Pcm_mockupPackage.eINSTANCE), viewType);
+      }
 
-        Component component1 = pcm.Component();
-        uuidResolver.registerEObject(component1);
-        component1.setId("ComponentID_1");
-        repository.getComponents().add(component1);
-
-        Component component2 = pcm.Component();
-        uuidResolver.registerEObject(component2);
-        component2.setId("ComponentID_2");
-        repository.getComponents().add(component2);
-
-        viewSource = mock(ChangeableViewSource.class);
-        when(viewSource.getViewSourceModels()).thenReturn(Set.of(resource));
-        when(viewSource.getUuidResolver()).thenReturn(uuidResolver);
+      @Override
+      protected Root createStructure() {
+        return new Root(viewRootClass,
+                        Optional.of(
+                            new Project(viewRootClass,
+                                        new Source(Pcm_mockupPackage.eINSTANCE.getRepository(),
+                                                   null),
+                                        List.of(),
+                                        Project.OnPut.NO_OP
+                            )),
+                        List.of(
+                            new Root.Target(
+                                nonRootContainment,
+                                new Project(
+                                    viewNonRootClass,
+                                    new Source(Pcm_mockupPackage.eINSTANCE.getComponent(), null),
+                                    List.of(
+                                        new FeatureProject(Optional.of(0),
+                                                           nonRootIdAttribute,
+                                                           new FeatureSource(
+                                                               FeatureSource.Target.ofFirst(
+                                                                   Pcm_mockupPackage.eINSTANCE.getIdentified_Id())))
+                                           ),
+                                    Project.OnPut.NO_OP
+                                )
+                            ))
+        );
+      }
     }
 
-    @Test
-    public void testAdditionAndRemovalOfComponents() {
-        EPackage viewType = DynamicModels.createEPackage();
-        EClass viewRootClass = DynamicModels.createEClass(viewType);
-        EClass viewNonRootClass = DynamicModels.createEClass(viewType);
-        EReference
-                nonRootContainment =
-                DynamicModels.createManyContainmentEReference(viewRootClass,
-                                                              "containment",
-                                                              viewNonRootClass);
+    test(new TestViewType(), view -> {
+      Repository repository = view
+          .getRootObjects(Repository.class)
+          .iterator()
+          .next();
+      Component component1 = repository
+          .getComponents()
+          .getFirst();
+      component1.setId("NewID");
+    }, view -> {
+      EObject root = view
+          .getRootObjects()
+          .iterator()
+          .next();
+      EObject nonRoot1 = DynamicModels
+          .getList(root, nonRootContainment)
+          .getFirst();
+      nonRoot1.eSet(nonRootIdAttribute, "NewID");
+    });
+  }
 
-        class TestViewType extends OperationBasedViewType {
-            public TestViewType() {
-                super("Test", List.of(Pcm_mockupPackage.eINSTANCE), viewType);
-            }
+  @Test
+  public void testInsertionAndRemovalOfInterfaces() {
+    EPackage viewType = DynamicModels.createEPackage();
+    EClass viewRootClass = DynamicModels.createEClass(viewType, "Root");
+    EClass viewComponentClass = DynamicModels.createEClass(viewType, "Component");
+    EReference
+        viewComponentContainment =
+        DynamicModels.createManyContainmentEReference(viewRootClass,
+                                                      "allComponents",
+                                                      viewComponentClass);
+    EClass viewInterfaceClass = DynamicModels.createEClass(viewType, "Interface");
+    EReference
+        viewInterfaceContainment =
+        DynamicModels.createManyContainmentEReference(viewRootClass,
+                                                      "allInterfaces",
+                                                      viewInterfaceClass);
+    EReference
+        viewComponent2InterfaceReference =
+        DynamicModels.createEReference(viewComponentClass, "interface", viewInterfaceClass);
 
-            @Override
-            protected Root createStructure() {
-                return new Root(viewRootClass,
-                                Optional.of(
-                                        new Project(viewRootClass,
-                                                    new Source(Pcm_mockupPackage.eINSTANCE.getRepository(), null),
-                                                    List.of(), Project.OnPut.NO_OP
-                                        )),
-                                List.of(
-                                        new Root.Target(
-                                                nonRootContainment,
-                                                new Project(
-                                                        viewNonRootClass,
-                                                        new Source(Pcm_mockupPackage.eINSTANCE.getComponent(), null),
-                                                        List.of(),
-                                                        Project.OnPut.NO_OP
-                                                )
-                                        ))
-                );
-            }
+    class TestViewType extends OperationBasedViewType {
+      public TestViewType() {
+        super("Test", List.of(Pcm_mockupPackage.eINSTANCE), viewType);
+      }
+
+      @Override
+      protected Root createStructure() {
+        return new Root(viewRootClass,
+                        Optional.of(
+                            new Project(viewRootClass,
+                                        new Source(Pcm_mockupPackage.eINSTANCE.getRepository(),
+                                                   null),
+                                        List.of(),
+                                        Project.OnPut.NO_OP
+                            )),
+                        List.of(
+                            new Root.Target(
+                                viewComponentContainment,
+                                new Project(
+                                    viewComponentClass,
+                                    new Source(Pcm_mockupPackage.eINSTANCE.getComponent(), null),
+                                    List.of(
+                                        new FeatureProject(Optional.of(0),
+                                                           viewComponent2InterfaceReference,
+                                                           new FeatureSource(
+                                                               FeatureSource.Target.ofFirst(
+                                                                   (Pcm_mockupPackage.eINSTANCE.getComponent_ProvidedInterface()))))
+                                           ),
+                                    Project.OnPut.NO_OP
+                                )
+                            ),
+                            new Root.Target(
+                                viewInterfaceContainment,
+                                new Project(
+                                    viewInterfaceClass,
+                                    new Source(Pcm_mockupPackage.eINSTANCE.getPInterface(), null),
+                                    List.of(),
+                                    Project.OnPut.NO_OP
+                                )
+                            )));
+      }
+    }
+
+    test(new TestViewType(), view -> {
+      Repository repository = view
+          .getRootObjects(Repository.class)
+          .iterator()
+          .next();
+
+      PInterface interface1 = pcm.Interface();
+      repository
+          .getInterfaces()
+          .add(interface1);
+      PInterface interface2 = pcm.Interface();
+      repository
+          .getInterfaces()
+          .add(interface2);
+      PInterface interface3 = pcm.Interface();
+      repository
+          .getInterfaces()
+          .add(interface3);
+
+      Component component1 = repository
+          .getComponents()
+          .get(0);
+      component1.setProvidedInterface(interface1);
+
+      Component component2 = repository
+          .getComponents()
+          .get(1);
+      component2.setProvidedInterface(interface2);
+
+      component1.setProvidedInterface(interface3);
+    }, view -> {
+      EObject root = view
+          .getRootObjects()
+          .iterator()
+          .next();
+
+      EObject interface1 = DynamicModels.createEObject(viewInterfaceClass);
+      DynamicModels
+          .getList(root, viewInterfaceContainment)
+          .add(interface1);
+      EObject interface2 = DynamicModels.createEObject(viewInterfaceClass);
+      DynamicModels
+          .getList(root, viewInterfaceContainment)
+          .add(interface2);
+      EObject interface3 = DynamicModels.createEObject(viewInterfaceClass);
+      DynamicModels
+          .getList(root, viewInterfaceContainment)
+          .add(interface3);
+
+      EObject component1 = DynamicModels
+          .getList(root, viewComponentContainment)
+          .get(0);
+      component1.eSet(viewComponent2InterfaceReference, interface1);
+
+      EObject component2 = DynamicModels
+          .getList(root, viewComponentContainment)
+          .get(1);
+      component2.eSet(viewComponent2InterfaceReference, interface2);
+
+      component1.eSet(viewComponent2InterfaceReference, interface3);
+    });
+  }
+
+  private void test(ViewType<?> testedViewtype, Consumer<View> baselineConsumer,
+                    Consumer<View> testConsumer) {
+    var baselineChange = run(new IdentityMappingViewType("Baseline"), baselineConsumer);
+    var testedChange = run(testedViewtype, testConsumer);
+
+    var baselineChanges = baselineChange.getEChanges();
+    var testedChanges = testedChange.getEChanges();
+
+    assertEquals(baselineChanges.size(), testedChanges.size());
+
+    // Order of deletions varies.
+    Set<Uuid> baselineDeletions = new HashSet<>();
+    Set<Uuid> testedDeletions = new HashSet<>();
+
+    // UUIDs of creations are not equal.
+    BiMap<Uuid, Uuid> creationMap = HashBiMap.create();
+
+    BiConsumer<Uuid, Uuid>
+        assertUuidEquality =
+        (Uuid expected, Uuid tested) -> assertTrue(Objects.equals(expected, tested) ||
+                                                       Objects.equals(creationMap.get(expected),
+                                                                      tested));
+
+    for (int index = 0; index < baselineChanges.size(); index++) {
+      var baselineChangeElement = baselineChanges.get(index);
+      var testedChangeElement = testedChanges.get(index);
+
+      assertEquals(baselineChangeElement.getClass(), testedChangeElement.getClass());
+
+      switch (baselineChangeElement) {
+        case DeleteEObject<Uuid> baselineDeleteEObject -> {
+          DeleteEObject<Uuid>
+              testedDeleteEObject =
+              (DeleteEObject<Uuid>) testedChangeElement;
+          baselineDeletions.add(baselineDeleteEObject.getAffectedElement());
+          testedDeletions.add(testedDeleteEObject.getAffectedElement());
+
+          continue;
         }
+        case CreateEObject<Uuid> baselineCreateEObject -> {
+          CreateEObject<Uuid>
+              testedCreateEObject =
+              (CreateEObject<Uuid>) testedChangeElement;
 
-        test(new TestViewType(), view -> {
-            Repository repository = view.getRootObjects(Repository.class).iterator().next();
-            repository.getComponents().add(pcm.Component());
-            repository.getComponents().removeFirst();
-            repository.getComponents().removeFirst();
-            repository.getComponents().add(pcm.Component());
-            repository.getComponents().add(pcm.Component());
-        }, view -> {
-            EObject root = view.getRootObjects().iterator().next();
-            DynamicModels.getList(root, nonRootContainment)
-                         .add(DynamicModels.createEObject(viewNonRootClass));
-            DynamicModels.getList(root, nonRootContainment).removeFirst();
-            DynamicModels.getList(root, nonRootContainment).removeFirst();
-            DynamicModels.getList(root, nonRootContainment)
-                         .add(DynamicModels.createEObject(viewNonRootClass));
-            DynamicModels.getList(root, nonRootContainment)
-                         .add(DynamicModels.createEObject(viewNonRootClass));
-        });
-    }
+          creationMap.put(baselineCreateEObject.getAffectedElement(),
+                          testedCreateEObject.getAffectedElement());
 
-    @Test
-    public void testChangeOfComponentId() {
-        EPackage viewType = DynamicModels.createEPackage();
-        EClass viewRootClass = DynamicModels.createEClass(viewType, "Root");
-        EClass viewNonRootClass = DynamicModels.createEClass(viewType, "NonRoot");
-        EReference
-                nonRootContainment =
-                DynamicModels.createManyContainmentEReference(viewRootClass,
-                                                              "containment",
-                                                              viewNonRootClass);
-        EAttribute
-                nonRootIdAttribute =
-                DynamicModels.createEAttribute(viewNonRootClass,
-                                               "id",
-                                               EcorePackage.eINSTANCE.getEString());
-
-        class TestViewType extends OperationBasedViewType {
-            public TestViewType() {
-                super("Test", List.of(Pcm_mockupPackage.eINSTANCE), viewType);
-            }
-
-            @Override
-            protected Root createStructure() {
-                return new Root(viewRootClass,
-                                Optional.of(
-                                        new Project(viewRootClass,
-                                                    new Source(Pcm_mockupPackage.eINSTANCE.getRepository(), null),
-                                                    List.of(),
-                                                    Project.OnPut.NO_OP
-                                        )),
-                                List.of(
-                                        new Root.Target(
-                                                nonRootContainment,
-                                                new Project(
-                                                        viewNonRootClass,
-                                                        new Source(Pcm_mockupPackage.eINSTANCE.getComponent(), null),
-                                                        List.of(
-                                                                new FeatureProject(Optional.of(0),
-                                                                                   nonRootIdAttribute,
-                                                                                   new FeatureSource(FeatureSource.Target.ofFirst(
-                                                                                           Pcm_mockupPackage.eINSTANCE.getIdentified_Id())))
-                                                               ),
-                                                        Project.OnPut.NO_OP
-                                                )
-                                        ))
-                );
-            }
+          continue;
         }
-
-        test(new TestViewType(), view -> {
-            Repository repository = view.getRootObjects(Repository.class).iterator().next();
-            Component component1 = repository.getComponents().getFirst();
-            component1.setId("NewID");
-        }, view -> {
-            EObject root = view.getRootObjects().iterator().next();
-            EObject nonRoot1 = DynamicModels.getList(root, nonRootContainment).getFirst();
-            nonRoot1.eSet(nonRootIdAttribute, "NewID");
-        });
-    }
-
-    @Test
-    public void testInsertionAndRemovalOfInterfaces() {
-        EPackage viewType = DynamicModels.createEPackage();
-        EClass viewRootClass = DynamicModels.createEClass(viewType, "Root");
-        EClass viewComponentClass = DynamicModels.createEClass(viewType, "Component");
-        EReference
-                viewComponentContainment =
-                DynamicModels.createManyContainmentEReference(viewRootClass,
-                                                              "allComponents",
-                                                              viewComponentClass);
-        EClass viewInterfaceClass = DynamicModels.createEClass(viewType, "Interface");
-        EReference
-                viewInterfaceContainment =
-                DynamicModels.createManyContainmentEReference(viewRootClass,
-                                                              "allInterfaces",
-                                                              viewInterfaceClass);
-        EReference
-                viewComponent2InterfaceReference =
-                DynamicModels.createEReference(viewComponentClass, "interface", viewInterfaceClass);
-
-        class TestViewType extends OperationBasedViewType {
-            public TestViewType() {
-                super("Test", List.of(Pcm_mockupPackage.eINSTANCE), viewType);
-            }
-
-            @Override
-            protected Root createStructure() {
-                return new Root(viewRootClass,
-                                Optional.of(
-                                        new Project(viewRootClass,
-                                                    new Source(Pcm_mockupPackage.eINSTANCE.getRepository(), null),
-                                                    List.of(),
-                                                    Project.OnPut.NO_OP
-                                        )),
-                                List.of(
-                                        new Root.Target(
-                                                viewComponentContainment,
-                                                new Project(
-                                                        viewComponentClass,
-                                                        new Source(Pcm_mockupPackage.eINSTANCE.getComponent(), null),
-                                                        List.of(
-                                                                new FeatureProject(Optional.of(0),
-                                                                                   viewComponent2InterfaceReference,
-                                                                                   new FeatureSource(FeatureSource.Target.ofFirst(
-                                                                                           (Pcm_mockupPackage.eINSTANCE.getComponent_ProvidedInterface()))))
-                                                               ),
-                                                        Project.OnPut.NO_OP
-                                                )
-                                        ),
-                                        new Root.Target(
-                                                viewInterfaceContainment,
-                                                new Project(
-                                                        viewInterfaceClass,
-                                                        new Source(Pcm_mockupPackage.eINSTANCE.getPInterface(), null),
-                                                        List.of(),
-                                                        Project.OnPut.NO_OP
-                                                )
-                                        )));
-            }
+        case FeatureEChange<Uuid, ?> baselineFeatureEChange -> {
+          FeatureEChange<Uuid, ?>
+              testedFeatureEChange =
+              (FeatureEChange<Uuid, ?>) testedChangeElement;
+          assertUuidEquality.accept(baselineFeatureEChange.getAffectedElement(),
+                                    testedFeatureEChange.getAffectedElement());
+          assertEquals(baselineFeatureEChange.getAffectedFeature(),
+                       testedFeatureEChange.getAffectedFeature());
         }
-
-        test(new TestViewType(), view -> {
-            Repository repository = view.getRootObjects(Repository.class).iterator().next();
-
-            PInterface interface1 = pcm.Interface();
-            repository.getInterfaces().add(interface1);
-            PInterface interface2 = pcm.Interface();
-            repository.getInterfaces().add(interface2);
-            PInterface interface3 = pcm.Interface();
-            repository.getInterfaces().add(interface3);
-
-            Component component1 = repository.getComponents().get(0);
-            component1.setProvidedInterface(interface1);
-
-            Component component2 = repository.getComponents().get(1);
-            component2.setProvidedInterface(interface2);
-
-            component1.setProvidedInterface(interface3);
-        }, view -> {
-            EObject root = view.getRootObjects().iterator().next();
-
-            EObject interface1 = DynamicModels.createEObject(viewInterfaceClass);
-            DynamicModels.getList(root, viewInterfaceContainment).add(interface1);
-            EObject interface2 = DynamicModels.createEObject(viewInterfaceClass);
-            DynamicModels.getList(root, viewInterfaceContainment).add(interface2);
-            EObject interface3 = DynamicModels.createEObject(viewInterfaceClass);
-            DynamicModels.getList(root, viewInterfaceContainment).add(interface3);
-
-            EObject component1 = DynamicModels.getList(root, viewComponentContainment).get(0);
-            component1.eSet(viewComponent2InterfaceReference, interface1);
-
-            EObject component2 = DynamicModels.getList(root, viewComponentContainment).get(1);
-            component2.eSet(viewComponent2InterfaceReference, interface2);
-
-            component1.eSet(viewComponent2InterfaceReference, interface3);
-        });
-    }
-
-    private void test(ViewType<?> testedViewtype, Consumer<View> baselineConsumer, Consumer<View> testConsumer) {
-        var baselineChange = run(new IdentityMappingViewType("Baseline"), baselineConsumer);
-        var testedChange = run(testedViewtype, testConsumer);
-
-        var baselineChanges = baselineChange.getEChanges();
-        var testedChanges = testedChange.getEChanges();
-
-        assertEquals(baselineChanges.size(), testedChanges.size());
-
-        // Order of deletions varies.
-        Set<Uuid> baselineDeletions = new HashSet<>();
-        Set<Uuid> testedDeletions = new HashSet<>();
-
-        // UUIDs of creations are not equal.
-        BiMap<Uuid, Uuid> creationMap = HashBiMap.create();
-
-        BiConsumer<Uuid, Uuid>
-                assertUuidEquality =
-                (Uuid expected, Uuid tested) -> assertTrue(Objects.equals(expected, tested) ||
-                                                                   Objects.equals(creationMap.get(expected), tested));
-
-        for (int index = 0; index < baselineChanges.size(); index++) {
-            var baselineChangeElement = baselineChanges.get(index);
-            var testedChangeElement = testedChanges.get(index);
-
-            assertEquals(baselineChangeElement.getClass(), testedChangeElement.getClass());
-
-            switch (baselineChangeElement) {
-                case DeleteEObject<Uuid> baselineDeleteEObject -> {
-                    DeleteEObject<Uuid>
-                            testedDeleteEObject =
-                            (DeleteEObject<Uuid>) testedChangeElement;
-                    baselineDeletions.add(baselineDeleteEObject.getAffectedElement());
-                    testedDeletions.add(testedDeleteEObject.getAffectedElement());
-
-                    continue;
-                }
-                case CreateEObject<Uuid> baselineCreateEObject -> {
-                    CreateEObject<Uuid>
-                            testedCreateEObject =
-                            (CreateEObject<Uuid>) testedChangeElement;
-
-                    creationMap.put(baselineCreateEObject.getAffectedElement(),
-                                    testedCreateEObject.getAffectedElement());
-
-                    continue;
-                }
-                case FeatureEChange<Uuid, ?> baselineFeatureEChange -> {
-                    FeatureEChange<Uuid, ?>
-                            testedFeatureEChange =
-                            (FeatureEChange<Uuid, ?>) testedChangeElement;
-                    assertUuidEquality.accept(baselineFeatureEChange.getAffectedElement(),
-                                              testedFeatureEChange.getAffectedElement());
-                    assertEquals(baselineFeatureEChange.getAffectedFeature(),
-                                 testedFeatureEChange.getAffectedFeature());
-                }
-                default -> {
-                }
-            }
-
-            if (baselineChangeElement instanceof EObjectExistenceEChange<Uuid> baselineEObjectExistenceEChange) {
-                EObjectExistenceEChange<Uuid>
-                        testedEObjectExistenceEChange =
-                        (EObjectExistenceEChange<Uuid>) testedChangeElement;
-                assertUuidEquality.accept(baselineEObjectExistenceEChange.getAffectedElement(),
-                                          testedEObjectExistenceEChange.getAffectedElement());
-            }
-
-            if (baselineChangeElement instanceof EObjectAddedEChange<Uuid> baselineEObjectAddedEChange) {
-                EObjectAddedEChange<Uuid>
-                        testedEObjectAddedEChange =
-                        (EObjectAddedEChange<Uuid>) testedChangeElement;
-                assertUuidEquality.accept(baselineEObjectAddedEChange.getNewValue(),
-                                          testedEObjectAddedEChange.getNewValue());
-            }
-
-            if (baselineChangeElement instanceof EObjectSubtractedEChange<Uuid> baselineEObjectSubtractedEChange) {
-                EObjectSubtractedEChange<Uuid>
-                        testedEObjectSubtractedEChange =
-                        (EObjectSubtractedEChange<Uuid>) testedChangeElement;
-                assertUuidEquality.accept(baselineEObjectSubtractedEChange.getOldValue(),
-                                          testedEObjectSubtractedEChange.getOldValue());
-            }
-
-            if (baselineChangeElement instanceof RootEChange<Uuid> baselineRootEChange) {
-                RootEChange<Uuid> testedRootEChange = (RootEChange<Uuid>) testedChangeElement;
-                assertSame(baselineRootEChange.getResource(), testedRootEChange.getResource());
-            }
+        default -> {
         }
+      }
 
-        assertEquals(baselineDeletions, testedDeletions);
+      if (baselineChangeElement instanceof EObjectExistenceEChange<Uuid> baselineEObjectExistenceEChange) {
+        EObjectExistenceEChange<Uuid>
+            testedEObjectExistenceEChange =
+            (EObjectExistenceEChange<Uuid>) testedChangeElement;
+        assertUuidEquality.accept(baselineEObjectExistenceEChange.getAffectedElement(),
+                                  testedEObjectExistenceEChange.getAffectedElement());
+      }
+
+      if (baselineChangeElement instanceof EObjectAddedEChange<Uuid> baselineEObjectAddedEChange) {
+        EObjectAddedEChange<Uuid>
+            testedEObjectAddedEChange =
+            (EObjectAddedEChange<Uuid>) testedChangeElement;
+        assertUuidEquality.accept(baselineEObjectAddedEChange.getNewValue(),
+                                  testedEObjectAddedEChange.getNewValue());
+      }
+
+      if (baselineChangeElement instanceof EObjectSubtractedEChange<Uuid> baselineEObjectSubtractedEChange) {
+        EObjectSubtractedEChange<Uuid>
+            testedEObjectSubtractedEChange =
+            (EObjectSubtractedEChange<Uuid>) testedChangeElement;
+        assertUuidEquality.accept(baselineEObjectSubtractedEChange.getOldValue(),
+                                  testedEObjectSubtractedEChange.getOldValue());
+      }
+
+      if (baselineChangeElement instanceof RootEChange<Uuid> baselineRootEChange) {
+        RootEChange<Uuid> testedRootEChange = (RootEChange<Uuid>) testedChangeElement;
+        assertSame(baselineRootEChange.getResource(), testedRootEChange.getResource());
+      }
     }
 
-    private VitruviusChange<Uuid> run(ViewType<?> viewtype, Consumer<View> consumer) {
-        try (View view = createView(viewtype, viewSource)) {
-            CommittableView committableView = view.withChangeRecordingTrait();
-            consumer.accept(committableView);
-            committableView.commitChanges();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    assertEquals(baselineDeletions, testedDeletions);
+  }
 
-        @SuppressWarnings("unchecked") ArgumentCaptor<VitruviusChange<Uuid>>
-                changeArgument =
-                ArgumentCaptor.forClass(VitruviusChange.class);
-        verify(viewSource).propagateChange(changeArgument.capture());
-        var result = changeArgument.getValue();
-        clearInvocations(viewSource);
-        return result;
+  private VitruviusChange<Uuid> run(ViewType<?> viewtype, Consumer<View> consumer) {
+    try (View view = createView(viewtype, viewSource)) {
+      CommittableView committableView = view.withChangeRecordingTrait();
+      consumer.accept(committableView);
+      committableView.commitChanges();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
 
-    private View createView(ViewType<?> viewtype, ChangeableViewSource viewSource) {
-        var selector = viewtype.createSelector(viewSource);
-        selector.getSelectableElements().forEach(eObject -> selector.setSelected(eObject, true));
-        return selector.createView();
-    }
+    @SuppressWarnings("unchecked") ArgumentCaptor<VitruviusChange<Uuid>>
+        changeArgument =
+        ArgumentCaptor.forClass(VitruviusChange.class);
+    verify(viewSource).propagateChange(changeArgument.capture());
+    var result = changeArgument.getValue();
+    clearInvocations(viewSource);
+    return result;
+  }
+
+  private View createView(ViewType<?> viewtype, ChangeableViewSource viewSource) {
+    var selector = viewtype.createSelector(viewSource);
+    selector
+        .getSelectableElements()
+        .forEach(eObject -> selector.setSelected(eObject, true));
+    return selector.createView();
+  }
 }

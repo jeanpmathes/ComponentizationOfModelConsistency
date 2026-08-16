@@ -1,5 +1,11 @@
 package tools.vitruv.compmodelcons.views.internal.impl;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.EChangeUtil;
@@ -17,166 +23,180 @@ import tools.vitruv.compmodelcons.views.internal.OriginResourceAccess;
 import tools.vitruv.compmodelcons.views.internal.ViewResourceAccess;
 import tools.vitruv.compmodelcons.views.operations.Root;
 
-import java.util.*;
-
 public class InternalViewImpl implements AutoCloseable {
-    private final EditableViewCorrespondences correspondences = new EditableViewCorrespondencesImpl();
-    private final Root structure;
-    private final ViewResourceAccess viewResourceAccess;
-    private final OriginResourceAccess originResourceAccess;
+  private final EditableViewCorrespondences correspondences = new EditableViewCorrespondencesImpl();
+  private final Root structure;
+  private final ViewResourceAccess viewResourceAccess;
+  private final OriginResourceAccess originResourceAccess;
 
-    private final ViewObserver viewObserver;
+  private final ViewObserver viewObserver;
 
-    private ChangeRecorder changeRecorder;
+  private ChangeRecorder changeRecorder;
 
-    private Root.ViewBinding viewBinding;
+  private Root.ViewBinding viewBinding;
 
-    public InternalViewImpl(Root structure, ViewResourceAccess viewResourceAccess, OriginResourceAccess originResourceAccess, ViewObserver viewObserver) {
-        this.structure = structure;
-        this.viewResourceAccess = viewResourceAccess;
-        this.originResourceAccess = originResourceAccess;
-        this.viewObserver = viewObserver;
+  public InternalViewImpl(Root structure, ViewResourceAccess viewResourceAccess,
+                          OriginResourceAccess originResourceAccess, ViewObserver viewObserver) {
+    this.structure = structure;
+    this.viewResourceAccess = viewResourceAccess;
+    this.originResourceAccess = originResourceAccess;
+    this.viewObserver = viewObserver;
 
-        setupChangeRecorderAndBeginRecording();
+    setupChangeRecorderAndBeginRecording();
+  }
+
+  private static List<EChange<EObject>> reorderChanges(List<EChange<EObject>> changes) {
+    // While the documentation of ChangeRecorder.endRecording() states that the deletions are
+    // inserted
+    // right after the change causing the removal, that is not the case.
+    // See ChangeRecorder.postprocessRemovals() and its documentation.
+    // However, I would really like it to be the case.
+
+    List<EChange<EObject>> reorderedChanges = new ArrayList<>(changes);
+
+    int numberOfDeletionsToReorder = 0;
+    for (int index = reorderedChanges.size() - 1; index >= 0; index--) {
+      if (reorderedChanges.get(index) instanceof DeleteEObject<EObject>) {
+        numberOfDeletionsToReorder += 1;
+      } else {
+        break;
+      }
     }
 
-    private static List<EChange<EObject>> reorderChanges(List<EChange<EObject>> changes) {
-        // While the documentation of ChangeRecorder.endRecording() states that the deletions are inserted
-        // right after the change causing the removal, that is not the case.
-        // See ChangeRecorder.postprocessRemovals() and its documentation.
-        // However, I would really like it to be the case.
+    // To ensure we keep a deletion in the right order with deletions of the same subtree, we
+    // need the containment relation.
+    // If the change sequence comes from change recording, we can simply use eContainer(), but if
+    // it comes from
+    // change derivation, no eContainer() is set, but luckily there is complete subtractive
+    // reference change information.
 
-        List<EChange<EObject>> reorderedChanges = new ArrayList<>(changes);
+    Map<EObject, EObject> containment = new HashMap<>();
+    for (EChange<EObject> eChange : changes) {
+      if (eChange instanceof DeleteEObject<EObject> deleteEObject &&
+          deleteEObject
+              .getAffectedElement()
+              .eContainer() != null) {
+        containment.put(deleteEObject.getAffectedElement(), deleteEObject
+            .getAffectedElement()
+            .eContainer());
+      } else if (
+          eChange instanceof SubtractiveReferenceEChange<EObject> subtractiveReferenceEChange &&
+              EChangeUtil.isContainmentRemoval(subtractiveReferenceEChange)) {
+        containment.put(subtractiveReferenceEChange.getOldValue(),
+                        subtractiveReferenceEChange.getAffectedElement());
+      }
+    }
 
-        int numberOfDeletionsToReorder = 0;
-        for (int index = reorderedChanges.size() - 1; index >= 0; index--) {
-            if (reorderedChanges.get(index) instanceof DeleteEObject<EObject>) {
-                numberOfDeletionsToReorder += 1;
-            } else {
-                break;
-            }
+    while (numberOfDeletionsToReorder > 0) {
+      Set<EObject> deleted = new HashSet<>();
+      List<DeleteEObject<EObject>> deletions = new ArrayList<>();
+
+      deletions.add((DeleteEObject<EObject>) reorderedChanges.getLast());
+      deleted.add(deletions
+                      .getFirst()
+                      .getAffectedElement());
+      reorderedChanges.removeLast();
+
+      // If an entire subtree was deleted, deletions are ordered with children first.
+      // This means the deletion we already have is the parent of the subtree.
+
+      for (int index = reorderedChanges.size() - 1; index >= 0; index--) {
+        EChange<EObject> eChange = reorderedChanges.get(index);
+        if (eChange instanceof DeleteEObject<EObject> deleteEObject
+            && deleted.contains(containment.get(deleteEObject.getAffectedElement()))) {
+          deletions.addFirst(deleteEObject);
+          deleted.add(deleteEObject.getAffectedElement());
+          reorderedChanges.remove(index);
+        } else {
+          break;
         }
+      }
 
-        // To ensure we keep a deletion in the right order with deletions of the same subtree, we need the containment relation.
-        // If the change sequence comes from change recording, we can simply use eContainer(), but if it comes from
-        // change derivation, no eContainer() is set, but luckily there is complete subtractive reference change information.
+      int indexOfCause = -1;
 
-        Map<EObject, EObject> containment = new HashMap<>();
-        for (EChange<EObject> eChange : changes) {
-            if (eChange instanceof DeleteEObject<EObject> deleteEObject &&
-                    deleteEObject.getAffectedElement().eContainer() != null) {
-                containment.put(deleteEObject.getAffectedElement(), deleteEObject.getAffectedElement().eContainer());
-            } else if (eChange instanceof SubtractiveReferenceEChange<EObject> subtractiveReferenceEChange &&
-                    EChangeUtil.isContainmentRemoval(subtractiveReferenceEChange)) {
-                containment.put(subtractiveReferenceEChange.getOldValue(), subtractiveReferenceEChange.getAffectedElement());
-            }
+      for (int index = reorderedChanges.size() - 1; index >= 0; index--) {
+        EChange<EObject> eChange = reorderedChanges.get(index);
+        if (eChange instanceof EObjectSubtractedEChange<EObject> subtractedEChange &&
+            EChangeUtil.isContainmentRemoval(subtractedEChange) &&
+            deleted.contains(subtractedEChange.getOldValue())) {
+          indexOfCause = index;
+          break;
         }
+      }
 
-        while (numberOfDeletionsToReorder > 0) {
-            Set<EObject> deleted = new HashSet<>();
-            List<DeleteEObject<EObject>> deletions = new ArrayList<>();
+      if (indexOfCause == -1) {
+        throw new IllegalStateException("Could not find the cause of the deletion");
+      }
 
-            deletions.add((DeleteEObject<EObject>) reorderedChanges.getLast());
-            deleted.add(deletions.getFirst().getAffectedElement());
-            reorderedChanges.removeLast();
+      int indexRightAfterCause = indexOfCause + 1;
+      reorderedChanges.addAll(indexRightAfterCause, deletions);
 
-            // If an entire subtree was deleted, deletions are ordered with children first.
-            // This means the deletion we already have is the parent of the subtree.
-
-            for (int index = reorderedChanges.size() - 1; index >= 0; index--) {
-                EChange<EObject> eChange = reorderedChanges.get(index);
-                if (eChange instanceof DeleteEObject<EObject> deleteEObject
-                        && deleted.contains(containment.get(deleteEObject.getAffectedElement()))) {
-                    deletions.addFirst(deleteEObject);
-                    deleted.add(deleteEObject.getAffectedElement());
-                    reorderedChanges.remove(index);
-                } else {
-                    break;
-                }
-            }
-
-            int indexOfCause = -1;
-
-            for (int index = reorderedChanges.size() - 1; index >= 0; index--) {
-                EChange<EObject> eChange = reorderedChanges.get(index);
-                if (eChange instanceof EObjectSubtractedEChange<EObject> subtractedEChange &&
-                        EChangeUtil.isContainmentRemoval(subtractedEChange) &&
-                        deleted.contains(subtractedEChange.getOldValue())) {
-                    indexOfCause = index;
-                    break;
-                }
-            }
-
-            if (indexOfCause == -1) {
-                throw new IllegalStateException("Could not find the cause of the deletion");
-            }
-
-            int indexRightAfterCause = indexOfCause + 1;
-            reorderedChanges.addAll(indexRightAfterCause, deletions);
-
-            numberOfDeletionsToReorder -= deletions.size();
-        }
-
-        return reorderedChanges;
+      numberOfDeletionsToReorder -= deletions.size();
     }
 
-    public EditableViewCorrespondences getCorrespondences() {
-        return correspondences;
+    return reorderedChanges;
+  }
+
+  public EditableViewCorrespondences getCorrespondences() {
+    return correspondences;
+  }
+
+  public void update() {
+    endRecordingAndClose();
+    viewResourceAccess.reset();
+    doGet();
+    setupChangeRecorderAndBeginRecording();
+  }
+
+  private void doGet() {
+    viewBinding = structure.doGet(
+        new GetContextImpl(originResourceAccess, viewResourceAccess, correspondences));
+  }
+
+  public void commit() {
+    VitruviusChange<EObject> change = changeRecorder.endRecording();
+    doPut(change);
+  }
+
+  private void doPut(VitruviusChange<EObject> change) {
+    var context =
+        new PutContextImpl(originResourceAccess, viewResourceAccess, correspondences, viewObserver);
+    reorderChanges(change.getEChanges()).forEach(
+        eChange -> viewBinding = structure.doPut(eChange, viewBinding, context));
+    context.validateAttachmentState();
+  }
+
+  public List<EChange<EObject>> updateAndTranslateChange(EChange<EObject> originChange) {
+    originResourceAccess.refreshResourceMapping();
+
+    var context = new GetContextImpl(originResourceAccess, viewResourceAccess, correspondences);
+    viewBinding = structure.doUpdatingGet(viewBinding, originChange, context);
+
+    VitruviusChange<EObject> viewChange = changeRecorder.endRecording();
+    List<EChange<EObject>> viewChanges = reorderChanges(viewChange.getEChanges());
+
+    endRecordingAndClose();
+    setupChangeRecorderAndBeginRecording();
+
+    return viewChanges;
+  }
+
+  private void setupChangeRecorderAndBeginRecording() {
+    changeRecorder = new ChangeRecorder(viewResourceAccess.getResourceSet());
+    changeRecorder.addToRecording(viewResourceAccess.getResourceSet());
+    changeRecorder.beginRecording();
+  }
+
+  private void endRecordingAndClose() {
+    if (changeRecorder.isRecording()) {
+      changeRecorder.endRecording();
     }
+    changeRecorder.close();
+    changeRecorder = null;
+  }
 
-    public void update() {
-        endRecordingAndClose();
-        viewResourceAccess.reset();
-        doGet();
-        setupChangeRecorderAndBeginRecording();
-    }
-
-    private void doGet() {
-        viewBinding = structure.doGet(new GetContextImpl(originResourceAccess, viewResourceAccess, correspondences));
-    }
-
-    public void commit() {
-        VitruviusChange<EObject> change = changeRecorder.endRecording();
-        doPut(change);
-    }
-
-    private void doPut(VitruviusChange<EObject> change) {
-        var context = new PutContextImpl(originResourceAccess, viewResourceAccess, correspondences, viewObserver);
-        reorderChanges(change.getEChanges()).forEach(eChange -> viewBinding = structure.doPut(eChange, viewBinding, context));
-        context.validateAttachmentState();
-    }
-
-    public List<EChange<EObject>> updateAndTranslateChange(EChange<EObject> originChange) {
-        originResourceAccess.refreshResourceMapping();
-
-        var context = new GetContextImpl(originResourceAccess, viewResourceAccess, correspondences);
-        viewBinding = structure.doUpdatingGet(viewBinding, originChange, context);
-
-        VitruviusChange<EObject> viewChange = changeRecorder.endRecording();
-        List<EChange<EObject>> viewChanges = reorderChanges(viewChange.getEChanges());
-
-        endRecordingAndClose();
-        setupChangeRecorderAndBeginRecording();
-
-        return viewChanges;
-    }
-
-    private void setupChangeRecorderAndBeginRecording() {
-        changeRecorder = new ChangeRecorder(viewResourceAccess.getResourceSet());
-        changeRecorder.addToRecording(viewResourceAccess.getResourceSet());
-        changeRecorder.beginRecording();
-    }
-
-    private void endRecordingAndClose() {
-        if (changeRecorder.isRecording()) {
-            changeRecorder.endRecording();
-        }
-        changeRecorder.close();
-        changeRecorder = null;
-    }
-
-    @Override
-    public void close() {
-        endRecordingAndClose();
-    }
+  @Override
+  public void close() {
+    endRecordingAndClose();
+  }
 }
