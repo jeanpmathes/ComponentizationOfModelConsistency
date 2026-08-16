@@ -22,7 +22,9 @@ public class RemoteChangePropagationSpecificationWrappingStrategy extends Abstra
 
     @Override
     public EditableCorrespondenceModelView<Correspondence> wrapCorrespondenceModel(EditableCorrespondenceModelView<Correspondence> correspondenceModel, ViewChangePropagationContext context) {
-        return new RemoteEditableCorrespondenceModelViewImpl<>(correspondenceModel, context.sourceView().getCorrespondenceResolver(), context.targetView().getCorrespondenceResolver());
+        return new RemoteEditableCorrespondenceModelViewImpl<>(correspondenceModel, context.sourceView()
+                                                                                           .getCorrespondenceResolver(), context
+                                                                       .targetView().getCorrespondenceResolver());
     }
 
     private static class RemoteCorrespondenceModelViewImpl<C extends Correspondence> implements CorrespondenceModelView<C> {

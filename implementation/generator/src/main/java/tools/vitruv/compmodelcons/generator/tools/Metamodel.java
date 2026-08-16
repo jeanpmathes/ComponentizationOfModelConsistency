@@ -43,7 +43,9 @@ public record Metamodel(EPackage ePackage, GenPackage genPackage) {
     }
 
     public GenClassifier getGenClassifier(EClassifier eClassifier) {
-        return genPackage.getGenClassifiers().stream().filter(classifier -> classifier.getEcoreClassifier().equals(eClassifier)).findAny().orElseThrow();
+        return genPackage.getGenClassifiers().stream()
+                         .filter(classifier -> classifier.getEcoreClassifier().equals(eClassifier)).findAny()
+                         .orElseThrow();
     }
 
     public GenClass getGenClass(String name) {
@@ -67,6 +69,9 @@ public record Metamodel(EPackage ePackage, GenPackage genPackage) {
     }
 
     public GenFeature getGenFeature(EStructuralFeature eStructuralFeature) {
-        return getGenClass(eStructuralFeature.getEContainingClass()).getAllGenFeatures().stream().filter(feature -> feature.getEcoreFeature().equals(eStructuralFeature)).findAny().orElseThrow();
+        return getGenClass(eStructuralFeature.getEContainingClass()).getAllGenFeatures().stream()
+                                                                    .filter(feature -> feature.getEcoreFeature()
+                                                                                              .equals(eStructuralFeature))
+                                                                    .findAny().orElseThrow();
     }
 }

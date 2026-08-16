@@ -35,18 +35,18 @@ public class ViewTypeSourceGenerator {
     private final JavaImportHelper importHelper = new JavaImportHelper();
     private final List<String> declarations = new ArrayList<>();
 
-    private final String          name;
-    private final AQR             aqr;
+    private final String name;
+    private final AQR aqr;
     private final List<Metamodel> originMetamodels;
-    private final Metamodel       viewtypeMetamodel;
+    private final Metamodel viewtypeMetamodel;
     private final ExpressionResolver expressions;
 
     public ViewTypeSourceGenerator(String name, List<Metamodel> originMetamodels, Metamodel viewtypeMetamodel, AQR aqr, ExpressionResolver expressions) {
-        this.name             = NamingGenerator.convertToPascalCase(name);
-        this.aqr              = aqr;
+        this.name = NamingGenerator.convertToPascalCase(name);
+        this.aqr = aqr;
         this.originMetamodels = originMetamodels;
         this.viewtypeMetamodel = viewtypeMetamodel;
-        this.expressions      = expressions;
+        this.expressions = expressions;
     }
 
     public String generate() {
@@ -59,8 +59,8 @@ public class ViewTypeSourceGenerator {
         importHelper.typeRef(ChangeSpecificationAwareViewType.class);
 
         builder.append("public class ")
-                .append(getClassName())
-                .append(" extends ChangeSpecificationAwareViewType {\n");
+               .append(getClassName())
+               .append(" extends ChangeSpecificationAwareViewType {\n");
         appendBody(builder);
         builder.append("}");
 
@@ -71,8 +71,8 @@ public class ViewTypeSourceGenerator {
         declarations.clear();
 
         builder.append("    public static final String NAME = \"")
-                .append(StringEscapeUtils.escapeJava(name))
-                .append("\";\n");
+               .append(StringEscapeUtils.escapeJava(name))
+               .append("\";\n");
 
         importHelper.typeRef(List.class);
         importHelper.typeRef(EPackage.class);
@@ -83,14 +83,14 @@ public class ViewTypeSourceGenerator {
                 builder.append(",\n");
             }
             builder.append("        ")
-                    .append(originMetamodels.get(index)
-                                    .getFullyQualifiedPackageInterfaceAccessor());
+                   .append(originMetamodels.get(index)
+                                           .getFullyQualifiedPackageInterfaceAccessor());
         }
         builder.append("\n");
         builder.append("    );\n");
         builder.append("    private static final EPackage viewtype = ")
-                .append(viewtypeMetamodel.getFullyQualifiedPackageInterfaceAccessor())
-                .append(";\n\n");
+               .append(viewtypeMetamodel.getFullyQualifiedPackageInterfaceAccessor())
+               .append(";\n\n");
 
         builder.append("    public ").append(getClassName()).append("() {\n");
         builder.append("        super(NAME, originMetamodels, viewtype);\n");
@@ -117,8 +117,8 @@ public class ViewTypeSourceGenerator {
 
         builder.append("        return new Root(\n");
         builder.append("            ")
-                .append(rootClass.getQualifiedClassifierAccessor())
-                .append(",\n");
+               .append(rootClass.getQualifiedClassifierAccessor())
+               .append(",\n");
 
         if (aqr.root().source() == null) {
             builder.append("            ").append("Optional.empty(),\n");
@@ -138,12 +138,12 @@ public class ViewTypeSourceGenerator {
 
                 GenFeature containment = viewtypeMetamodel.getGenFeature(rootClass.getEcoreClass(),
                                                                          reference.name()
-                );
+                                                                        );
 
                 builder.append("                ").append("new Root.Target(\n");
                 builder.append("                    ")
-                        .append(containment.getQualifiedFeatureAccessor())
-                        .append(",\n");
+                       .append(containment.getQualifiedFeatureAccessor())
+                       .append(",\n");
                 appendProjectOperation(builder, 2, reference.type());
                 builder.append("                )");
             }
@@ -163,8 +163,8 @@ public class ViewTypeSourceGenerator {
 
         builder.append(indent(level)).append("new Project(\n");
         builder.append(indent(level + 1))
-                .append(targetClass.getQualifiedClassifierAccessor())
-                .append(",\n");
+               .append(targetClass.getQualifiedClassifierAccessor())
+               .append(",\n");
         appendQueryOperations(builder, level + 1, targetClass, Objects.requireNonNull(target.source()));
 
         List<AQRFrom> context = target.source().allFroms().toList();
@@ -197,8 +197,8 @@ public class ViewTypeSourceGenerator {
         importHelper.typeRef(PutContext.class);
 
         declaration.append("    protected void ")
-                .append(onPutMethodName)
-                .append("(EChange<EObject> change, OriginBinding oldBinding, OriginBinding newBinding, PutContext context) {\n");
+                   .append(onPutMethodName)
+                   .append("(EChange<EObject> change, OriginBinding oldBinding, OriginBinding newBinding, PutContext context) {\n");
         declaration.append("    }");
 
         declarations.add(declaration.toString());
@@ -264,9 +264,9 @@ public class ViewTypeSourceGenerator {
                 final int leftIndex = featureCondition.otherIndex();
                 final int rightIndex = fromIndex;
 
-                EClass    leftClass     = froms.get(leftIndex).clazz();
+                EClass leftClass = froms.get(leftIndex).clazz();
                 Metamodel leftMetamodel = getOriginMetamodel(leftClass.getEPackage());
-                EClass    rightClass    = froms.get(rightIndex).clazz();
+                EClass rightClass = froms.get(rightIndex).clazz();
                 Metamodel rightMetamodel = getOriginMetamodel(rightClass.getEPackage());
 
                 importHelper.typeRef(FeatureCondition.class);
@@ -287,12 +287,12 @@ public class ViewTypeSourceGenerator {
                     builder.append(indent(level + 2)).append("new FeatureCondition(");
                     builder.append(indent(level + 3)).append(leftIndex).append(",\n");
                     builder.append(indent(level + 3))
-                            .append(leftFeatureGen.getQualifiedFeatureAccessor())
-                            .append(",\n");
+                           .append(leftFeatureGen.getQualifiedFeatureAccessor())
+                           .append(",\n");
                     builder.append(indent(level + 3)).append(rightIndex).append(",\n");
                     builder.append(indent(level + 3))
-                            .append(rightFeatureGen.getQualifiedFeatureAccessor())
-                            .append("\n");
+                           .append(rightFeatureGen.getQualifiedFeatureAccessor())
+                           .append("\n");
                     builder.append(indent(level + 2)).append(")");
                 }
             }
@@ -361,15 +361,15 @@ public class ViewTypeSourceGenerator {
         }
         if (target != null) {
             builder.append(indent(level + 1))
-                    .append("Optional.of(")
-                    .append(target.index())
-                    .append("),\n");
+                   .append("Optional.of(")
+                   .append(target.index())
+                   .append("),\n");
         } else {
             builder.append(indent(level + 1)).append("Optional.empty()").append(",\n");
         }
         builder.append(indent(level + 1))
-                .append(createdFeature.getQualifiedFeatureAccessor())
-                .append(",\n");
+               .append(createdFeature.getQualifiedFeatureAccessor())
+               .append(",\n");
         if (feature.kind() instanceof AQRFeature.Kind.Copy copy) {
             if (target != null) {
                 appendFeatureSourceOperation(builder, level + 1, target);
@@ -416,10 +416,10 @@ public class ViewTypeSourceGenerator {
     private void appendFeatureTransformOperation(StringBuilder builder, int level, XExpression expression, List<AQRFrom> context) {
         importHelper.typeRef(FeatureTransform.class);
 
-        String name           = expressions.getMethodName(expression);
+        String name = expressions.getMethodName(expression);
         String expressionName = "EXPRESSION_" + name;
-        String doGetName      = "doGet_" + name;
-        String doPutName      = "doPut_" + name;
+        String doGetName = "doGet_" + name;
+        String doPutName = "doPut_" + name;
         String doUpdatingGetName = "doUpdatingGet_" + name;
 
         builder.append(indent(level)).append("new FeatureTransform(\n");
@@ -434,8 +434,8 @@ public class ViewTypeSourceGenerator {
         importHelper.typeRef(OriginBinding.class);
 
         declaration.append("    protected static final Function<OriginBinding, Object> ")
-                .append(expressionName)
-                .append(" = ");
+                   .append(expressionName)
+                   .append(" = ");
         appendExpression(declaration, 2, expression, context);
         declaration.append(";\n\n");
 
@@ -445,12 +445,12 @@ public class ViewTypeSourceGenerator {
         importHelper.typeRef(ValueBinding.class);
 
         declaration.append("    protected FeatureBinding ")
-                .append(doGetName)
-                .append("(ObjectBinding subjectBinding, GetContext context) {\n");
+                   .append(doGetName)
+                   .append("(ObjectBinding subjectBinding, GetContext context) {\n");
         declaration.append(
-                        "        return FeatureBinding.ofOriginBinding(subjectBinding, ValueBinding.ofDynamic(")
-                .append(expressionName)
-                .append(".apply(subjectBinding)));\n");
+                           "        return FeatureBinding.ofOriginBinding(subjectBinding, ValueBinding.ofDynamic(")
+                   .append(expressionName)
+                   .append(".apply(subjectBinding)));\n");
         declaration.append("    }\n\n");
 
         importHelper.typeRef(FeatureBinding.class);
@@ -462,8 +462,8 @@ public class ViewTypeSourceGenerator {
         importHelper.typeRef(UnsupportedOperationException.class);
 
         declaration.append("    protected FeatureBinding ")
-                .append(doPutName)
-                .append("(EChange<EObject> viewChange, FeatureBinding feature, ObjectBinding subjectBinding, ValueUpdateBinding value, PutContext context) {\n");
+                   .append(doPutName)
+                   .append("(EChange<EObject> viewChange, FeatureBinding feature, ObjectBinding subjectBinding, ValueUpdateBinding value, PutContext context) {\n");
         declaration.append("        throw new UnsupportedOperationException();\n");
         declaration.append("    }\n\n");
 
@@ -474,12 +474,12 @@ public class ViewTypeSourceGenerator {
         importHelper.typeRef(ValueBinding.class);
 
         declaration.append("    protected FeatureBinding ")
-                .append(doUpdatingGetName)
-                .append("(FeatureBinding previous, ObjectBinding subjectBinding, EChange<EObject> originChange, GetContext context) {\n");
+                   .append(doUpdatingGetName)
+                   .append("(FeatureBinding previous, ObjectBinding subjectBinding, EChange<EObject> originChange, GetContext context) {\n");
         declaration.append(
-                        "        return FeatureBinding.ofOriginBinding(subjectBinding, ValueBinding.ofDynamic(")
-                .append(expressionName)
-                .append(".apply(subjectBinding)));\n");
+                           "        return FeatureBinding.ofOriginBinding(subjectBinding, ValueBinding.ofDynamic(")
+                   .append(expressionName)
+                   .append(".apply(subjectBinding)));\n");
         declaration.append("    }");
 
         declarations.add(declaration.toString());
@@ -488,11 +488,11 @@ public class ViewTypeSourceGenerator {
     private void appendExpression(StringBuilder builder, int level, XExpression expression, List<AQRFrom> parameters) {
         builder.append("originBinding -> {\n");
         builder.append(indent(level + 1))
-                .append("var originObjects = originBinding.originObjects();\n");
+               .append("var originObjects = originBinding.originObjects();\n");
         builder.append(indent(level + 1))
-                .append("return ")
-                .append(expressions.getQualifiedMethodName(expression))
-                .append("(\n");
+               .append("return ")
+               .append(expressions.getQualifiedMethodName(expression))
+               .append("(\n");
 
         boolean indexAlwaysZero = false;
         if (parameters.size() == 1 && parameters.getFirst().alias() != null) {
@@ -510,15 +510,15 @@ public class ViewTypeSourceGenerator {
 
             AQRFrom parameter = parameters.get(index);
             GenClass parameterClass = getOriginMetamodel(parameter.clazz()
-                                                                 .getEPackage()).getGenClass(
+                                                                  .getEPackage()).getGenClass(
                     parameter.clazz());
 
             builder.append(indent(level + 2))
-                    .append("(")
-                    .append(parameterClass.getQualifiedInterfaceName())
-                    .append(") originObjects.get(")
-                    .append(indexAlwaysZero ? 0 : index)
-                    .append(")");
+                   .append("(")
+                   .append(parameterClass.getQualifiedInterfaceName())
+                   .append(") originObjects.get(")
+                   .append(indexAlwaysZero ? 0 : index)
+                   .append(")");
         }
 
         builder.append("\n");
@@ -547,7 +547,7 @@ public class ViewTypeSourceGenerator {
                     if (Objects.equals(formalParameter.getName(), parameter.alias()) ||
                             (parameters.size() == 1 &&
                                     formalParameter.getName()
-                                            .equals(Constants.ExpressionSelfReference)
+                                                   .equals(Constants.ExpressionSelfReference)
                             )) {
                         return new FeatureSource.Target(index, features.reversed());
                     }
@@ -573,9 +573,9 @@ public class ViewTypeSourceGenerator {
 
     private Metamodel getOriginMetamodel(EPackage ePackage) {
         return originMetamodels.stream()
-                .filter(metamodel -> metamodel.ePackage().equals(ePackage))
-                .findAny()
-                .orElseThrow();
+                               .filter(metamodel -> metamodel.ePackage().equals(ePackage))
+                               .findAny()
+                               .orElseThrow();
     }
 
     private String indent(int indent) {
@@ -587,7 +587,7 @@ public class ViewTypeSourceGenerator {
                              NamingGenerator.getPackagePath(aqr),
                              getClassName(),
                              JavaFileGenerator.JAVA_FILE_EXTENSION
-        );
+                            );
     }
 
     private String getPackageName() {

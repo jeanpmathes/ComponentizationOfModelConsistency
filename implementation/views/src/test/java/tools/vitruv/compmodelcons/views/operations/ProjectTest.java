@@ -141,10 +141,13 @@ public class ProjectTest extends AbstractOperationTest {
         }
 
         // Pre-Action Change
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createDeleteEObjectChange(results.getFirst().viewObject());
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance()
+                                                                   .createDeleteEObjectChange(results.getFirst()
+                                                                                                     .viewObject());
 
         // Action
-        when(originOperation.doPut(any(), any(), any())).thenReturn(OriginBinding.of(results.getFirst().originObjects().getFirst()));
+        when(originOperation.doPut(any(), any(), any())).thenReturn(OriginBinding.of(results.getFirst().originObjects()
+                                                                                            .getFirst()));
         ObjectBinding result = operation.doPut(change, results.getFirst(), context);
 
         // Assertions
@@ -179,7 +182,8 @@ public class ProjectTest extends AbstractOperationTest {
         when(featureProject.doGet(any(), any())).then(invocation -> {
             ObjectBinding binding = invocation.getArgument(0);
             binding.viewObject().eSet(number, 67);
-            createdFeatureBinding.set(createBinding(binding.originObjects().getFirst(), binding.viewObject(), ValueBinding.of(67)));
+            createdFeatureBinding.set(createBinding(binding.originObjects()
+                                                           .getFirst(), binding.viewObject(), ValueBinding.of(67)));
             return createdFeatureBinding.get();
         });
         List<ObjectBinding> results = operation.beginGetByCreatingViewObjects(context);
@@ -189,10 +193,16 @@ public class ProjectTest extends AbstractOperationTest {
 
         // Pre-Action Change
         results.getFirst().viewObject().eUnset(number);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createUnsetFeatureChange(results.getFirst().viewObject(), number);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance()
+                                                                   .createUnsetFeatureChange(results.getFirst()
+                                                                                                    .viewObject(), number);
 
         // Action
-        when(featureProject.doPut(any(), any(), any(), any())).thenReturn(createBinding(results.getFirst().originObjects().getFirst(), results.getFirst().viewObject(), ValueBinding.of(0)));
+        when(featureProject.doPut(any(), any(), any(), any())).thenReturn(createBinding(results.getFirst()
+                                                                                               .originObjects()
+                                                                                               .getFirst(), results
+                                                                                                .getFirst()
+                                                                                                .viewObject(), ValueBinding.of(0)));
         operation.doPut(change, results.getFirst(), context);
 
         // Assertions

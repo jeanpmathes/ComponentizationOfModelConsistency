@@ -22,9 +22,9 @@ class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
         DynamicModels.createManyContainmentEReference(root, "allRestaurants", restaurant);
 
         ViewTypeSourceGenerator generator = createGenerator(viewType, "my_example", """
-                from Restaurant r
-                create {}
-                """);
+                                                                                    from Restaurant r
+                                                                                    create {}
+                                                                                    """);
 
         assertEquals("neojoin/viewtypes/mymodel/MyExampleViewType.java", generator.getFileName());
 
@@ -43,29 +43,29 @@ class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
         DynamicModels.createManyContainmentEReference(root, "allRestaurants", restaurant);
 
         ViewTypeSourceGenerator generator = createGenerator(viewType, "test", """
-                from Restaurant r
-                create {}
-                """);
+                                                                              from Restaurant r
+                                                                              create {}
+                                                                              """);
 
         compile(generator,
                 new JavaSourceFromString("neojoin/viewtypes/mymodel/MymodelPackage.java",
-                        """
-                                package neojoin.viewtypes.mymodel;
-                                
-                                import org.eclipse.emf.ecore.EPackage;
-                                import org.eclipse.emf.ecore.EClass;
-                                import org.eclipse.emf.ecore.EReference;
-                                
-                                public interface MymodelPackage extends EPackage {
-                                    MymodelPackage eINSTANCE = null;
-                                
-                                    public interface Literals {
-                                        EClass ROOT = null;
-                                        EClass RESTAURANT = null;
-                                        EReference ROOT__ALL_RESTAURANTS = null;
-                                    }
-                                }
-                                """));
+                                         """
+                                         package neojoin.viewtypes.mymodel;
+                                         
+                                         import org.eclipse.emf.ecore.EPackage;
+                                         import org.eclipse.emf.ecore.EClass;
+                                         import org.eclipse.emf.ecore.EReference;
+                                         
+                                         public interface MymodelPackage extends EPackage {
+                                             MymodelPackage eINSTANCE = null;
+                                         
+                                             public interface Literals {
+                                                 EClass ROOT = null;
+                                                 EClass RESTAURANT = null;
+                                                 EReference ROOT__ALL_RESTAURANTS = null;
+                                             }
+                                         }
+                                         """));
     }
 
     @Test
@@ -75,27 +75,27 @@ class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
         DynamicModels.createEClass(viewType, "Store");
 
         ViewTypeSourceGenerator generator = createGenerator(viewType, "test", """
-                from Restaurant r
-                create root Store {}
-                """);
+                                                                              from Restaurant r
+                                                                              create root Store {}
+                                                                              """);
 
         compile(generator,
                 new JavaSourceFromString("neojoin/viewtypes/mymodel/MymodelPackage.java",
-                        """
-                                package neojoin.viewtypes.mymodel;
-                                
-                                import org.eclipse.emf.ecore.EPackage;
-                                import org.eclipse.emf.ecore.EClass;
-                                import org.eclipse.emf.ecore.EReference;
-                                
-                                public interface MymodelPackage extends EPackage {
-                                    MymodelPackage eINSTANCE = null;
-                                
-                                    public interface Literals {
-                                        EClass STORE = null;
-                                    }
-                                }
-                                """));
+                                         """
+                                         package neojoin.viewtypes.mymodel;
+                                         
+                                         import org.eclipse.emf.ecore.EPackage;
+                                         import org.eclipse.emf.ecore.EClass;
+                                         import org.eclipse.emf.ecore.EReference;
+                                         
+                                         public interface MymodelPackage extends EPackage {
+                                             MymodelPackage eINSTANCE = null;
+                                         
+                                             public interface Literals {
+                                                 EClass STORE = null;
+                                             }
+                                         }
+                                         """));
     }
 
     @Test
@@ -109,32 +109,32 @@ class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
         DynamicModels.createEAttribute(restaurant, "numEmployees", EcorePackage.eINSTANCE.getEInt());
 
         ViewTypeSourceGenerator generator = createGenerator(viewType, "test", """
-                from Restaurant r
-                create {
-                    r.numEmployees
-                }
-                """);
+                                                                              from Restaurant r
+                                                                              create {
+                                                                                  r.numEmployees
+                                                                              }
+                                                                              """);
 
         compile(generator,
                 new JavaSourceFromString("neojoin/viewtypes/mymodel/MymodelPackage.java",
-                        """
-                                package neojoin.viewtypes.mymodel;
-                                
-                                import org.eclipse.emf.ecore.EPackage;
-                                import org.eclipse.emf.ecore.EClass;
-                                import org.eclipse.emf.ecore.EReference;
-                                
-                                public interface MymodelPackage extends EPackage {
-                                    MymodelPackage eINSTANCE = null;
-                                
-                                    public interface Literals {
-                                        EClass ROOT = null;
-                                        EClass RESTAURANT = null;
-                                        EReference ROOT__ALL_RESTAURANTS = null;
-                                        EReference RESTAURANT__NUM_EMPLOYEES = null;
-                                    }
-                                }
-                                """));
+                                         """
+                                         package neojoin.viewtypes.mymodel;
+                                         
+                                         import org.eclipse.emf.ecore.EPackage;
+                                         import org.eclipse.emf.ecore.EClass;
+                                         import org.eclipse.emf.ecore.EReference;
+                                         
+                                         public interface MymodelPackage extends EPackage {
+                                             MymodelPackage eINSTANCE = null;
+                                         
+                                             public interface Literals {
+                                                 EClass ROOT = null;
+                                                 EClass RESTAURANT = null;
+                                                 EReference ROOT__ALL_RESTAURANTS = null;
+                                                 EReference RESTAURANT__NUM_EMPLOYEES = null;
+                                             }
+                                         }
+                                         """));
     }
 
     @Test
@@ -149,35 +149,35 @@ class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
         DynamicModels.createEAttribute(joined, "name", EcorePackage.eINSTANCE.getEString());
 
         ViewTypeSourceGenerator generator = createGenerator(viewType, "test", """
-                from Restaurant r
-                join Food f
-                create Joined {
-                    r.numEmployees
-                    f.name
-                }
-                """);
+                                                                              from Restaurant r
+                                                                              join Food f
+                                                                              create Joined {
+                                                                                  r.numEmployees
+                                                                                  f.name
+                                                                              }
+                                                                              """);
 
         compile(generator,
                 new JavaSourceFromString("neojoin/viewtypes/mymodel/MymodelPackage.java",
-                        """
-                                package neojoin.viewtypes.mymodel;
-                                
-                                import org.eclipse.emf.ecore.EPackage;
-                                import org.eclipse.emf.ecore.EClass;
-                                import org.eclipse.emf.ecore.EReference;
-                                
-                                public interface MymodelPackage extends EPackage {
-                                    MymodelPackage eINSTANCE = null;
-                                
-                                    public interface Literals {
-                                        EClass ROOT = null;
-                                        EClass JOINED = null;
-                                        EReference ROOT__ALL_JOINEDS = null;
-                                        EReference JOINED__NUM_EMPLOYEES = null;
-                                        EReference JOINED__NAME = null;
-                                    }
-                                }
-                                """));
+                                         """
+                                         package neojoin.viewtypes.mymodel;
+                                         
+                                         import org.eclipse.emf.ecore.EPackage;
+                                         import org.eclipse.emf.ecore.EClass;
+                                         import org.eclipse.emf.ecore.EReference;
+                                         
+                                         public interface MymodelPackage extends EPackage {
+                                             MymodelPackage eINSTANCE = null;
+                                         
+                                             public interface Literals {
+                                                 EClass ROOT = null;
+                                                 EClass JOINED = null;
+                                                 EReference ROOT__ALL_JOINEDS = null;
+                                                 EReference JOINED__NUM_EMPLOYEES = null;
+                                                 EReference JOINED__NAME = null;
+                                             }
+                                         }
+                                         """));
     }
 
     @Test
@@ -192,49 +192,49 @@ class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
         DynamicModels.createEAttribute(joined, "name", EcorePackage.eINSTANCE.getEString());
 
         ViewTypeSourceGenerator generator = createGenerator(viewType, "test", """
-                from Restaurant r
-                join Food f
-                where r.numEmployees > 10
-                create Joined {
-                    r.numEmployees
-                    f.name
-                }
-                """);
+                                                                              from Restaurant r
+                                                                              join Food f
+                                                                              where r.numEmployees > 10
+                                                                              create Joined {
+                                                                                  r.numEmployees
+                                                                                  f.name
+                                                                              }
+                                                                              """);
 
         compile(generator,
                 new JavaSourceFromString("neojoin/viewtypes/mymodel/MymodelPackage.java",
-                        """
-                                package neojoin.viewtypes.mymodel;
-                                
-                                import org.eclipse.emf.ecore.EPackage;
-                                import org.eclipse.emf.ecore.EClass;
-                                import org.eclipse.emf.ecore.EReference;
-                                
-                                public interface MymodelPackage extends EPackage {
-                                    MymodelPackage eINSTANCE = null;
-                                
-                                    public interface Literals {
-                                        EClass ROOT = null;
-                                        EClass JOINED = null;
-                                        EReference ROOT__ALL_JOINEDS = null;
-                                        EReference JOINED__NUM_EMPLOYEES = null;
-                                        EReference JOINED__NAME = null;
-                                    }
-                                }
-                                """),
+                                         """
+                                         package neojoin.viewtypes.mymodel;
+                                         
+                                         import org.eclipse.emf.ecore.EPackage;
+                                         import org.eclipse.emf.ecore.EClass;
+                                         import org.eclipse.emf.ecore.EReference;
+                                         
+                                         public interface MymodelPackage extends EPackage {
+                                             MymodelPackage eINSTANCE = null;
+                                         
+                                             public interface Literals {
+                                                 EClass ROOT = null;
+                                                 EClass JOINED = null;
+                                                 EReference ROOT__ALL_JOINEDS = null;
+                                                 EReference JOINED__NUM_EMPLOYEES = null;
+                                                 EReference JOINED__NAME = null;
+                                             }
+                                         }
+                                         """),
                 new JavaSourceFromString("neojoin/viewtypes/mymodel/ExpressionStubClass.java",
-                        """
-                                package neojoin.viewtypes.mymodel;
-                                
-                                class ExpressionStubClass {
-                                    static boolean method(
-                                        models.restaurant.Restaurant restaurant,
-                                        models.restaurant.Food food
-                                    ) {
-                                        return true;
-                                    }
-                                }
-                                """));
+                                         """
+                                         package neojoin.viewtypes.mymodel;
+                                         
+                                         class ExpressionStubClass {
+                                             static boolean method(
+                                                 models.restaurant.Restaurant restaurant,
+                                                 models.restaurant.Food food
+                                             ) {
+                                                 return true;
+                                             }
+                                         }
+                                         """));
     }
 
     @Test
@@ -249,36 +249,36 @@ class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
         DynamicModels.createEAttribute(joined, "name", EcorePackage.eINSTANCE.getEString());
 
         ViewTypeSourceGenerator generator = createGenerator(viewType, "test", """
-                from Restaurant r
-                join Food f
-                    using name
-                create Joined {
-                    r.numEmployees
-                    f.name
-                }
-                """);
+                                                                              from Restaurant r
+                                                                              join Food f
+                                                                                  using name
+                                                                              create Joined {
+                                                                                  r.numEmployees
+                                                                                  f.name
+                                                                              }
+                                                                              """);
 
         compile(generator,
                 new JavaSourceFromString("neojoin/viewtypes/mymodel/MymodelPackage.java",
-                        """
-                                package neojoin.viewtypes.mymodel;
-                                
-                                import org.eclipse.emf.ecore.EPackage;
-                                import org.eclipse.emf.ecore.EClass;
-                                import org.eclipse.emf.ecore.EReference;
-                                
-                                public interface MymodelPackage extends EPackage {
-                                    MymodelPackage eINSTANCE = null;
-                                
-                                    public interface Literals {
-                                        EClass ROOT = null;
-                                        EClass JOINED = null;
-                                        EReference ROOT__ALL_JOINEDS = null;
-                                        EReference JOINED__NUM_EMPLOYEES = null;
-                                        EReference JOINED__NAME = null;
-                                    }
-                                }
-                                """));
+                                         """
+                                         package neojoin.viewtypes.mymodel;
+                                         
+                                         import org.eclipse.emf.ecore.EPackage;
+                                         import org.eclipse.emf.ecore.EClass;
+                                         import org.eclipse.emf.ecore.EReference;
+                                         
+                                         public interface MymodelPackage extends EPackage {
+                                             MymodelPackage eINSTANCE = null;
+                                         
+                                             public interface Literals {
+                                                 EClass ROOT = null;
+                                                 EClass JOINED = null;
+                                                 EReference ROOT__ALL_JOINEDS = null;
+                                                 EReference JOINED__NUM_EMPLOYEES = null;
+                                                 EReference JOINED__NAME = null;
+                                             }
+                                         }
+                                         """));
     }
 
     @Test
@@ -293,50 +293,50 @@ class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
         DynamicModels.createEAttribute(joined, "name", EcorePackage.eINSTANCE.getEString());
 
         ViewTypeSourceGenerator generator = createGenerator(viewType, "test", """
-                from Restaurant r
-                join Food f
-                    on r.name == f.name
-                    using name, name, name, name
-                create Joined {
-                    r.numEmployees
-                    f.name
-                }
-                """);
+                                                                              from Restaurant r
+                                                                              join Food f
+                                                                                  on r.name == f.name
+                                                                                  using name, name, name, name
+                                                                              create Joined {
+                                                                                  r.numEmployees
+                                                                                  f.name
+                                                                              }
+                                                                              """);
 
         compile(generator,
                 new JavaSourceFromString("neojoin/viewtypes/mymodel/MymodelPackage.java",
-                        """
-                                package neojoin.viewtypes.mymodel;
-                                
-                                import org.eclipse.emf.ecore.EPackage;
-                                import org.eclipse.emf.ecore.EClass;
-                                import org.eclipse.emf.ecore.EReference;
-                                
-                                public interface MymodelPackage extends EPackage {
-                                    MymodelPackage eINSTANCE = null;
-                                
-                                    public interface Literals {
-                                        EClass ROOT = null;
-                                        EClass JOINED = null;
-                                        EReference ROOT__ALL_JOINEDS = null;
-                                        EReference JOINED__NUM_EMPLOYEES = null;
-                                        EReference JOINED__NAME = null;
-                                    }
-                                }
-                                """),
+                                         """
+                                         package neojoin.viewtypes.mymodel;
+                                         
+                                         import org.eclipse.emf.ecore.EPackage;
+                                         import org.eclipse.emf.ecore.EClass;
+                                         import org.eclipse.emf.ecore.EReference;
+                                         
+                                         public interface MymodelPackage extends EPackage {
+                                             MymodelPackage eINSTANCE = null;
+                                         
+                                             public interface Literals {
+                                                 EClass ROOT = null;
+                                                 EClass JOINED = null;
+                                                 EReference ROOT__ALL_JOINEDS = null;
+                                                 EReference JOINED__NUM_EMPLOYEES = null;
+                                                 EReference JOINED__NAME = null;
+                                             }
+                                         }
+                                         """),
                 new JavaSourceFromString("neojoin/viewtypes/mymodel/ExpressionStubClass.java",
-                        """
-                                package neojoin.viewtypes.mymodel;
-                                
-                                class ExpressionStubClass {
-                                    static boolean method(
-                                        models.restaurant.Restaurant restaurant,
-                                        models.restaurant.Food food
-                                    ) {
-                                        return true;
-                                    }
-                                }
-                                """));
+                                         """
+                                         package neojoin.viewtypes.mymodel;
+                                         
+                                         class ExpressionStubClass {
+                                             static boolean method(
+                                                 models.restaurant.Restaurant restaurant,
+                                                 models.restaurant.Food food
+                                             ) {
+                                                 return true;
+                                             }
+                                         }
+                                         """));
     }
 
     @Test
@@ -353,7 +353,7 @@ class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
                                                                                   value := 12 + 47
                                                                               }
                                                                               """
-        );
+                                                           );
 
         compile(generator,
                 new JavaSourceFromString("neojoin/viewtypes/mymodel/MymodelPackage.java",
@@ -388,6 +388,6 @@ class ViewTypeSourceGeneratorTest extends AbstractGeneratorTest {
                                          }
                                          """
                 )
-        );
+               );
     }
 }

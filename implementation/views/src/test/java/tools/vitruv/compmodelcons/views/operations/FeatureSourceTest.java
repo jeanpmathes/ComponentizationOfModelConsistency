@@ -80,10 +80,14 @@ class FeatureSourceTest extends AbstractOperationTest {
 
         // Pre-Action Change
         simple.eSet(numberAttribute, numEmployeesValue + 3);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createReplaceSingleAttributeChange(simple, numberAttribute, numEmployeesValue, numEmployeesValue + 3);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance()
+                                                                   .createReplaceSingleAttributeChange(simple, numberAttribute, numEmployeesValue,
+                                                                                                       numEmployeesValue +
+                                                                                                               3);
 
         // Action
-        result = operation.doPut(change, result, simpleBinding, new ValueUpdateBinding.Replace(numEmployeesValue + 3), context);
+        result = operation.doPut(change, result, simpleBinding, new ValueUpdateBinding.Replace(
+                numEmployeesValue + 3), context);
 
         // Assertions
         assertEquals(new ValueBinding.Single(numEmployeesValue + 3), result.value());
@@ -121,7 +125,8 @@ class FeatureSourceTest extends AbstractOperationTest {
         EObject insertedRestaurant = DynamicModels.createEObject(restaurantClass);
         DynamicModels.getList(simple, reference).add(inserted);
         int index = DynamicModels.getList(simple, reference).indexOf(inserted);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertReferenceChange(simple, reference, inserted, index);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance()
+                                                                   .createInsertReferenceChange(simple, reference, inserted, index);
 
         // Action
         PutContext spyContext = spy(context);
@@ -129,8 +134,10 @@ class FeatureSourceTest extends AbstractOperationTest {
 
         // Assertions
         verify(spyContext, times(1)).notifyOriginObjectAttachmentChange(insertedRestaurant);
-        assertEquals(new ValueBinding.Many(Streams.concat(Stream.of(insertedRestaurant), restaurants.stream()).toList()), result.value());
-        assertEquals(Streams.concat(Stream.of(insertedRestaurant), restaurants.stream()).toList(), store.eGet(restaurantsReference));
+        assertEquals(new ValueBinding.Many(Streams.concat(Stream.of(insertedRestaurant), restaurants.stream())
+                                                  .toList()), result.value());
+        assertEquals(Streams.concat(Stream.of(insertedRestaurant), restaurants.stream())
+                            .toList(), store.eGet(restaurantsReference));
     }
 
     @Test
@@ -162,7 +169,8 @@ class FeatureSourceTest extends AbstractOperationTest {
         // Pre-Action Change
         EObject removed = DynamicModels.createEObject(restaurantClass);
         EObject removedRestaurant = restaurants.getFirst();
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createRemoveReferenceChange(simple, reference, removed, 0);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance()
+                                                                   .createRemoveReferenceChange(simple, reference, removed, 0);
 
         // Action
         PutContext spyContext = spy(context);
@@ -170,10 +178,11 @@ class FeatureSourceTest extends AbstractOperationTest {
 
         // Assertions
         verify(spyContext, times(1)).notifyOriginObjectAttachmentChange(removedRestaurant);
-        assertEquals(new ValueBinding.Many(restaurants.stream().filter(entry -> entry != removedRestaurant).toList()), result.value());
-        assertEquals(restaurants.stream().filter(entry -> entry != removedRestaurant).toList(), store.eGet(restaurantsReference));
+        assertEquals(new ValueBinding.Many(restaurants.stream().filter(entry -> entry != removedRestaurant)
+                                                      .toList()), result.value());
+        assertEquals(restaurants.stream().filter(entry -> entry != removedRestaurant)
+                                .toList(), store.eGet(restaurantsReference));
     }
-
 
     @Test
     public void testPutOfUnsetShouldUnsetFeatureOnOriginObject() {
@@ -202,7 +211,8 @@ class FeatureSourceTest extends AbstractOperationTest {
 
         // Pre-Action Change
         simple.eUnset(numberAttribute);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createUnsetFeatureChange(simple, numberAttribute);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance()
+                                                                   .createUnsetFeatureChange(simple, numberAttribute);
 
         // Action
         result = operation.doPut(change, result, simpleBinding, new ValueUpdateBinding.Unset(), context);

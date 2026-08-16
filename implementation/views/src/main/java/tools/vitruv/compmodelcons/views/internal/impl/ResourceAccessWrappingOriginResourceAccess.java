@@ -24,9 +24,9 @@ public class ResourceAccessWrappingOriginResourceAccess extends AbstractOriginRe
     @Override
     protected Collection<EObject> getRoots() {
         return Streams.concat(resourceAccess.getModelResources().stream(), Arrays.stream(additionalResources))
-                .flatMap(resource -> resource.getContents().stream())
-                .distinct()
-                .toList();
+                      .flatMap(resource -> resource.getContents().stream())
+                      .distinct()
+                      .toList();
     }
 
     @Override

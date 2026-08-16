@@ -13,7 +13,8 @@ public class GeneratedQueryModelExpressionTypeConfiguration implements QueryMode
         String name = viewTypeDefinition.eResource().getURI().trimFileExtension().lastSegment();
 
         queryModelExpressionType.setSimpleName(NamingGenerator.convertToPascalCase(name) + "ViewTypeExpressions");
-        queryModelExpressionType.setPackageName(NamingGenerator.PACKAGE_BASE + "." + viewTypeDefinition.getExport().getPackage());
+        queryModelExpressionType.setPackageName(
+                NamingGenerator.PACKAGE_BASE + "." + viewTypeDefinition.getExport().getPackage());
         queryModelExpressionType.setVisibility(JvmVisibility.DEFAULT);
         queryModelExpressionType.setFinal(true);
     }

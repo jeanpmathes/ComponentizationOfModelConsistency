@@ -9,6 +9,7 @@ public class NamingGenerator {
     private NamingGenerator() {
 
     }
+
     private final static char[] DELIMITERS = {
             '_', ' ', '-'
     };

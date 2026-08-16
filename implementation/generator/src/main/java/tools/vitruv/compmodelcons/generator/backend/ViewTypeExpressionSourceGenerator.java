@@ -28,7 +28,7 @@ public class ViewTypeExpressionSourceGenerator implements ExpressionResolver {
             IGeneratorConfigProvider generatorConfigProvider,
             IJvmModelAssociations jvmModelAssociations,
             ILogicalContainerProvider logicalContainerProvider
-    ) {
+                                            ) {
         this.expressionHelper = expressionHelper;
 
         this.jvmModelGenerator = jvmModelGenerator;
@@ -40,7 +40,8 @@ public class ViewTypeExpressionSourceGenerator implements ExpressionResolver {
     }
 
     public String generate() {
-        return jvmModelGenerator.generateType(expressionHoldingType, generatorConfigProvider.get(expressionHoldingType)).toString();
+        return jvmModelGenerator.generateType(expressionHoldingType, generatorConfigProvider.get(expressionHoldingType))
+                                .toString();
     }
 
     public String getFileName() {

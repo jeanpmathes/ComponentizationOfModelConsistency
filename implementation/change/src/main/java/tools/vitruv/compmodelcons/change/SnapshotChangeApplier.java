@@ -28,7 +28,7 @@ public class SnapshotChangeApplier {
                 repositoryChange,
                 repositoryObject -> snapshot.getSnapshotEObject(repositoryObject).orElseThrow(),
                 resource -> snapshot.getModelResource(resource.getURI())
-        );
+                                                                                   );
 
         ApplyEChangeSwitch.applyEChange(snapshotChange, true);
 

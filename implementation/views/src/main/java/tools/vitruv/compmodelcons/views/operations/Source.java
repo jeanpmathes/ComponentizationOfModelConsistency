@@ -16,16 +16,16 @@ import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
 import java.util.List;
 
 public class Source implements OriginOperation {
-    private final EClass              sourceClass;
+    private final EClass sourceClass;
     private final SourceObjectFactory sourceObjectFactory;
-    private final boolean             isRoot;
-    private final EReference          container;
+    private final boolean isRoot;
+    private final EReference container;
 
     public Source(EClass sourceClass, SourceObjectFactory sourceObjectFactory) {
-        this.sourceClass         = sourceClass;
+        this.sourceClass = sourceClass;
         this.sourceObjectFactory = SourceObjectFactory.requireNonNullElseDefault(sourceObjectFactory, sourceClass);
-        this.isRoot              = DynamicModels.isRoot(sourceClass);
-        this.container           = isRoot ? null : DynamicModels.getUnambiguousContainer(sourceClass);
+        this.isRoot = DynamicModels.isRoot(sourceClass);
+        this.container = isRoot ? null : DynamicModels.getUnambiguousContainer(sourceClass);
     }
 
     public static void attachedCreatedOriginObject(EObject created, EClass sourceClass, boolean isRoot, EReference container, PutContext context) {
@@ -64,11 +64,13 @@ public class Source implements OriginOperation {
         context.notifyOriginObjectDeleted(deleted);
     }
 
-    @Override public List<OriginBinding> doGet(GetContext context) {
+    @Override
+    public List<OriginBinding> doGet(GetContext context) {
         return context.getOriginObjects(sourceClass).stream().map(OriginBinding::of).toList();
     }
 
-    @Override public OriginBinding doPut(EChange<EObject> viewChange, OriginBinding target, PutContext context) {
+    @Override
+    public OriginBinding doPut(EChange<EObject> viewChange, OriginBinding target, PutContext context) {
         if (viewChange instanceof CreateEObject<EObject> createEObject) {
             assert target.originObjects().isEmpty();
 

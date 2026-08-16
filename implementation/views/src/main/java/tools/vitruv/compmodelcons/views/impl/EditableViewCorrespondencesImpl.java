@@ -34,12 +34,13 @@ public class EditableViewCorrespondencesImpl implements EditableViewCorresponden
     @Override
     public Set<EObject> getCorrespondingViewObjectForPartialOriginObjects(EObject originObject, EClass viewClass) {
         return partialCorrespondences.get(new PartialOriginKey(originObject, viewClass)).stream()
-                .map(ViewKey::viewObject).collect(Collectors.toUnmodifiableSet());
+                                     .map(ViewKey::viewObject).collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
     public boolean correspond(List<EObject> originObjects, EObject viewObject) {
-        return correspondences.containsKey(new OriginKey(originObjects, viewObject.eClass())) && correspondences.get(new OriginKey(originObjects, viewObject.eClass())).equals(new ViewKey(viewObject));
+        return correspondences.containsKey(new OriginKey(originObjects, viewObject.eClass())) &&
+                correspondences.get(new OriginKey(originObjects, viewObject.eClass())).equals(new ViewKey(viewObject));
     }
 
     @Override

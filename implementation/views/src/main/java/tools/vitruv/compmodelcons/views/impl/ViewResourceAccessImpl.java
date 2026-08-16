@@ -51,16 +51,16 @@ public class ViewResourceAccessImpl implements ViewResourceAccess {
     @Override
     public void moveRoot(EObject root, URI uri) {
         resourceSet.getResources().stream()
-                .filter(resource -> resource.getContents().contains(root))
-                .findFirst()
-                .ifPresent(resource -> resource.setURI(uri));
+                   .filter(resource -> resource.getContents().contains(root))
+                   .findFirst()
+                   .ifPresent(resource -> resource.setURI(uri));
     }
 
     @Override
     public Collection<EObject> getRoots() {
         return resourceSet.getResources().stream()
-                .flatMap(resource -> resource.getContents().stream())
-                .toList();
+                          .flatMap(resource -> resource.getContents().stream())
+                          .toList();
     }
 
     @Override

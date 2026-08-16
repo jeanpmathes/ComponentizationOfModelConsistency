@@ -20,16 +20,16 @@ import java.util.List;
 import java.util.Optional;
 
 public class FeatureProject {
-    private final Optional<Integer>  sourceIndex;
+    private final Optional<Integer> sourceIndex;
     private final EStructuralFeature createdFeature;
-    private final boolean            isReference;
+    private final boolean isReference;
     private final FeatureOriginOperation origin;
 
     public FeatureProject(Optional<Integer> sourceIndex, EStructuralFeature createdFeature, FeatureOriginOperation origin) {
         this.sourceIndex = sourceIndex;
         this.createdFeature = createdFeature;
         this.isReference = createdFeature instanceof EReference;
-        this.origin      = origin;
+        this.origin = origin;
     }
 
     public EStructuralFeature getCreatedFeature() {
@@ -91,8 +91,9 @@ public class FeatureProject {
 
     private FeatureBinding put(int index, EChange<EObject> change, FeatureProjectBindingImpl binding, ObjectBinding subject, PutContext context) {
         ValueUpdateBinding value = switch (change) {
-            case ReplaceSingleValuedFeatureEChange<EObject, ?, ?> replaceSingleValuedFeatureEChange -> new ValueUpdateBinding.Replace(
-                    translateViewToOrigin(index, replaceSingleValuedFeatureEChange.getNewValue(), context));
+            case ReplaceSingleValuedFeatureEChange<EObject, ?, ?> replaceSingleValuedFeatureEChange ->
+                    new ValueUpdateBinding.Replace(
+                            translateViewToOrigin(index, replaceSingleValuedFeatureEChange.getNewValue(), context));
             case InsertInListEChange<EObject, ?, ?> insertInListEChange -> new ValueUpdateBinding.Insert(
                     translateViewToOrigin(index, insertInListEChange.getNewValue(), context),
                     insertInListEChange.getIndex());
@@ -110,7 +111,7 @@ public class FeatureProject {
     private Object translateOriginToView(Object originValue, GetContext context) {
         if (originValue instanceof EObject eObject) {
             var candidates = context.getCorrespondences()
-                    .getCorrespondingViewObjectForPartialOriginObjects(eObject, (EClass) createdFeature.getEType());
+                                    .getCorrespondingViewObjectForPartialOriginObjects(eObject, (EClass) createdFeature.getEType());
             if (candidates.isEmpty()) {
                 throw new IllegalStateException("Could not find view object for origin object " + eObject);
             }
@@ -138,7 +139,8 @@ public class FeatureProject {
     private record FeatureProjectBindingImpl(FeatureBinding originBinding, EObject viewSubjectObject,
                                              ValueBinding value) implements FeatureBinding {
 
-        @Override public List<EObject> originSubjectObjects() {
+        @Override
+        public List<EObject> originSubjectObjects() {
             return originBinding.originSubjectObjects();
         }
     }

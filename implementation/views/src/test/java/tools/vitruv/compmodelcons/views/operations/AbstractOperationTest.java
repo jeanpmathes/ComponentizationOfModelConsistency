@@ -38,7 +38,8 @@ class AbstractOperationTest {
     protected static Models loadModels() throws URISyntaxException {
         ResourceSet resourceSet = new ResourceSetImpl();
 
-        resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("ecore", new EcoreResourceFactoryImpl());
+        resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap()
+                   .put("ecore", new EcoreResourceFactoryImpl());
         resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("xmi", new XMIResourceFactoryImpl());
 
         Resource[] models = new Resource[Model.values().length];
@@ -72,11 +73,15 @@ class AbstractOperationTest {
         }
 
         public URI getMetamodelURI() throws URISyntaxException {
-            return URI.createFileURI(Paths.get(Objects.requireNonNull(getClass().getClassLoader().getResource(String.format("models/%s.ecore", metamodel))).toURI()).toString());
+            return URI.createFileURI(Paths.get(Objects.requireNonNull(getClass().getClassLoader()
+                                                                                .getResource(String.format("models/%s.ecore", metamodel)))
+                                                      .toURI()).toString());
         }
 
         public URI getModelURI() throws URISyntaxException {
-            return URI.createFileURI(Paths.get(Objects.requireNonNull(getClass().getClassLoader().getResource(String.format("models/%s.xmi", model))).toURI()).toString());
+            return URI.createFileURI(Paths.get(Objects.requireNonNull(getClass().getClassLoader()
+                                                                                .getResource(String.format("models/%s.xmi", model)))
+                                                      .toURI()).toString());
         }
 
         public int getIndex() {
@@ -148,7 +153,9 @@ class AbstractOperationTest {
         public Models(ResourceSet resourceSet, Resource[] originModels) {
             this.resourceSet = resourceSet;
             this.originModels = originModels;
-            this.originPackages = Arrays.stream(originModels).map(resource -> resource.getContents().getFirst().eClass().getEPackage()).toArray(EPackage[]::new);
+            this.originPackages = Arrays.stream(originModels)
+                                        .map(resource -> resource.getContents().getFirst().eClass().getEPackage())
+                                        .toArray(EPackage[]::new);
             this.viewModels = new ArrayList<>();
 
             viewModels.add(resourceSet.createResource(URI.createURI("view.xmi")));
@@ -168,9 +175,11 @@ class AbstractOperationTest {
 
         public Collection<Resource> getOtherModels(Model model) {
             return resourceSet.getResources().stream()
-                    .filter(resource -> !resource.getContents().isEmpty() && resource.getContents().getFirst().eClass().getEPackage().equals(getPackage(model)))
-                    .filter(resource -> resource != getModel(model))
-                    .toList();
+                              .filter(resource -> !resource.getContents().isEmpty() &&
+                                      resource.getContents().getFirst().eClass().getEPackage()
+                                              .equals(getPackage(model)))
+                              .filter(resource -> resource != getModel(model))
+                              .toList();
         }
 
         public Model getModelIdentifier(EPackage ePackage) {
@@ -198,7 +207,8 @@ class AbstractOperationTest {
         }
 
         public Resource createOriginModel(EPackage ePackage, URI uri) {
-            return resourceSet.createResource(uri.appendFileExtension(".origin").appendFileExtension(ePackage.getNsPrefix()));
+            return resourceSet.createResource(uri.appendFileExtension(".origin")
+                                                 .appendFileExtension(ePackage.getNsPrefix()));
         }
     }
 
@@ -218,7 +228,8 @@ class AbstractOperationTest {
                 @Override
                 public Collection<Resource> getResources(EPackage ePackage) {
                     Model model = models.getModelIdentifier(ePackage);
-                    return Streams.concat(Stream.of(models.getModel(model)), models.getOtherModels(model).stream()).toList();
+                    return Streams.concat(Stream.of(models.getModel(model)), models.getOtherModels(model).stream())
+                                  .toList();
                 }
 
                 @Override
@@ -263,7 +274,8 @@ class AbstractOperationTest {
 
                 @Override
                 public Collection<EObject> getRoots() {
-                    return models.getViewModels().stream().flatMap(resource -> resource.getContents().stream()).toList();
+                    return models.getViewModels().stream().flatMap(resource -> resource.getContents().stream())
+                                 .toList();
                 }
 
                 @Override

@@ -18,20 +18,20 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class Root {
-    private final EClass  rootClass;
+    private final EClass rootClass;
     private final boolean isRootImplicit;
     private final Project root;
     private final List<Target> targets;
 
-    private final Map<EClass, Integer> targetIndices               = new HashMap<>();
-    private final Set<EReference>      targetContainmentReferences = new HashSet<>();
+    private final Map<EClass, Integer> targetIndices = new HashMap<>();
+    private final Set<EReference> targetContainmentReferences = new HashSet<>();
 
     public Root(EClass rootClass, Optional<Project> root, List<Target> targets) {
         this.rootClass = rootClass;
         this.isRootImplicit = root.isEmpty();
-        this.root      =
+        this.root =
                 root.orElse(new Project(rootClass, new Empty(), List.of(), Project.OnPut.NO_OP));
-        this.targets   = targets;
+        this.targets = targets;
 
         for (int index = 0; index < targets.size(); index++) {
             targetIndices.put(targets.get(index).reference().getEReferenceType(), index);
@@ -46,10 +46,10 @@ public class Root {
                     return new RootObjectBindingImpl(rootBinding, targets.stream().map(entry -> {
                         Map<EObject, ObjectBinding> result = new HashMap<>();
                         for (ObjectBinding targetBinding : entry.operation()
-                                .beginGetByCreatingViewObjects(context)) {
+                                                                .beginGetByCreatingViewObjects(context)) {
                             result.put(targetBinding.viewObject(), targetBinding);
                             DynamicModels.getList(rootBinding.viewObject(), entry.reference())
-                                    .add(targetBinding.viewObject());
+                                         .add(targetBinding.viewObject());
                         }
                         return result;
                     }).toList()
@@ -61,8 +61,8 @@ public class Root {
             for (int targetIndex = 0; targetIndex < targets.size(); targetIndex++) {
                 for (var targetBinding : rootBinding.targetBindings.get(targetIndex).values()) {
                     targets.get(targetIndex)
-                            .operation()
-                            .completeGetByCallingGetOnFeatures(targetBinding, context);
+                           .operation()
+                           .completeGetByCallingGetOnFeatures(targetBinding, context);
                 }
             }
         }
@@ -83,11 +83,11 @@ public class Root {
                 break;
             }
             if (rootBinding.targetBindings()
-                    .stream()
-                    .anyMatch(map -> map.values()
-                            .stream()
-                            .anyMatch(binding -> binding.viewObject()
-                                    .equals(affectedViewObject)))) {
+                           .stream()
+                           .anyMatch(map -> map.values()
+                                               .stream()
+                                               .anyMatch(binding -> binding.viewObject()
+                                                                           .equals(affectedViewObject)))) {
                 responsibleRootIndex = index;
                 break;
             }
@@ -137,14 +137,15 @@ public class Root {
                 ObjectBinding rootBinding =
                         root.doPut(change, ObjectBinding.ofViewObject(affectedViewObject), context);
                 return new RootObjectBindingImpl(rootBinding,
-                                                 Stream.generate(() -> (Map<EObject, ObjectBinding>) new HashMap<EObject, ObjectBinding>())
+                                                 Stream
+                                                         .generate(() -> (Map<EObject, ObjectBinding>) new HashMap<EObject, ObjectBinding>())
                                                          .limit(targets.size())
                                                          .toList()
                 );
             } else {
-                RootObjectBindingImpl rootTarget   = (RootObjectBindingImpl) target;
-                ObjectBinding         peeledTarget = rootTarget.rootBinding;
-                ObjectBinding         rootBinding  = root.doPut(change, peeledTarget, context);
+                RootObjectBindingImpl rootTarget = (RootObjectBindingImpl) target;
+                ObjectBinding peeledTarget = rootTarget.rootBinding;
+                ObjectBinding rootBinding = root.doPut(change, peeledTarget, context);
                 return new RootObjectBindingImpl(rootBinding, rootTarget.targetBindings);
             }
         } else {
@@ -152,7 +153,7 @@ public class Root {
             int classIndex = targetIndices.get(affectedViewObject.eClass());
             ObjectBinding peeledTarget =
                     Optional.ofNullable(rootTarget.targetBindings.get(classIndex)
-                                                .get(affectedViewObject))
+                                                                 .get(affectedViewObject))
                             .orElse(ObjectBinding.ofViewObject(affectedViewObject));
             ObjectBinding targetBinding =
                     targets.get(classIndex).operation().doPut(change, peeledTarget, context);
@@ -182,17 +183,20 @@ public class Root {
                                          List<Map<EObject, ObjectBinding>> targetBindings
     ) implements ObjectBinding {
 
-        @Override public List<EObject> originObjects() {
+        @Override
+        public List<EObject> originObjects() {
             return rootBinding.originObjects();
         }
 
-        @Override public EObject viewObject() {
+        @Override
+        public EObject viewObject() {
             return rootBinding.viewObject();
         }
     }
 
     private static class Empty implements OriginOperation {
-        @Override public List<OriginBinding> doGet(GetContext context) {
+        @Override
+        public List<OriginBinding> doGet(GetContext context) {
             return List.of(OriginBinding.empty());
         }
 

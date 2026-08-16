@@ -22,29 +22,30 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class Join implements OriginOperation {
-    private final EClass              sourceClass;
+    private final EClass sourceClass;
     private final SourceObjectFactory sourceObjectFactory;
-    private final boolean             isRoot;
-    private final EReference          container;
-    private final OriginOperation     origin;
-    private final Type                type;
-    private final Condition           condition;
+    private final boolean isRoot;
+    private final EReference container;
+    private final OriginOperation origin;
+    private final Type type;
+    private final Condition condition;
 
     public Join(EClass sourceClass, SourceObjectFactory sourceObjectFactory, OriginOperation origin, Type type, Condition condition) {
-        this.sourceClass         = sourceClass;
+        this.sourceClass = sourceClass;
         this.sourceObjectFactory = SourceObjectFactory.requireNonNullElseDefault(sourceObjectFactory, sourceClass);
-        this.isRoot              = DynamicModels.isRoot(sourceClass);
-        this.container           = isRoot ? null : DynamicModels.getUnambiguousContainer(sourceClass);
-        this.origin              = origin;
-        this.type                = type;
-        this.condition           = condition;
+        this.isRoot = DynamicModels.isRoot(sourceClass);
+        this.container = isRoot ? null : DynamicModels.getUnambiguousContainer(sourceClass);
+        this.origin = origin;
+        this.type = type;
+        this.condition = condition;
     }
 
-    @Override public List<OriginBinding> doGet(GetContext context) {
+    @Override
+    public List<OriginBinding> doGet(GetContext context) {
         return origin.doGet(context).stream().flatMap(originBinding -> {
             Stream<OriginBinding> result = context.getOriginObjects(sourceClass).stream()
-                    .map(joined -> (OriginBinding) new JoinOriginBindingImpl(originBinding, joined))
-                    .filter(condition::evaluate);
+                                                  .map(joined -> (OriginBinding) new JoinOriginBindingImpl(originBinding, joined))
+                                                  .filter(condition::evaluate);
 
             return type == Type.INNER ? result : defaultIfEmpty(result, () -> originBinding);
         }).toList();
@@ -55,7 +56,8 @@ public class Join implements OriginOperation {
         return iterator.hasNext() ? Streams.stream(iterator) : Stream.of(defaultFunction.get());
     }
 
-    @Override public OriginBinding doPut(EChange<EObject> viewChange, OriginBinding target, PutContext context) {
+    @Override
+    public OriginBinding doPut(EChange<EObject> viewChange, OriginBinding target, PutContext context) {
         if (viewChange instanceof CreateEObject<EObject> createEObject) {
             assert target.originObjects().isEmpty();
 
@@ -87,8 +89,8 @@ public class Join implements OriginOperation {
         }
 
         if (viewChange instanceof InsertRootEObject<EObject> insertRootEObject) {
-            JoinOriginBindingImpl binding  = (JoinOriginBindingImpl) target;
-            EObject               inserted = binding.originObject();
+            JoinOriginBindingImpl binding = (JoinOriginBindingImpl) target;
+            EObject inserted = binding.originObject();
 
             OriginBinding originBinding = origin.doPut(viewChange, binding.originBinding(), context);
 
@@ -117,7 +119,8 @@ public class Join implements OriginOperation {
     }
 
     public enum Type {
-        INNER, LEFT
+        INNER,
+        LEFT
     }
 
     @Override
@@ -138,7 +141,8 @@ public class Join implements OriginOperation {
             this.originObjects.add(originObject);
         }
 
-        @Override public List<EObject> originObjects() {
+        @Override
+        public List<EObject> originObjects() {
             return originObjects;
         }
 

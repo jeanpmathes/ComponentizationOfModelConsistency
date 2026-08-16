@@ -112,7 +112,8 @@ public class DynamicModels {
         for (EClassifier eClassifier : sourceClass.getEPackage().getEClassifiers()) {
             if (eClassifier instanceof EClass eClass) {
                 for (EReference eReference : eClass.getEReferences()) {
-                    if (eReference.isContainment() && eReference.isMany() && eReference.getEReferenceType().isSuperTypeOf(sourceClass)) {
+                    if (eReference.isContainment() && eReference.isMany() &&
+                            eReference.getEReferenceType().isSuperTypeOf(sourceClass)) {
                         containers.add(eReference);
                     }
                 }

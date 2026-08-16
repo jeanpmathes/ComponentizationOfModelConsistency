@@ -270,7 +270,8 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
 
         @Override
         public CommittableView withChangeDerivingTrait(StateBasedChangeResolutionStrategy stateBasedChangeResolutionStrategy) {
-            return new CommittableOperationBasedView(this, originResourceAccess.getView().withChangeDerivingTrait(stateBasedChangeResolutionStrategy));
+            return new CommittableOperationBasedView(this, originResourceAccess.getView()
+                                                                               .withChangeDerivingTrait(stateBasedChangeResolutionStrategy));
         }
 
         @Override

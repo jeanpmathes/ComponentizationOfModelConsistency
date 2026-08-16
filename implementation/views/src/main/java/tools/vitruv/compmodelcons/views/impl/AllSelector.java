@@ -42,7 +42,8 @@ public class AllSelector implements ViewSelector {
     }
 
     @Override
-    public void setSelected(EObject eObject, boolean selected) { }
+    public void setSelected(EObject eObject, boolean selected) {
+    }
 
     @Override
     public boolean isViewObjectSelected(EObject eObject) {
@@ -63,5 +64,5 @@ public class AllSelector implements ViewSelector {
     public boolean isValid() {
         return true;
     }
-    
+
 }

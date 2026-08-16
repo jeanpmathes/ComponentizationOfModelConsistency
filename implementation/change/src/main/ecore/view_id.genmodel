@@ -8,16 +8,16 @@
                    modelName="ViewIdModel" rootExtendsClass="org.eclipse.emf.ecore.impl.MinimalEObjectImpl$Container"
                    codeFormatting="true" importerID="org.eclipse.emf.importer.ecore" complianceLevel="17.0"
                    copyrightFields="false" operationReflection="true" importOrganizing="true">
-    <foreignModel>model.ecore</foreignModel>
-    <testsDirectory xsi:nil="true"/>
-    <genPackages prefix="ViewIdModel" basePackage="tools.vitruv.compmodelcons.change.viewid"
-                 disposableProviderFactory="true" ecorePackage="view_id.ecore#/">
-        <genClasses ecoreClass="view_id.ecore#//ViewIdModel">
-            <genFeatures property="None" children="true" createChild="true"
-                         ecoreFeature="ecore:EReference view_id.ecore#//ViewIdModel/ids"/>
-        </genClasses>
-        <genClasses ecoreClass="view_id.ecore#//ViewId">
-            <genFeatures createChild="false" ecoreFeature="ecore:EAttribute view_id.ecore#//ViewId/hierarchicalId"/>
-        </genClasses>
-    </genPackages>
+  <foreignModel>model.ecore</foreignModel>
+  <testsDirectory xsi:nil="true"/>
+  <genPackages prefix="ViewIdModel" basePackage="tools.vitruv.compmodelcons.change.viewid"
+               disposableProviderFactory="true" ecorePackage="view_id.ecore#/">
+    <genClasses ecoreClass="view_id.ecore#//ViewIdModel">
+      <genFeatures property="None" children="true" createChild="true"
+                   ecoreFeature="ecore:EReference view_id.ecore#//ViewIdModel/ids"/>
+    </genClasses>
+    <genClasses ecoreClass="view_id.ecore#//ViewId">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute view_id.ecore#//ViewId/hierarchicalId"/>
+    </genClasses>
+  </genPackages>
 </genmodel:GenModel>

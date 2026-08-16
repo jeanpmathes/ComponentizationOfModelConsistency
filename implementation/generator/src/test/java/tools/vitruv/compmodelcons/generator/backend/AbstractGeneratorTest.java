@@ -45,8 +45,8 @@ public class AbstractGeneratorTest {
                                                                
                                                                """ + query);
 
-        NeoJoinStandaloneSetup setup  = new NeoJoinStandaloneSetup(registry);
-        Parser.Result          result = setup.getParser().parse(URI.createFileURI(path.toString()));
+        NeoJoinStandaloneSetup setup = new NeoJoinStandaloneSetup(registry);
+        Parser.Result result = setup.getParser().parse(URI.createFileURI(path.toString()));
 
         Parser.Result.Success success = assertInstanceOf(Parser.Result.Success.class, result);
         return success.aqr();
@@ -57,7 +57,7 @@ public class AbstractGeneratorTest {
                                                                                                              IOException {
         PackageModelCollector collector = new PackageModelCollector(Paths.get(
                 Objects.requireNonNull(ViewTypeSourceGeneratorTest.class.getClassLoader().getResource("models"))
-                        .toURI()).toString());
+                       .toURI()).toString());
         EPackage.Registry registry = collector.collect();
 
         List<Metamodel> originMetamodels =
@@ -73,34 +73,38 @@ public class AbstractGeneratorTest {
         Pattern pattern = Pattern.compile("^(.+)\\.[^.]+\\.([^.]+)$");
 
         return new ViewTypeSourceGenerator(name, originMetamodels, viewtypeMetamodel, aqr, new ExpressionResolver() {
-            @Override public String getMethodName(XExpression expression) {
+            @Override
+            public String getMethodName(XExpression expression) {
                 return "method";
             }
 
-            @Override public String getQualifiedMethodName(XExpression expression) {
+            @Override
+            public String getQualifiedMethodName(XExpression expression) {
                 return "ExpressionStubClass.method";
             }
 
-            @Override public EStructuralFeature getAccessedFeature(XExpression expression) {
+            @Override
+            public EStructuralFeature getAccessedFeature(XExpression expression) {
                 if (!(expression instanceof XMemberFeatureCall xMemberFeatureCall)) {
                     return null;
                 }
 
-                String  name    = xMemberFeatureCall.getFeature().getQualifiedName();
+                String name = xMemberFeatureCall.getFeature().getQualifiedName();
                 Matcher matcher = pattern.matcher(name);
 
                 if (!matcher.matches()) {
                     throw new IllegalArgumentException("Invalid feature name: " + name);
                 }
 
-                String uri         = matcher.group(1);
+                String uri = matcher.group(1);
                 String featureName = matcher.group(2);
 
                 return originMetamodels.stream().filter(metamodel -> metamodel.ePackage().getNsURI().equals(uri))
-                        .findAny().map(Metamodel::ePackage).map(EPackage::getEClassifiers).stream()
-                        .flatMap(List::stream).filter(EClass.class::isInstance).map(EClass.class::cast)
-                        .flatMap(eClass -> eClass.getEStructuralFeatures().stream())
-                        .filter(feature -> feature.getName().equals(featureName)).findAny().orElseThrow();
+                                       .findAny().map(Metamodel::ePackage).map(EPackage::getEClassifiers).stream()
+                                       .flatMap(List::stream).filter(EClass.class::isInstance).map(EClass.class::cast)
+                                       .flatMap(eClass -> eClass.getEStructuralFeatures().stream())
+                                       .filter(feature -> feature.getName().equals(featureName)).findAny()
+                                       .orElseThrow();
             }
         });
     }
@@ -296,7 +300,8 @@ public class AbstractGeneratorTest {
             this.code = code;
         }
 
-        @Override public CharSequence getCharContent(boolean ignoreEncodingErrors) {
+        @Override
+        public CharSequence getCharContent(boolean ignoreEncodingErrors) {
             return code;
         }
     }

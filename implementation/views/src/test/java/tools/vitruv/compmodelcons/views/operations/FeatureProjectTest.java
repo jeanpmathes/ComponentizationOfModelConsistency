@@ -198,7 +198,8 @@ class FeatureProjectTest extends AbstractOperationTest {
 
         // Pre-Action Change
         simple.eUnset(numberAttribute);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createUnsetFeatureChange(simple, numberAttribute);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance()
+                                                                   .createUnsetFeatureChange(simple, numberAttribute);
 
         // Action
         when(originOperation.doPut(any(), any(), any(), any(), any())).thenReturn(FeatureBinding.ofOriginObject(restaurant, ValueBinding.of(0)));
@@ -248,15 +249,19 @@ class FeatureProjectTest extends AbstractOperationTest {
         context.getCorrespondences().addCorrespondence(List.of(insertedRestaurant), inserted);
         DynamicModels.getList(simple, mappedReference).add(inserted);
         int index = DynamicModels.getList(simple, mappedReference).indexOf(inserted);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createInsertReferenceChange(simple, mappedReference, inserted, index);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance()
+                                                                   .createInsertReferenceChange(simple, mappedReference, inserted, index);
 
         // Action
-        when(originOperation.doPut(any(), any(), any(), any(), any())).thenReturn(FeatureBinding.ofOriginObject(store, new ValueBinding.Many(Streams.concat(restaurants.stream(), Stream.of(insertedRestaurant)).toList())));
+        when(originOperation.doPut(any(), any(), any(), any(), any())).thenReturn(FeatureBinding.ofOriginObject(store, new ValueBinding.Many(Streams
+                                                                                                                                                     .concat(restaurants.stream(), Stream.of(insertedRestaurant))
+                                                                                                                                                     .toList())));
         result = operation.doPut(change, result, simpleBinding, context);
 
         // Assertions
         verify(originOperation, times(1)).doPut(eq(change), any(), eq(simpleBinding), eq(new ValueUpdateBinding.Insert(insertedRestaurant, index)), eq(context));
-        assertEquals(new ValueBinding.Many(Streams.concat(mappedObjects.stream(), Stream.of(inserted)).toList()), result.value());
+        assertEquals(new ValueBinding.Many(Streams.concat(mappedObjects.stream(), Stream.of(inserted))
+                                                  .toList()), result.value());
     }
 
     @Test
@@ -285,7 +290,8 @@ class FeatureProjectTest extends AbstractOperationTest {
 
         // Pre-Action Change
         simple.eUnset(numberAttribute);
-        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance().createUnsetFeatureChange(simple, numberAttribute);
+        EChange<EObject> change = TypeInferringAtomicEChangeFactory.getInstance()
+                                                                   .createUnsetFeatureChange(simple, numberAttribute);
 
         // Action & Assertions
         assertThrows(UnsupportedOperationException.class, () -> operation.doPut(change, result, simpleBinding, context));

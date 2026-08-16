@@ -9,7 +9,7 @@ import java.util.Objects;
 public interface SourceObjectFactory {
     static SourceObjectFactory requireNonNullElseDefault(SourceObjectFactory factory, EClass sourceClass) {
         return Objects.requireNonNullElseGet(factory, () -> ignored -> sourceClass.getEPackage().getEFactoryInstance()
-                .create(sourceClass));
+                                                                                  .create(sourceClass));
     }
     EObject createOriginObject(EObject viewObject);
 }
