@@ -5,6 +5,7 @@ import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.EChangeUtil;
 import tools.vitruv.change.atomic.eobject.DeleteEObject;
 import tools.vitruv.change.atomic.eobject.EObjectSubtractedEChange;
+import tools.vitruv.change.atomic.feature.reference.SubtractiveReferenceEChange;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.change.composite.recording.ChangeRecorder;
 import tools.vitruv.compmodelcons.views.EditableViewCorrespondences;
@@ -16,8 +17,7 @@ import tools.vitruv.compmodelcons.views.internal.OriginResourceAccess;
 import tools.vitruv.compmodelcons.views.internal.ViewResourceAccess;
 import tools.vitruv.compmodelcons.views.operations.Root;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class InternalViewImpl implements AutoCloseable {
     private final EditableViewCorrespondences correspondences = new EditableViewCorrespondencesImpl();
@@ -57,17 +57,38 @@ public class InternalViewImpl implements AutoCloseable {
             }
         }
 
+        // To ensure we keep a deletion in the right order with deletions of the same subtree, we need the containment relation.
+        // If the change sequence comes from change recording, we can simply use eContainer(), but if it comes from
+        // change derivation, no eContainer() is set, but luckily there is complete subtractive reference change information.
+
+        Map<EObject, EObject> containment = new HashMap<>();
+        for (EChange<EObject> eChange : changes) {
+            if (eChange instanceof DeleteEObject<EObject> deleteEObject &&
+                    deleteEObject.getAffectedElement().eContainer() != null) {
+                containment.put(deleteEObject.getAffectedElement(), deleteEObject.getAffectedElement().eContainer());
+            } else if (eChange instanceof SubtractiveReferenceEChange<EObject> subtractiveReferenceEChange &&
+                    EChangeUtil.isContainmentRemoval(subtractiveReferenceEChange)) {
+                containment.put(subtractiveReferenceEChange.getOldValue(), subtractiveReferenceEChange.getAffectedElement());
+            }
+        }
+
         while (numberOfDeletionsToReorder > 0) {
-            DeleteEObject<EObject> deletion = (DeleteEObject<EObject>) reorderedChanges.getLast();
+            Set<EObject> deleted = new HashSet<>();
+            List<DeleteEObject<EObject>> deletions = new ArrayList<>();
+
+            deletions.add((DeleteEObject<EObject>) reorderedChanges.getLast());
+            deleted.add(deletions.getFirst().getAffectedElement());
             reorderedChanges.removeLast();
 
-            List<EChange<EObject>> associatedDeletions = new ArrayList<>();
+            // If an entire subtree was deleted, deletions are ordered with children first.
+            // This means the deletion we already have is the parent of the subtree.
+
             for (int index = reorderedChanges.size() - 1; index >= 0; index--) {
                 EChange<EObject> eChange = reorderedChanges.get(index);
-                if (eChange instanceof DeleteEObject<EObject> subtractedEChange
-                        && EChangeUtil.isContainmentRemoval(subtractedEChange)
-                        && subtractedEChange.getAffectedElement() == deletion.getAffectedElement()) {
-                    associatedDeletions.addFirst(eChange);
+                if (eChange instanceof DeleteEObject<EObject> deleteEObject
+                        && deleted.contains(containment.get(deleteEObject.getAffectedElement()))) {
+                    deletions.addFirst(deleteEObject);
+                    deleted.add(deleteEObject.getAffectedElement());
                     reorderedChanges.remove(index);
                 } else {
                     break;
@@ -78,7 +99,9 @@ public class InternalViewImpl implements AutoCloseable {
 
             for (int index = reorderedChanges.size() - 1; index >= 0; index--) {
                 EChange<EObject> eChange = reorderedChanges.get(index);
-                if (eChange instanceof EObjectSubtractedEChange<EObject> subtractedEChange && EChangeUtil.isContainmentRemoval(subtractedEChange) && subtractedEChange.getOldValue() == deletion.getAffectedElement()) {
+                if (eChange instanceof EObjectSubtractedEChange<EObject> subtractedEChange &&
+                        EChangeUtil.isContainmentRemoval(subtractedEChange) &&
+                        deleted.contains(subtractedEChange.getOldValue())) {
                     indexOfCause = index;
                     break;
                 }
@@ -89,10 +112,9 @@ public class InternalViewImpl implements AutoCloseable {
             }
 
             int indexRightAfterCause = indexOfCause + 1;
-            reorderedChanges.add(indexRightAfterCause, deletion);
-            reorderedChanges.addAll(indexRightAfterCause, associatedDeletions);
+            reorderedChanges.addAll(indexRightAfterCause, deletions);
 
-            numberOfDeletionsToReorder -= associatedDeletions.size() + 1;
+            numberOfDeletionsToReorder -= deletions.size();
         }
 
         return reorderedChanges;

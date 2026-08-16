@@ -50,8 +50,8 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
     }
 
     @Override
-    public ChangePropagationView createView(ResourceAccess resourceAccess, CorrespondenceModelAccess correspondenceModelAccess, Function<String, URI> uriFactory, ChangePropagationObservable observable, CorrespondenceResolvingContext correspondenceContext) {
-        return new ChangePropagationViewImpl(resourceAccess, correspondenceModelAccess, createUri(uriFactory), observable, Optional.of(correspondenceContext));
+    public ChangePropagationView createView(ResourceAccess resourceAccess, CorrespondenceModelAccess correspondenceModelAccess, Function<String, URI> uriFactory, ChangePropagationObservable observable, ResourceAccess actualResourceAccess) {
+        return new ChangePropagationViewImpl(resourceAccess, correspondenceModelAccess, createUri(uriFactory), observable, actualResourceAccess);
     }
 
     private URI getIdModelURI(ResourceAccess resourceAccess) {
@@ -66,7 +66,7 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
         private final URI viewUri;
         private final CorrespondenceResolverImpl correspondenceResolver;
 
-        public ChangePropagationViewImpl(ResourceAccess resourceAccess, CorrespondenceModelAccess correspondenceModelAccess, URI viewUri, ChangePropagationObservable observable, Optional<CorrespondenceResolvingContext> correspondenceContext) {
+        public ChangePropagationViewImpl(ResourceAccess resourceAccess, CorrespondenceModelAccess correspondenceModelAccess, URI viewUri, ChangePropagationObservable observable, ResourceAccess actualResourceAccess) {
             this.resourceAccess = resourceAccess;
             this.originResourceAccess = new ResourceAccessWrappingOriginResourceAccess(resourceAccess, correspondenceModelAccess.getResource());
             this.viewUri = this.originResourceAccess.getViewUriHint(getOriginMetamodels(), getMetamodel())
@@ -76,11 +76,10 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
             this.internalView = new InternalViewImpl(getStructure(), viewResourceAccess, originResourceAccess,
                                                      observable != null ? new ViewObserver(observable)
                                                                         : DefaultViewObserver.INSTANCE);
-
             this.internalView.update();
 
-            if (correspondenceContext.isPresent()) {
-                ViewIdModel viewIdModel = loadViewIdModel(correspondenceContext.get());
+            if (actualResourceAccess != null) {
+                ViewIdModel viewIdModel = loadViewIdModel(actualResourceAccess);
                 HierarchicalIdResolver hierarchicalIdResolver = HierarchicalIdResolver.create(viewResourceAccess.getResourceSet());
                 this.correspondenceResolver = new CorrespondenceResolverImpl(viewIdModel, hierarchicalIdResolver);
             } else {
@@ -88,9 +87,8 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
             }
         }
 
-        private ViewIdModel loadViewIdModel(CorrespondenceResolvingContext correspondenceContext) {
-            Resource resource = correspondenceContext.resourceAccess()
-                                                     .getModelResource(getIdModelURI(correspondenceContext.resourceAccess()));
+        private ViewIdModel loadViewIdModel(ResourceAccess resourceAccess) {
+            Resource resource = resourceAccess.getModelResource(getIdModelURI(resourceAccess));
 
             if (resource.getContents().isEmpty()) {
                 resource.getContents().add(ViewIdModelFactory.eINSTANCE.createViewIdModel());
@@ -141,7 +139,7 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                 case CHANGE_DERIVATION -> {
                     StateBasedChangeResolutionStrategy stateBasedChangeResolutionStrategy = getStateBasedChangeResolutionStrategy();
 
-                    try (ChangePropagationViewImpl changedView = new ChangePropagationViewImpl(changedOrigin, changedCorrespondenceModel, viewUri, null, Optional.empty())) {
+                    try (ChangePropagationViewImpl changedView = new ChangePropagationViewImpl(changedOrigin, changedCorrespondenceModel, viewUri, null, null)) {
                         viewChanges = deriveAndApplyChangesToReach(changedView, stateBasedChangeResolutionStrategy);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
@@ -152,7 +150,7 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                         throw new IllegalStateException("Cannot use updating get with a non-snapshot resource access");
                     }
 
-                    SnapshotChangeApplier applier = new SnapshotChangeApplier(snapshot.copy());
+                    SnapshotChangeApplier applier = new SnapshotChangeApplier(snapshot);
                     viewChanges = new ArrayList<>();
                     for (EChange<EObject> repositoryOriginChange : originChanges) {
                         EChange<EObject> snapshotChange = applier.apply(repositoryOriginChange);
@@ -182,7 +180,7 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
         }
 
         private StateBasedChangeResolutionStrategy getStateBasedChangeResolutionStrategy() {
-            return new DefaultStateBasedChangeResolutionStrategy(UseIdentifiers.NEVER);
+            return new DefaultStateBasedChangeResolutionStrategy(UseIdentifiers.WHEN_AVAILABLE);
         }
 
         private List<EChange<EObject>> deriveAndApplyChangesToReach(ChangePropagationViewImpl changedView, StateBasedChangeResolutionStrategy stateBasedChangeResolutionStrategy) {

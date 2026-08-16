@@ -29,7 +29,7 @@ public class NullViewChangePropagatingSpecificationImpl implements ChangePropaga
     }
 
     @Override
-    public ChangePropagationView createView(ResourceAccess resourceAccess, CorrespondenceModelAccess correspondenceModelAccess, Function<String, URI> uriFactory, ChangePropagationObservable observable, CorrespondenceResolvingContext correspondenceContext) {
+    public ChangePropagationView createView(ResourceAccess resourceAccess, CorrespondenceModelAccess correspondenceModelAccess, Function<String, URI> uriFactory, ChangePropagationObservable observable, ResourceAccess actualResourceAccess) {
         return new DirectModelAccessView(metamodelDescriptor, resourceAccess);
     }
 

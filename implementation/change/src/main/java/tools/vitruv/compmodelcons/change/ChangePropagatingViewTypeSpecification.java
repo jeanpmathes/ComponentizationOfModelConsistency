@@ -15,5 +15,5 @@ public interface ChangePropagatingViewTypeSpecification {
 
     MetamodelDescriptor getViewTypeMetamodelDescriptor();
 
-    ChangePropagationView createView(ResourceAccess resourceAccess, CorrespondenceModelAccess correspondenceModelAccess, Function<String, URI> uriFactory, ChangePropagationObservable observable, CorrespondenceResolvingContext correspondenceContext);
+    ChangePropagationView createView(ResourceAccess resourceAccess, CorrespondenceModelAccess correspondenceModelAccess, Function<String, URI> uriFactory, ChangePropagationObservable observable, ResourceAccess actualResourceAccess);
 }

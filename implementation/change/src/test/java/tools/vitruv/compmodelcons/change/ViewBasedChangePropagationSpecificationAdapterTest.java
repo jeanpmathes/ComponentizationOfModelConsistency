@@ -19,6 +19,7 @@ import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.CorrespondenceFactory;
 import tools.vitruv.change.correspondence.Correspondences;
 import tools.vitruv.change.correspondence.model.CorrespondenceModel;
+import tools.vitruv.change.correspondence.view.CorrespondenceModelViewFactory;
 import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
 import tools.vitruv.change.propagation.ChangePropagationSpecification;
 import tools.vitruv.change.propagation.ModelSnapshot;
@@ -104,15 +105,16 @@ class ViewBasedChangePropagationSpecificationAdapterTest {
         setupOrigin(resourceSet, projectPath, "source.xmi", sourceOriginInfo, "oldName");
         EObject targetRoot = setupOrigin(resourceSet, projectPath, "target.xmi", targetOriginInfo, "targetOldName");
 
-        ResourceAccess changedOrigin = new TestResourceAccess(resourceSet);
-        EditableCorrespondenceModelView<Correspondence> correspondenceModelView = mock(TestEditableCorrespondenceModelView.class, withSettings()
+        ResourceAccess changedOrigin = new TestResourceAccess(resourceSet, tempDirectory);
+        TestEditableCorrespondenceModelView<Correspondence> correspondenceModelView = mock(TestEditableCorrespondenceModelView.class, withSettings()
                 .useConstructor().defaultAnswer(CALLS_REAL_METHODS));
+        when(correspondenceModelView.getCorrespondenceModel()).thenCallRealMethod();
+        CorrespondenceModel correspondenceModel = correspondenceModelView.getCorrespondenceModel();
 
         ResourceSet previousResourceSet = new ResourceSetImpl();
         setupOrigin(previousResourceSet, projectPath, "source.xmi", sourceOriginInfo, "oldName");
         setupOrigin(previousResourceSet, projectPath, "target.xmi", targetOriginInfo, "targetOldName");
-        ModelSnapshot previousState = mock(ModelSnapshot.class);
-        when(previousState.copy()).thenReturn(new TestModelSnapshot(previousResourceSet));
+        ModelSnapshot previousState = spy(new TestModelSnapshot(previousResourceSet, tempDirectory, correspondenceModel));
 
         EObject sourceRoot = resourceSet.getResources().getFirst().getContents().getFirst();
         EObject sourceNonRoot = ((List<EObject>) sourceRoot.eGet(sourceOriginInfo.rootClass.getEAllContainments()
@@ -159,6 +161,10 @@ class ViewBasedChangePropagationSpecificationAdapterTest {
                 .useConstructor().defaultAnswer(CALLS_REAL_METHODS));
 
         public TestEditableCorrespondenceModelView() {
+        }
+
+        public CorrespondenceModel getCorrespondenceModel() {
+            return correspondenceModel;
         }
     }
 
@@ -223,11 +229,13 @@ class ViewBasedChangePropagationSpecificationAdapterTest {
         }
     }
 
-    private class TestResourceAccess implements ResourceAccess {
+    private static class TestResourceAccess implements ResourceAccess {
         protected final ResourceSet resourceSet;
+        private final Path tempDirectory;
 
-        public TestResourceAccess(ResourceSet resourceSet) {
+        public TestResourceAccess(ResourceSet resourceSet, Path tempDirectory) {
             this.resourceSet = resourceSet;
+            this.tempDirectory = tempDirectory;
         }
 
         @Override
@@ -259,14 +267,17 @@ class ViewBasedChangePropagationSpecificationAdapterTest {
         }
     }
 
-    private class TestModelSnapshot extends TestResourceAccess implements ModelSnapshot {
-        public TestModelSnapshot(ResourceSet resourceSet) {
-            super(resourceSet);
+    private static class TestModelSnapshot extends TestResourceAccess implements ModelSnapshot {
+        private final CorrespondenceModel correspondenceModel;
+
+        public TestModelSnapshot(ResourceSet resourceSet, Path tempDirectory, CorrespondenceModel correspondenceModel) {
+            super(resourceSet, tempDirectory);
+            this.correspondenceModel = correspondenceModel;
         }
 
         @Override
-        public ModelSnapshot copy() {
-            return this;
+        public EditableCorrespondenceModelView<Correspondence> getCorrespondenceModel() {
+            return CorrespondenceModelViewFactory.createEditableCorrespondenceModelView(correspondenceModel);
         }
 
         @Override

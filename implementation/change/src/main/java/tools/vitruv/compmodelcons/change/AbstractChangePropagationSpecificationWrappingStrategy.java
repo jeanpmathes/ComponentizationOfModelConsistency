@@ -15,6 +15,10 @@ public abstract class AbstractChangePropagationSpecificationWrappingStrategy imp
     private final ChangePropagationSpecification specification;
 
     public AbstractChangePropagationSpecificationWrappingStrategy(ChangePropagationSpecification specification) {
+        if (specification instanceof ViewBasedChangePropagationSpecificationAdapter) {
+            throw new IllegalArgumentException("The specification must not be a ViewBasedChangePropagationSpecificationAdapter");
+        }
+
         this.specification = specification;
     }
 

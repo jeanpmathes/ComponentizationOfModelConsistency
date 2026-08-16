@@ -1,5 +1,6 @@
 package tools.vitruv.compmodelcons.change;
 
+import com.google.common.collect.Streams;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
@@ -11,7 +12,6 @@ import tools.vitruv.change.propagation.ChangePropagationSpecification;
 import tools.vitruv.change.propagation.ModelSnapshot;
 import tools.vitruv.change.propagation.impl.AbstractChangePropagationSpecification;
 import tools.vitruv.change.utils.ResourceAccess;
-import tools.vitruv.compmodelcons.change.impl.CorrespondenceResolvingContextImpl;
 import tools.vitruv.dsls.reactions.runtime.helper.PersistenceHelper;
 
 import java.util.List;
@@ -50,31 +50,33 @@ public class ViewBasedChangePropagationSpecificationAdapter extends AbstractChan
         return true;
     }
 
+    private static Function<String, URI> createUriFactory(ResourceAccess changedOrigin, ModelSnapshot unchangedOrigin) {
+        return Streams.concat(changedOrigin.getModelResources().stream(), unchangedOrigin.getModelResources().stream())
+                      .filter(resource -> !resource.getContents().isEmpty())
+                      .map(resource -> resource.getContents().getFirst())
+                      .findFirst()
+                      .map(eObject -> (Function<String, URI>) ((string) -> PersistenceHelper.getURIFromSourceProjectFolder(eObject, string)))
+                      .orElseThrow();
+    }
+
     @Override
-    public void propagateChanges(List<EChange<EObject>> originChanges, EditableCorrespondenceModelView<Correspondence> correspondenceModel, ResourceAccess changedOrigin, ModelSnapshot previousState) {
-        Function<String, URI> uriFactory = changedOrigin.getModelResources().stream()
-                                                        .filter(resource -> resource.getURI().isFile()).findAny()
-                                                        .map(resource -> resource.getContents().getFirst())
-                                                        .map(eObject -> (Function<String, URI>) ((string) -> PersistenceHelper.getURIFromSourceProjectFolder(eObject, string)))
-                                                        .orElseThrow();
+    public void propagateChanges(List<EChange<EObject>> originChanges, EditableCorrespondenceModelView<Correspondence> changedCorrespondenceModel, ResourceAccess changedOrigin, ModelSnapshot unchangedOrigin) {
+        Function<String, URI> uriFactory = createUriFactory(changedOrigin, unchangedOrigin);
 
-        CorrespondenceResolvingContext correspondenceContext = new CorrespondenceResolvingContextImpl(changedOrigin);
-
-        try (CorrespondenceModelAccess changedCorrespondenceModel = new CorrespondenceModelAccess(correspondenceModel);
-             ModelSnapshot unchangedOrigin = previousState.copy();
-             CorrespondenceModelAccess unchangedCorrespondenceModel = changedCorrespondenceModel.copy(unchangedOrigin);
-             ChangePropagationView sourceView = sourceViewType.createView(unchangedOrigin, unchangedCorrespondenceModel, uriFactory, this, correspondenceContext);
-             ChangePropagationView targetView = targetViewType.createView(changedOrigin, changedCorrespondenceModel, uriFactory, this, correspondenceContext)
+        try (CorrespondenceModelAccess unchangedCorrespondenceModelAccess = new CorrespondenceModelAccess(unchangedOrigin.getCorrespondenceModel());
+             CorrespondenceModelAccess changedCorrespondenceModelAccess = new CorrespondenceModelAccess(changedCorrespondenceModel);
+             ChangePropagationView sourceView = sourceViewType.createView(unchangedOrigin, unchangedCorrespondenceModelAccess, uriFactory, this, changedOrigin);
+             ChangePropagationView targetView = targetViewType.createView(changedOrigin, changedCorrespondenceModelAccess, uriFactory, this, changedOrigin)
         ) {
-            List<EChange<EObject>> viewChanges = sourceView.fitAndDetermineChanges(changedOrigin, changedCorrespondenceModel, originChanges, changeDeterminationMode);
+            List<EChange<EObject>> viewChanges = sourceView.fitAndDetermineChanges(changedOrigin, changedCorrespondenceModelAccess, originChanges, changeDeterminationMode);
 
             var context = new ViewChangePropagationContext(sourceView, sourceViewType, targetView, targetViewType);
 
             originChanges.forEach(change -> notifyChangePropagationStarted(this, change));
 
             // For full correctness, the previous state would need to include the unchanged state of the two views as well.
-            // However, no one is using that anyway, so why bother?
-            specification.propagateChanges(viewChanges, correspondenceModel, context, null);
+            // However, no one is using that anyway, so I have chosen to not implement that for now.
+            specification.propagateChanges(viewChanges, changedCorrespondenceModel, context, null);
             targetView.commit();
 
             originChanges.forEach(change -> notifyChangePropagationStopped(this, change));

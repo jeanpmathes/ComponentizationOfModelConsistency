@@ -1,19 +1,11 @@
 package tools.vitruv.compmodelcons.change;
 
-import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
-import org.eclipse.emf.ecore.util.EcoreUtil;
 import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.Correspondences;
 import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
-import tools.vitruv.change.propagation.ModelSnapshot;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * This class is used as an ugly workaround for the currently missing correspondence handling syntax in the NeoJoin language.
@@ -58,59 +50,8 @@ public final class CorrespondenceModelAccess implements AutoCloseable {
         throw new IllegalArgumentException("Field not found: " + name);
     }
 
-    private static Optional<List<EObject>> mapToSnapshot(List<EObject> repositoryObjects, ModelSnapshot snapshot) {
-        List<EObject> snapshotEObjects = new ArrayList<>(repositoryObjects.size());
-
-        for (EObject repositoryObject : repositoryObjects) {
-            Optional<EObject> snapshotEObject = snapshot.getSnapshotEObject(repositoryObject);
-            if (snapshotEObject.isEmpty()) {
-                return Optional.empty();
-            }
-            snapshotEObjects.add(snapshotEObject.get());
-        }
-
-        return Optional.of(snapshotEObjects);
-    }
-
     public Resource getResource() {
         return correspondences.eResource();
-    }
-
-    private CorrespondenceModelAccess getOriginal() {
-        return original == null ? this : original;
-    }
-
-    public CorrespondenceModelAccess copy(ModelSnapshot modelSnapshot) {
-        Correspondences copy = EcoreUtil.copy(correspondences);
-
-        for (int index = correspondences.getCorrespondences().size() - 1; index >= 0; index--) {
-            Correspondence originalCorrespondence = correspondences.getCorrespondences().get(index);
-            Correspondence copiedCorrespondence = copy.getCorrespondences().get(index);
-
-            Optional<List<EObject>> leftEObjects =
-                    mapToSnapshot(originalCorrespondence.getLeftEObjects(), modelSnapshot);
-            Optional<List<EObject>> rightEObjects =
-                    mapToSnapshot(originalCorrespondence.getRightEObjects(), modelSnapshot);
-
-            if (leftEObjects.isEmpty() || rightEObjects.isEmpty()) {
-                copy.getCorrespondences().remove(index);
-                continue;
-            }
-
-            copiedCorrespondence.getLeftEObjects().clear();
-            copiedCorrespondence.getLeftEObjects().addAll(leftEObjects.get());
-
-            copiedCorrespondence.getRightEObjects().clear();
-            copiedCorrespondence.getRightEObjects().addAll(rightEObjects.get());
-        }
-
-        ResourceSet resourceSet = new ResourceSetImpl();
-        Resource resource = resourceSet.createResource(correspondences.eResource().getURI());
-
-        resource.getContents().add(copy);
-        resourceSet.getResources().add(resource);
-
-        return new CorrespondenceModelAccess(copy, getOriginal());
     }
 
     @Override
