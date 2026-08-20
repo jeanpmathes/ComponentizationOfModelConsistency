@@ -62,7 +62,9 @@ public class Source implements OriginOperation {
         context.removeRootFromDefaultOriginModel(sourceClass.getEPackage(), deleted);
       }
     } else if (container != null) {
-      if (deleted.eContainer() != null) {
+      if (deleted.eContainer() != null && deleted
+          .eContainmentFeature()
+          .equals(container)) {
         if (container.isMany()) {
           DynamicModels
               .getList(deleted.eContainer(), container)
