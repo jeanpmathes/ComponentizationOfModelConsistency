@@ -23,23 +23,23 @@ class ViewBasedChangePropagationSpecificationAdapterFactoryTest {
   final MetamodelDescriptor y = MetamodelDescriptor.with("y");
 
   @Test
-  void testCreateInternalWithEmptyOptionals() {
+  void testCreateWithEmptyOptionals() {
     AbstractReactionsChangePropagationSpecification specification =
         mock(AbstractReactionsChangePropagationSpecification.class);
     when(specification.getSourceMetamodelDescriptor()).thenReturn(a);
     when(specification.getTargetMetamodelDescriptor()).thenReturn(b);
 
     ChangePropagationSpecification result =
-        ViewChangePropagationSpecificationAdapterFactory.INSTANCE.createInternal(Optional.empty(),
-                                                                                 specification,
-                                                                                 Optional.empty());
+        ViewChangePropagationSpecificationAdapterFactory.INSTANCE.create(Optional.empty(),
+                                                                         specification,
+                                                                         Optional.empty());
 
     assertEquals(a, result.getSourceMetamodelDescriptor());
     assertEquals(b, result.getTargetMetamodelDescriptor());
   }
 
   @Test
-  void testCreateInternalWithMultipleMetamodels() {
+  void testCreateWithMultipleMetamodels() {
     ChangePropagatingViewTypeSpecification sourceViewType =
         mock(ChangePropagatingViewTypeSpecification.class);
     ChangePropagatingViewTypeSpecification targetViewType =
@@ -56,48 +56,7 @@ class ViewBasedChangePropagationSpecificationAdapterFactoryTest {
     when(specification.getTargetMetamodelDescriptor()).thenReturn(y);
 
     ChangePropagationSpecification result =
-        ViewChangePropagationSpecificationAdapterFactory.INSTANCE.createInternal(
-            Optional.of(sourceViewType), specification, Optional.of(targetViewType));
-
-    assertEquals(ab, result.getSourceMetamodelDescriptor());
-    assertEquals(cd, result.getTargetMetamodelDescriptor());
-  }
-
-  @Test
-  void testCreateRemoteWithEmptyOptionals() {
-    AbstractReactionsChangePropagationSpecification specification =
-        mock(AbstractReactionsChangePropagationSpecification.class);
-    when(specification.getSourceMetamodelDescriptor()).thenReturn(a);
-    when(specification.getTargetMetamodelDescriptor()).thenReturn(b);
-
-    ChangePropagationSpecification result =
-        ViewChangePropagationSpecificationAdapterFactory.INSTANCE.createRemote(Optional.empty(),
-                                                                               specification,
-                                                                               Optional.empty());
-
-    assertEquals(a, result.getSourceMetamodelDescriptor());
-    assertEquals(b, result.getTargetMetamodelDescriptor());
-  }
-
-  @Test
-  void testCreateRemoteWithMultipleMetamodels() {
-    ChangePropagatingViewTypeSpecification sourceViewType =
-        mock(ChangePropagatingViewTypeSpecification.class);
-    ChangePropagatingViewTypeSpecification targetViewType =
-        mock(ChangePropagatingViewTypeSpecification.class);
-
-    when(sourceViewType.getViewTypeMetamodelDescriptor()).thenReturn(x);
-    when(targetViewType.getViewTypeMetamodelDescriptor()).thenReturn(y);
-    when(sourceViewType.getOriginMetamodelDescriptor()).thenReturn(ab);
-    when(targetViewType.getOriginMetamodelDescriptor()).thenReturn(cd);
-
-    AbstractReactionsChangePropagationSpecification specification =
-        mock(AbstractReactionsChangePropagationSpecification.class);
-    when(specification.getSourceMetamodelDescriptor()).thenReturn(x);
-    when(specification.getTargetMetamodelDescriptor()).thenReturn(y);
-
-    ChangePropagationSpecification result =
-        ViewChangePropagationSpecificationAdapterFactory.INSTANCE.createRemote(
+        ViewChangePropagationSpecificationAdapterFactory.INSTANCE.create(
             Optional.of(sourceViewType), specification, Optional.of(targetViewType));
 
     assertEquals(ab, result.getSourceMetamodelDescriptor());

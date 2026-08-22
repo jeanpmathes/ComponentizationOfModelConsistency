@@ -14,6 +14,8 @@ import tools.vitruv.change.propagation.ChangePropagationSpecification;
 import tools.vitruv.change.propagation.ModelRepositorySnapshot;
 import tools.vitruv.change.propagation.impl.AbstractChangePropagationSpecification;
 import tools.vitruv.change.utils.ResourceAccess;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolverFactory;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceTranslationStrategy;
 import tools.vitruv.dsls.reactions.runtime.helper.PersistenceHelper;
 
 /**
@@ -25,14 +27,21 @@ import tools.vitruv.dsls.reactions.runtime.helper.PersistenceHelper;
 public class ViewBasedChangePropagationSpecificationAdapter
     extends AbstractChangePropagationSpecification implements ChangePropagationSpecification {
   private final ChangePropagatingViewTypeSpecification sourceViewType;
-  private final CorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper specification;
+  private final ChangePropagationSpecification specification;
+  private final CorrespondenceTranslationStrategy correspondenceTranslationStrategy;
   private final ChangePropagatingViewTypeSpecification targetViewType;
 
   ViewBasedChangePropagationSpecificationAdapter(
       ChangePropagatingViewTypeSpecification sourceViewType, MetamodelDescriptor sourceMetamodel,
-      CorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper specification,
+      ChangePropagationSpecification specification,
+      CorrespondenceTranslationStrategy correspondenceTranslationStrategy,
       ChangePropagatingViewTypeSpecification targetViewType, MetamodelDescriptor targetMetamodel) {
     super(sourceMetamodel, targetMetamodel);
+
+    if (specification instanceof ViewBasedChangePropagationSpecificationAdapter) {
+      throw new IllegalArgumentException(
+          "The specification must not be a ViewBasedChangePropagationSpecificationAdapter");
+    }
 
     if (!sourceViewType
         .getViewTypeMetamodelDescriptor()
@@ -52,6 +61,7 @@ public class ViewBasedChangePropagationSpecificationAdapter
 
     this.sourceViewType = sourceViewType;
     this.specification = specification;
+    this.correspondenceTranslationStrategy = correspondenceTranslationStrategy;
     this.targetViewType = targetViewType;
   }
 
@@ -91,6 +101,9 @@ public class ViewBasedChangePropagationSpecificationAdapter
       ModelRepositorySnapshot unchangedOrigin) {
     Function<String, URI> uriFactory = createUriFactory(changedOrigin, unchangedOrigin);
 
+    CorrespondenceResolverFactory correspondenceResolverFactory =
+        correspondenceTranslationStrategy.createCorrespondenceResolverFactory(changedOrigin);
+
     try (
         CorrespondenceModelAccess unchangedCorrespondenceModelAccess =
             new CorrespondenceModelAccess(
@@ -102,13 +115,13 @@ public class ViewBasedChangePropagationSpecificationAdapter
                                         unchangedCorrespondenceModelAccess,
                                         uriFactory,
                                         this,
-                                        changedOrigin);
+                                        correspondenceResolverFactory);
         ChangePropagationView targetView
             = targetViewType.createView(changedOrigin,
                                         changedCorrespondenceModelAccess,
                                         uriFactory,
                                         this,
-                                        changedOrigin)
+                                        correspondenceResolverFactory)
     ) {
       List<EChange<EObject>> viewChanges =
           sourceView.fitAndDetermineChanges(changedOrigin, changedCorrespondenceModelAccess,
@@ -122,7 +135,11 @@ public class ViewBasedChangePropagationSpecificationAdapter
       // For full correctness, the previous state would need to include the unchanged state of
       // the two views as well.
       // However, no one is using that anyway, so I have chosen to not implement that for now.
-      specification.propagateChanges(viewChanges, changedCorrespondenceModel, context, null);
+      specification.propagateChanges(viewChanges,
+                                     correspondenceTranslationStrategy.createTranslatedCorrespondenceModelView(
+                                         changedCorrespondenceModel, context),
+                                     context.getResourceAccess(), null);
+
       targetView.commit();
 
       originChanges.forEach(change -> notifyChangePropagationStopped(this, change));

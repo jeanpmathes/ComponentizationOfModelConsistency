@@ -7,10 +7,9 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.change.propagation.ChangePropagationSpecification;
-import tools.vitruv.compmodelcons.change.impl.InternalCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceTranslationStrategy;
+import tools.vitruv.compmodelcons.change.correspondence.impl.ViewIdCorrespondenceTranslationStrategyImpl;
 import tools.vitruv.compmodelcons.change.impl.NullViewChangePropagatingSpecificationImpl;
-import tools.vitruv.compmodelcons.change.impl.RemoteCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper;
-import tools.vitruv.dsls.reactions.runtime.reactions.AbstractReactionsChangePropagationSpecification;
 
 public class ViewChangePropagationSpecificationAdapterFactory {
   public static final ViewChangePropagationSpecificationAdapterFactory INSTANCE =
@@ -36,9 +35,22 @@ public class ViewChangePropagationSpecificationAdapterFactory {
     MetamodelDescriptor targetMetamodel = targetViewType
         .map(ChangePropagatingViewTypeSpecification::getOriginMetamodelDescriptor)
         .orElse(specification.getTargetMetamodelDescriptor());
-
     return producer.apply(cleanUpMetamodelDescriptor(sourceMetamodel),
                           cleanUpMetamodelDescriptor(targetMetamodel));
+  }
+
+  private ChangePropagationSpecification create(
+      Optional<ChangePropagatingViewTypeSpecification> sourceViewType,
+      ChangePropagationSpecification specification,
+      Optional<ChangePropagatingViewTypeSpecification> targetViewType,
+      CorrespondenceTranslationStrategy correspondenceTranslationStrategy) {
+    return create(sourceViewType, specification, targetViewType,
+                  (sourceMetamodel, targetMetamodel) -> new ViewBasedChangePropagationSpecificationAdapter(
+                      sourceViewType.orElse(new NullViewChangePropagatingSpecificationImpl(
+                          specification.getSourceMetamodelDescriptor())), sourceMetamodel,
+                      specification, correspondenceTranslationStrategy, targetViewType.orElse(
+                      new NullViewChangePropagatingSpecificationImpl(
+                          specification.getTargetMetamodelDescriptor())), targetMetamodel));
   }
 
   private MetamodelDescriptor cleanUpMetamodelDescriptor(MetamodelDescriptor metamodelDescriptor) {
@@ -49,31 +61,11 @@ public class ViewChangePropagationSpecificationAdapterFactory {
                                         .collect(Collectors.toSet()));
   }
 
-  public ChangePropagationSpecification createInternal(
-      Optional<ChangePropagatingViewTypeSpecification> sourceViewType,
-      AbstractReactionsChangePropagationSpecification specification,
-      Optional<ChangePropagatingViewTypeSpecification> targetViewType) {
-    return create(sourceViewType, specification, targetViewType,
-                  (sourceMetamodel, targetMetamodel) -> new ViewBasedChangePropagationSpecificationAdapter(
-                      sourceViewType.orElse(new NullViewChangePropagatingSpecificationImpl(
-                          specification.getSourceMetamodelDescriptor())), sourceMetamodel,
-                      new InternalCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper(
-                          specification), targetViewType.orElse(
-                      new NullViewChangePropagatingSpecificationImpl(
-                          specification.getTargetMetamodelDescriptor())), targetMetamodel));
-  }
-
-  public ChangePropagationSpecification createRemote(
+  public ChangePropagationSpecification create(
       Optional<ChangePropagatingViewTypeSpecification> sourceViewType,
       ChangePropagationSpecification specification,
       Optional<ChangePropagatingViewTypeSpecification> targetViewType) {
     return create(sourceViewType, specification, targetViewType,
-                  (sourceMetamodel, targetMetamodel) -> new ViewBasedChangePropagationSpecificationAdapter(
-                      sourceViewType.orElse(new NullViewChangePropagatingSpecificationImpl(
-                          specification.getSourceMetamodelDescriptor())), sourceMetamodel,
-                      new RemoteCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper(
-                          specification),
-                      targetViewType.orElse(new NullViewChangePropagatingSpecificationImpl(
-                          specification.getTargetMetamodelDescriptor())), targetMetamodel));
+                  new ViewIdCorrespondenceTranslationStrategyImpl());
   }
 }

@@ -1,9 +1,9 @@
-package tools.vitruv.compmodelcons.change.impl;
+package tools.vitruv.compmodelcons.change.correspondence.impl;
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import tools.vitruv.change.composite.MetamodelDescriptor;
-import tools.vitruv.compmodelcons.change.CorrespondenceResolver;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolver;
 
 public class PassthroughCorrespondenceResolverImpl implements CorrespondenceResolver {
   private final MetamodelDescriptor metamodel;
@@ -40,6 +40,16 @@ public class PassthroughCorrespondenceResolverImpl implements CorrespondenceReso
   @Override
   public EObject getCorrespondenceEObject(EObject viewEObject, boolean createIfNotExist) {
     return viewEObject;
+  }
+
+  @Override
+  public void onViewFitted() {
+
+  }
+
+  @Override
+  public void onResolverUse() {
+
   }
 
   @Override

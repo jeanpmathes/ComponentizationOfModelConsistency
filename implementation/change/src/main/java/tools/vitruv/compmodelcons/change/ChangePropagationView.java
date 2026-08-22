@@ -4,6 +4,7 @@ import java.util.List;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.utils.ResourceAccess;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolver;
 
 /**
  * A view that is used during change propagation as part of a view-based change propagation

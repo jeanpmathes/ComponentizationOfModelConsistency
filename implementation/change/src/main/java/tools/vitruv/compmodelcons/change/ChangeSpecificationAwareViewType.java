@@ -1,17 +1,13 @@
 package tools.vitruv.compmodelcons.change;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -19,7 +15,6 @@ import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.hid.HierarchicalId;
-import tools.vitruv.change.atomic.hid.internal.HierarchicalIdResolver;
 import tools.vitruv.change.changederivation.StateBasedChangeResolutionStrategy;
 import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.change.composite.description.VitruviusChange;
@@ -27,10 +22,9 @@ import tools.vitruv.change.composite.description.VitruviusChangeFactory;
 import tools.vitruv.change.composite.description.VitruviusChangeResolverFactory;
 import tools.vitruv.change.propagation.ChangePropagationObservable;
 import tools.vitruv.change.utils.ResourceAccess;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolver;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolverFactory;
 import tools.vitruv.compmodelcons.change.impl.RootPreservingStateBasedChangeResolutionStrategy;
-import tools.vitruv.compmodelcons.change.viewid.model.ViewId;
-import tools.vitruv.compmodelcons.change.viewid.model.ViewIdModel;
-import tools.vitruv.compmodelcons.change.viewid.model.ViewIdModelFactory;
 import tools.vitruv.compmodelcons.views.impl.DefaultViewObserver;
 import tools.vitruv.compmodelcons.views.impl.OperationBasedViewType;
 import tools.vitruv.compmodelcons.views.impl.ViewResourceAccessImpl;
@@ -64,13 +58,10 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                                           CorrespondenceModelAccess correspondenceModelAccess,
                                           Function<String, URI> uriFactory,
                                           ChangePropagationObservable observable,
-                                          ResourceAccess actualResourceAccess) {
+                                          CorrespondenceResolverFactory correspondenceResolverFactory) {
     return new ChangePropagationViewImpl(resourceAccess, correspondenceModelAccess,
-                                         createUri(uriFactory), observable, actualResourceAccess);
-  }
-
-  private URI getIdModelURI(ResourceAccess resourceAccess) {
-    return resourceAccess.getMetadataModelURI("views", String.format("%s.viewid", getName()));
+                                         createUri(uriFactory), observable,
+                                         correspondenceResolverFactory);
   }
 
   private class ChangePropagationViewImpl implements ChangePropagationView {
@@ -78,15 +69,14 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
     private final ViewResourceAccess viewResourceAccess;
     private final InternalViewImpl internalView;
     private final URI viewUri;
-    private final CorrespondenceResolverImpl correspondenceResolver;
+    private final CorrespondenceResolver correspondenceResolver;
 
     public ChangePropagationViewImpl(ResourceAccess resourceAccess,
                                      CorrespondenceModelAccess correspondenceModelAccess,
                                      URI viewUri, ChangePropagationObservable observable,
-                                     ResourceAccess actualResourceAccess) {
-      this.originResourceAccess
-          = new ResourceAccessWrappingOriginResourceAccess(resourceAccess,
-                                                           correspondenceModelAccess.getResource());
+                                     CorrespondenceResolverFactory correspondenceResolverFactory) {
+      this.originResourceAccess = new ResourceAccessWrappingOriginResourceAccess(resourceAccess,
+                                                                                 correspondenceModelAccess.getResource());
       this.viewUri = this.originResourceAccess
           .getViewUriHint(getOriginMetamodels(), getMetamodel())
           .orElse(viewUri);
@@ -98,31 +88,12 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                                                   : DefaultViewObserver.INSTANCE);
       this.internalView.update();
 
-      if (actualResourceAccess != null) {
-        ViewIdModel viewIdModel = loadViewIdModel(actualResourceAccess);
-        HierarchicalIdResolver hierarchicalIdResolver =
-            HierarchicalIdResolver.create(viewResourceAccess.getResourceSet());
-        this.correspondenceResolver =
-            new CorrespondenceResolverImpl(viewIdModel, hierarchicalIdResolver);
+      if (correspondenceResolverFactory != null) {
+        this.correspondenceResolver = correspondenceResolverFactory.createCorrespondenceResolver(
+            ChangeSpecificationAwareViewType.this, viewResourceAccess);
       } else {
         this.correspondenceResolver = null;
       }
-    }
-
-    private ViewIdModel loadViewIdModel(ResourceAccess resourceAccess) {
-      Resource resource = resourceAccess.getModelResource(getIdModelURI(resourceAccess));
-
-      if (resource
-          .getContents()
-          .isEmpty()) {
-        resource
-            .getContents()
-            .add(ViewIdModelFactory.eINSTANCE.createViewIdModel());
-      }
-
-      return (ViewIdModel) resource
-          .getContents()
-          .getFirst();
     }
 
     @Override
@@ -168,16 +139,15 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
     }
 
     @Override
-    public List<EChange<EObject>> fitAndDetermineChanges(
-        ResourceAccess changedOrigin,
-        CorrespondenceModelAccess changedCorrespondenceModel,
-        List<EChange<EObject>> originChanges) {
+    public List<EChange<EObject>> fitAndDetermineChanges(ResourceAccess changedOrigin,
+                                                         CorrespondenceModelAccess changedCorrespondenceModel,
+                                                         List<EChange<EObject>> originChanges) {
       List<EChange<EObject>> viewChanges;
 
-      try (ChangePropagationViewImpl changedView
-               = new ChangePropagationViewImpl(changedOrigin,
-                                               changedCorrespondenceModel,
-                                               viewUri, null, null)
+      try (ChangePropagationViewImpl changedView = new ChangePropagationViewImpl(changedOrigin,
+                                                                                 changedCorrespondenceModel,
+                                                                                 viewUri, null,
+                                                                                 null)
       ) {
         viewChanges =
             deriveAndApplyChangesToReach(changedView, getStateBasedChangeResolutionStrategy());
@@ -186,7 +156,7 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
       }
 
       if (correspondenceResolver != null) {
-        correspondenceResolver.resolveUnresolvedViewIds();
+        correspondenceResolver.onViewFitted();
       }
 
       return viewChanges;
@@ -194,7 +164,9 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
 
     @Override
     public CorrespondenceResolver getCorrespondenceResolver() {
-      correspondenceResolver.ensureNoUnresolvedViewIds();
+      if (correspondenceResolver != null) {
+        correspondenceResolver.onResolverUse();
+      }
       return correspondenceResolver;
     }
 
@@ -287,125 +259,6 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
       @Override
       public void originObjectCreated(EObject eObject) {
         observable.notifyObjectCreated(eObject);
-      }
-    }
-
-    private class CorrespondenceResolverImpl implements CorrespondenceResolver {
-      private final ViewIdModel viewIdModel;
-      private final HierarchicalIdResolver hierarchicalIdResolver;
-
-      private final BiMap<EObject, ViewId> viewObjectToViewId = HashBiMap.create();
-      private final Map<HierarchicalId, ViewId> unresolvedHierarchicalIds = new HashMap<>();
-
-      private CorrespondenceResolverImpl(ViewIdModel viewIdModel,
-                                         HierarchicalIdResolver hierarchicalIdResolver) {
-        this.viewIdModel = viewIdModel;
-        this.hierarchicalIdResolver = hierarchicalIdResolver;
-
-        initializeMap();
-      }
-
-      private void initializeMap() {
-        Set<HierarchicalId> hierarchicalIds = new HashSet<>();
-
-        for (ViewId viewId : viewIdModel.getIds()) {
-          HierarchicalId hierarchicalId = new HierarchicalId(viewId.getHierarchicalId());
-          if (!hierarchicalIds.add(hierarchicalId)) {
-            throw new IllegalStateException(
-                "Duplicate hierarchical ID found in view ID model: " + hierarchicalId);
-          }
-          try {
-            EObject viewObject = hierarchicalIdResolver.getEObject(hierarchicalId);
-            viewObjectToViewId.put(viewObject, viewId);
-          } catch (IllegalStateException e) {
-            unresolvedHierarchicalIds.put(hierarchicalId, viewId);
-          }
-        }
-      }
-
-      public void resolveUnresolvedViewIds() {
-        Iterator<Map.Entry<HierarchicalId, ViewId>> iterator = unresolvedHierarchicalIds
-            .entrySet()
-            .iterator();
-        while (iterator.hasNext()) {
-          Map.Entry<HierarchicalId, ViewId> entry = iterator.next();
-          HierarchicalId hierarchicalId = entry.getKey();
-          ViewId viewId = entry.getValue();
-          try {
-            EObject viewObject = hierarchicalIdResolver.getEObject(hierarchicalId);
-            viewObjectToViewId.put(viewObject, viewId);
-            iterator.remove();
-          } catch (IllegalStateException e) {
-            // The view ID remains unresolved.
-          }
-        }
-      }
-
-      public void ensureNoUnresolvedViewIds() {
-        if (!unresolvedHierarchicalIds.isEmpty()) {
-          throw new IllegalStateException("The following view IDs could not be resolved: "
-                                              + unresolvedHierarchicalIds.keySet());
-        }
-      }
-
-      @Override
-      public boolean canResolveViewEObject(EObject viewObject) {
-        return viewObject
-            .eClass()
-            .getEPackage()
-            .equals(getMetamodel());
-      }
-
-      @Override
-      public boolean canResolveCorrespondenceEObject(EObject correspondenceObject) {
-        return correspondenceObject
-            .eClass()
-            .getEPackage()
-            .equals(ViewIdModelFactory.eINSTANCE.getViewIdModelPackage())
-            && correspondenceObject instanceof ViewId viewId && viewObjectToViewId
-            .inverse()
-            .containsKey(viewId);
-      }
-
-      @Override
-      public EObject getViewEObject(EObject correspondenceEObject) {
-        return viewObjectToViewId
-            .inverse()
-            .get((ViewId) correspondenceEObject);
-      }
-
-      @Override
-      public EObject getCorrespondenceEObject(EObject viewEObject, boolean createIfNotExist) {
-        ViewId existingViewId = viewObjectToViewId.get(viewEObject);
-        if (existingViewId != null || !createIfNotExist) {
-          return existingViewId;
-        }
-        ViewId newViewId = ViewIdModelFactory.eINSTANCE.createViewId();
-        viewObjectToViewId.put(viewEObject, newViewId);
-        viewIdModel
-            .getIds()
-            .add(newViewId);
-        return newViewId;
-      }
-
-      @Override
-      public void close() {
-        for (ViewId viewId : List.copyOf(viewIdModel.getIds())) {
-          EObject viewObject = viewObjectToViewId
-              .inverse()
-              .get(viewId);
-          if (viewObject.eResource() == null || viewObject
-              .eResource()
-              .getResourceSet() == null) {
-            viewIdModel
-                .getIds()
-                .remove(viewId);
-          } else {
-            viewId.setHierarchicalId(hierarchicalIdResolver
-                                         .getAndUpdateId(viewObject)
-                                         .getId());
-          }
-        }
       }
     }
   }

@@ -11,7 +11,9 @@ import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.compmodelcons.change.ChangePropagatingViewTypeSpecification;
 import tools.vitruv.compmodelcons.change.ChangePropagationView;
 import tools.vitruv.compmodelcons.change.CorrespondenceModelAccess;
-import tools.vitruv.compmodelcons.change.CorrespondenceResolver;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolver;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolverFactory;
+import tools.vitruv.compmodelcons.change.correspondence.impl.PassthroughCorrespondenceResolverImpl;
 
 public class NullViewChangePropagatingSpecificationImpl
     implements ChangePropagatingViewTypeSpecification {
@@ -36,12 +38,19 @@ public class NullViewChangePropagatingSpecificationImpl
                                           CorrespondenceModelAccess correspondenceModelAccess,
                                           Function<String, URI> uriFactory,
                                           ChangePropagationObservable observable,
-                                          ResourceAccess actualResourceAccess) {
+                                          CorrespondenceResolverFactory correspondenceResolverFactory) {
     return new DirectModelAccessView(metamodelDescriptor, resourceAccess);
   }
 
-  private record DirectModelAccessView(MetamodelDescriptor metamodel, ResourceAccess resourceAccess)
-      implements ChangePropagationView {
+  private static final class DirectModelAccessView implements ChangePropagationView {
+    private final MetamodelDescriptor metamodel;
+    private ResourceAccess resourceAccess;
+
+    private DirectModelAccessView(MetamodelDescriptor metamodel, ResourceAccess resourceAccess) {
+      this.metamodel = metamodel;
+      this.resourceAccess = resourceAccess;
+    }
+
     @Override
     public ResourceAccess getViewResourceAccess() {
       return resourceAccess;
@@ -62,6 +71,7 @@ public class NullViewChangePropagatingSpecificationImpl
     public List<EChange<EObject>> fitAndDetermineChanges(ResourceAccess changedOrigin,
                                                          CorrespondenceModelAccess changedCorrespondenceModel,
                                                          List<EChange<EObject>> originChanges) {
+      this.resourceAccess = changedOrigin;
       return originChanges;
     }
 

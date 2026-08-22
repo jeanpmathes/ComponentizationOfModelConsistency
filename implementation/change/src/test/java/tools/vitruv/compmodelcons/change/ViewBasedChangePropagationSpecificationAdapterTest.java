@@ -44,7 +44,7 @@ import tools.vitruv.change.propagation.ChangePropagationSpecification;
 import tools.vitruv.change.propagation.ModelRepositorySnapshot;
 import tools.vitruv.change.propagation.impl.AbstractChangePropagationSpecification;
 import tools.vitruv.change.utils.ResourceAccess;
-import tools.vitruv.compmodelcons.change.impl.RemoteCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper;
+import tools.vitruv.compmodelcons.change.correspondence.impl.ViewIdCorrespondenceTranslationStrategyImpl;
 import tools.vitruv.compmodelcons.views.DynamicModels;
 import tools.vitruv.compmodelcons.views.operations.FeatureProject;
 import tools.vitruv.compmodelcons.views.operations.FeatureSource;
@@ -99,8 +99,6 @@ class ViewBasedChangePropagationSpecificationAdapterTest {
         sourceViewType.getViewTypeMetamodelDescriptor());
     when(specification.getTargetMetamodelDescriptor()).thenReturn(
         targetViewType.getViewTypeMetamodelDescriptor());
-    var wrappingStrategy =
-        new RemoteCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper(specification);
 
     MetamodelDescriptor otherMetamodel = MetamodelDescriptor.of(EcorePackage.eINSTANCE);
     ChangePropagatingViewTypeSpecification otherViewType =
@@ -111,7 +109,8 @@ class ViewBasedChangePropagationSpecificationAdapterTest {
     assertThrows(IllegalArgumentException.class,
                  () -> new ViewBasedChangePropagationSpecificationAdapter(otherViewType,
                                                                           otherViewType.getOriginMetamodelDescriptor(),
-                                                                          wrappingStrategy,
+                                                                          specification,
+                                                                          new ViewIdCorrespondenceTranslationStrategyImpl(),
                                                                           targetViewType,
                                                                           targetViewType.getOriginMetamodelDescriptor()));
   }
@@ -172,15 +171,14 @@ class ViewBasedChangePropagationSpecificationAdapterTest {
   }
 
   private ViewBasedChangePropagationSpecificationAdapter getViewChangePropagationSpecificationAdapter() {
-    ChangePropagationSpecification functionalSpecification =
+    ChangePropagationSpecification specification =
         new TestChangePropagationSpecification(sourceViewType.getViewTypeMetamodelDescriptor(),
                                                targetViewType.getViewTypeMetamodelDescriptor());
-    var wrappingStrategy =
-        new RemoteCorrespondenceTranslatingChangeCorrespondenceSpecificationWrapper(
-            functionalSpecification);
     return new ViewBasedChangePropagationSpecificationAdapter(sourceViewType,
                                                               sourceViewType.getOriginMetamodelDescriptor(),
-                                                              wrappingStrategy, targetViewType,
+                                                              specification,
+                                                              new ViewIdCorrespondenceTranslationStrategyImpl(),
+                                                              targetViewType,
                                                               targetViewType.getOriginMetamodelDescriptor());
   }
 
