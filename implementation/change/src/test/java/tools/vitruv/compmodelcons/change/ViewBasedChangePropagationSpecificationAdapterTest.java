@@ -367,16 +367,6 @@ class ViewBasedChangePropagationSpecificationAdapterTest {
     }
 
     @Override
-    public Optional<EObject> getSnapshotEObject(EObject eObject) {
-      return Optional.empty();
-    }
-
-    @Override
-    public Optional<EObject> getRepositoryEObject(EObject eObject) {
-      return Optional.empty();
-    }
-
-    @Override
     public void close() {
     }
   }
