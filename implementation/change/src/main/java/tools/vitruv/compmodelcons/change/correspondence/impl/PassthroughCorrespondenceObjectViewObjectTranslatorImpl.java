@@ -3,12 +3,13 @@ package tools.vitruv.compmodelcons.change.correspondence.impl;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import tools.vitruv.change.composite.MetamodelDescriptor;
-import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolver;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslator;
 
-public class PassthroughCorrespondenceResolverImpl implements CorrespondenceResolver {
+public class PassthroughCorrespondenceObjectViewObjectTranslatorImpl
+    implements CorrespondenceObjectViewObjectTranslator {
   private final MetamodelDescriptor metamodel;
 
-  public PassthroughCorrespondenceResolverImpl(MetamodelDescriptor metamodel) {
+  public PassthroughCorrespondenceObjectViewObjectTranslatorImpl(MetamodelDescriptor metamodel) {
     this.metamodel = metamodel;
   }
 

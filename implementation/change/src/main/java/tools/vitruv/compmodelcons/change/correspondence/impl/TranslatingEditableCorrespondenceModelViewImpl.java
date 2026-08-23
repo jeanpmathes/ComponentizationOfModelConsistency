@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
-import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolver;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslator;
 
 public class TranslatingEditableCorrespondenceModelViewImpl<C extends Correspondence>
     extends TranslatingCorrespondenceModelViewImpl<C> implements
@@ -14,8 +14,8 @@ public class TranslatingEditableCorrespondenceModelViewImpl<C extends Correspond
   private final EditableCorrespondenceModelView<C> editableInner;
 
   public TranslatingEditableCorrespondenceModelViewImpl(EditableCorrespondenceModelView<C> inner,
-                                                        CorrespondenceResolver sourceResolver,
-                                                        CorrespondenceResolver targetResolver) {
+                                                        CorrespondenceObjectViewObjectTranslator sourceResolver,
+                                                        CorrespondenceObjectViewObjectTranslator targetResolver) {
     super(inner, sourceResolver, targetResolver);
     this.editableInner = inner;
   }

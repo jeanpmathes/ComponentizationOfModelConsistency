@@ -6,7 +6,8 @@ import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.compmodelcons.change.ViewChangePropagationContext;
 
 public interface CorrespondenceTranslationStrategy {
-  CorrespondenceResolverFactory createCorrespondenceResolverFactory(ResourceAccess resourceAccess);
+  CorrespondenceObjectViewObjectTranslatorFactory createCorrespondenceResolverFactory(
+      ResourceAccess resourceAccess);
 
   EditableCorrespondenceModelView<Correspondence> createTranslatedCorrespondenceModelView(
       EditableCorrespondenceModelView<Correspondence> inner, ViewChangePropagationContext context);

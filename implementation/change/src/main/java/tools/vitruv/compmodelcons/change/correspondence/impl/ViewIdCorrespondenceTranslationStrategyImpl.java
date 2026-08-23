@@ -18,8 +18,8 @@ import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
 import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.compmodelcons.change.ViewChangePropagationContext;
-import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolver;
-import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolverFactory;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslator;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslatorFactory;
 import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceTranslationStrategy;
 import tools.vitruv.compmodelcons.change.viewid.model.ViewId;
 import tools.vitruv.compmodelcons.change.viewid.model.ViewIdModel;
@@ -31,9 +31,9 @@ public class ViewIdCorrespondenceTranslationStrategyImpl
     implements CorrespondenceTranslationStrategy {
 
   @Override
-  public CorrespondenceResolverFactory createCorrespondenceResolverFactory(
+  public CorrespondenceObjectViewObjectTranslatorFactory createCorrespondenceResolverFactory(
       ResourceAccess resourceAccess) {
-    return new RemoteCorrespondenceResolverFactoryImpl(resourceAccess);
+    return new RemoteCorrespondenceObjectViewObjectTranslatorFactoryImpl(resourceAccess);
   }
 
   @Override
@@ -48,8 +48,9 @@ public class ViewIdCorrespondenceTranslationStrategyImpl
                                                                     .getCorrespondenceResolver());
   }
 
-  private record RemoteCorrespondenceResolverFactoryImpl(ResourceAccess actualResourceAccess)
-      implements CorrespondenceResolverFactory {
+  private record RemoteCorrespondenceObjectViewObjectTranslatorFactoryImpl(
+      ResourceAccess actualResourceAccess)
+      implements CorrespondenceObjectViewObjectTranslatorFactory {
 
     private ViewIdModel loadViewIdModel(ViewType<?> viewType, ResourceAccess actualResourceAccess) {
       Resource resource =
@@ -74,16 +75,19 @@ public class ViewIdCorrespondenceTranslationStrategyImpl
     }
 
     @Override
-    public CorrespondenceResolver createCorrespondenceResolver(ViewType<?> viewType,
-                                                               ViewResourceAccess viewResourceAccess) {
-      return new RemoteCorrespondenceResolverImpl(loadViewIdModel(viewType, actualResourceAccess),
-                                                  viewType.getMetamodel(),
-                                                  HierarchicalIdResolver.create(
+    public CorrespondenceObjectViewObjectTranslator createCorrespondenceResolver(
+        ViewType<?> viewType,
+        ViewResourceAccess viewResourceAccess) {
+      return new RemoteCorrespondenceObjectViewObjectTranslatorImpl(
+          loadViewIdModel(viewType, actualResourceAccess),
+          viewType.getMetamodel(),
+          HierarchicalIdResolver.create(
                                                       viewResourceAccess.getResourceSet()));
     }
   }
 
-  private static class RemoteCorrespondenceResolverImpl implements CorrespondenceResolver {
+  private static class RemoteCorrespondenceObjectViewObjectTranslatorImpl
+      implements CorrespondenceObjectViewObjectTranslator {
     private final ViewIdModel viewIdModel;
     private final EPackage metamodel;
     private final HierarchicalIdResolver hierarchicalIdResolver;
@@ -91,8 +95,9 @@ public class ViewIdCorrespondenceTranslationStrategyImpl
     private final BiMap<EObject, ViewId> viewObjectToViewId = HashBiMap.create();
     private final Map<HierarchicalId, ViewId> unresolvedHierarchicalIds = new HashMap<>();
 
-    private RemoteCorrespondenceResolverImpl(ViewIdModel viewIdModel, EPackage metamodel,
-                                             HierarchicalIdResolver hierarchicalIdResolver) {
+    private RemoteCorrespondenceObjectViewObjectTranslatorImpl(ViewIdModel viewIdModel,
+                                                               EPackage metamodel,
+                                                               HierarchicalIdResolver hierarchicalIdResolver) {
       this.viewIdModel = viewIdModel;
       this.metamodel = metamodel;
       this.hierarchicalIdResolver = hierarchicalIdResolver;

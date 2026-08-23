@@ -7,17 +7,17 @@ import java.util.Set;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.view.CorrespondenceModelView;
-import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolver;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslator;
 
 public class TranslatingCorrespondenceModelViewImpl<C extends Correspondence>
     implements CorrespondenceModelView<C> {
   protected final CorrespondenceModelView<C> inner;
-  protected final CorrespondenceResolver sourceResolver;
-  protected final CorrespondenceResolver targetResolver;
+  protected final CorrespondenceObjectViewObjectTranslator sourceResolver;
+  protected final CorrespondenceObjectViewObjectTranslator targetResolver;
 
   public TranslatingCorrespondenceModelViewImpl(CorrespondenceModelView<C> inner,
-                                                CorrespondenceResolver sourceResolver,
-                                                CorrespondenceResolver targetResolver) {
+                                                CorrespondenceObjectViewObjectTranslator sourceResolver,
+                                                CorrespondenceObjectViewObjectTranslator targetResolver) {
     this.inner = inner;
     this.sourceResolver = sourceResolver;
     this.targetResolver = targetResolver;

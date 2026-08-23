@@ -4,7 +4,7 @@ import java.util.List;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.utils.ResourceAccess;
-import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolver;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslator;
 
 /**
  * A view that is used during change propagation as part of a view-based change propagation
@@ -38,7 +38,7 @@ public interface ChangePropagationView extends AutoCloseable {
    *
    * @return the correspondence resolver
    */
-  CorrespondenceResolver getCorrespondenceResolver();
+  CorrespondenceObjectViewObjectTranslator getCorrespondenceResolver();
 
   /**
    * Commit all changes that were made to this view to the origin.

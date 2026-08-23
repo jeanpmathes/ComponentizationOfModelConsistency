@@ -11,9 +11,9 @@ import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.compmodelcons.change.ChangePropagatingViewTypeSpecification;
 import tools.vitruv.compmodelcons.change.ChangePropagationView;
 import tools.vitruv.compmodelcons.change.CorrespondenceModelAccess;
-import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolver;
-import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolverFactory;
-import tools.vitruv.compmodelcons.change.correspondence.impl.PassthroughCorrespondenceResolverImpl;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslator;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslatorFactory;
+import tools.vitruv.compmodelcons.change.correspondence.impl.PassthroughCorrespondenceObjectViewObjectTranslatorImpl;
 
 public class NullViewChangePropagatingSpecificationImpl
     implements ChangePropagatingViewTypeSpecification {
@@ -38,7 +38,7 @@ public class NullViewChangePropagatingSpecificationImpl
                                           CorrespondenceModelAccess correspondenceModelAccess,
                                           Function<String, URI> uriFactory,
                                           ChangePropagationObservable observable,
-                                          CorrespondenceResolverFactory correspondenceResolverFactory) {
+                                          CorrespondenceObjectViewObjectTranslatorFactory correspondenceObjectViewObjectTranslatorFactory) {
     return new DirectModelAccessView(metamodelDescriptor, resourceAccess);
   }
 
@@ -57,8 +57,8 @@ public class NullViewChangePropagatingSpecificationImpl
     }
 
     @Override
-    public CorrespondenceResolver getCorrespondenceResolver() {
-      return new PassthroughCorrespondenceResolverImpl(metamodel);
+    public CorrespondenceObjectViewObjectTranslator getCorrespondenceResolver() {
+      return new PassthroughCorrespondenceObjectViewObjectTranslatorImpl(metamodel);
     }
 
     @Override

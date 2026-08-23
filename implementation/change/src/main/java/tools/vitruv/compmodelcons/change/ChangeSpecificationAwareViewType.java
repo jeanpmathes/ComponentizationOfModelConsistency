@@ -22,8 +22,8 @@ import tools.vitruv.change.composite.description.VitruviusChangeFactory;
 import tools.vitruv.change.composite.description.VitruviusChangeResolverFactory;
 import tools.vitruv.change.propagation.ChangePropagationObservable;
 import tools.vitruv.change.utils.ResourceAccess;
-import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolver;
-import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolverFactory;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslator;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslatorFactory;
 import tools.vitruv.compmodelcons.change.impl.RootPreservingStateBasedChangeResolutionStrategy;
 import tools.vitruv.compmodelcons.views.impl.DefaultViewObserver;
 import tools.vitruv.compmodelcons.views.impl.OperationBasedViewType;
@@ -58,10 +58,10 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                                           CorrespondenceModelAccess correspondenceModelAccess,
                                           Function<String, URI> uriFactory,
                                           ChangePropagationObservable observable,
-                                          CorrespondenceResolverFactory correspondenceResolverFactory) {
+                                          CorrespondenceObjectViewObjectTranslatorFactory correspondenceObjectViewObjectTranslatorFactory) {
     return new ChangePropagationViewImpl(resourceAccess, correspondenceModelAccess,
                                          createUri(uriFactory), observable,
-                                         correspondenceResolverFactory);
+                                         correspondenceObjectViewObjectTranslatorFactory);
   }
 
   private class ChangePropagationViewImpl implements ChangePropagationView {
@@ -69,12 +69,12 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
     private final ViewResourceAccess viewResourceAccess;
     private final InternalViewImpl internalView;
     private final URI viewUri;
-    private final CorrespondenceResolver correspondenceResolver;
+    private final CorrespondenceObjectViewObjectTranslator correspondenceObjectViewObjectTranslator;
 
     public ChangePropagationViewImpl(ResourceAccess resourceAccess,
                                      CorrespondenceModelAccess correspondenceModelAccess,
                                      URI viewUri, ChangePropagationObservable observable,
-                                     CorrespondenceResolverFactory correspondenceResolverFactory) {
+                                     CorrespondenceObjectViewObjectTranslatorFactory correspondenceObjectViewObjectTranslatorFactory) {
       this.originResourceAccess = new ResourceAccessWrappingOriginResourceAccess(resourceAccess,
                                                                                  correspondenceModelAccess.getResource());
       this.viewUri = this.originResourceAccess
@@ -88,11 +88,12 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                                                   : DefaultViewObserver.INSTANCE);
       this.internalView.update();
 
-      if (correspondenceResolverFactory != null) {
-        this.correspondenceResolver = correspondenceResolverFactory.createCorrespondenceResolver(
+      if (correspondenceObjectViewObjectTranslatorFactory != null) {
+        this.correspondenceObjectViewObjectTranslator =
+            correspondenceObjectViewObjectTranslatorFactory.createCorrespondenceResolver(
             ChangeSpecificationAwareViewType.this, viewResourceAccess);
       } else {
-        this.correspondenceResolver = null;
+        this.correspondenceObjectViewObjectTranslator = null;
       }
     }
 
@@ -155,19 +156,19 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
         throw new RuntimeException(e);
       }
 
-      if (correspondenceResolver != null) {
-        correspondenceResolver.onViewFitted();
+      if (correspondenceObjectViewObjectTranslator != null) {
+        correspondenceObjectViewObjectTranslator.onViewFitted();
       }
 
       return viewChanges;
     }
 
     @Override
-    public CorrespondenceResolver getCorrespondenceResolver() {
-      if (correspondenceResolver != null) {
-        correspondenceResolver.onResolverUse();
+    public CorrespondenceObjectViewObjectTranslator getCorrespondenceResolver() {
+      if (correspondenceObjectViewObjectTranslator != null) {
+        correspondenceObjectViewObjectTranslator.onResolverUse();
       }
-      return correspondenceResolver;
+      return correspondenceObjectViewObjectTranslator;
     }
 
     @Override
@@ -239,8 +240,8 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
 
     @Override
     public void close() throws Exception {
-      if (correspondenceResolver != null) {
-        correspondenceResolver.close();
+      if (correspondenceObjectViewObjectTranslator != null) {
+        correspondenceObjectViewObjectTranslator.close();
       }
 
       internalView.close();

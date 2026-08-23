@@ -14,7 +14,7 @@ import tools.vitruv.change.propagation.ChangePropagationSpecification;
 import tools.vitruv.change.propagation.ModelRepositorySnapshot;
 import tools.vitruv.change.propagation.impl.AbstractChangePropagationSpecification;
 import tools.vitruv.change.utils.ResourceAccess;
-import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceResolverFactory;
+import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslatorFactory;
 import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceTranslationStrategy;
 import tools.vitruv.dsls.reactions.runtime.helper.PersistenceHelper;
 
@@ -101,7 +101,8 @@ public class ViewBasedChangePropagationSpecificationAdapter
       ModelRepositorySnapshot unchangedOrigin) {
     Function<String, URI> uriFactory = createUriFactory(changedOrigin, unchangedOrigin);
 
-    CorrespondenceResolverFactory correspondenceResolverFactory =
+    CorrespondenceObjectViewObjectTranslatorFactory
+        correspondenceObjectViewObjectTranslatorFactory =
         correspondenceTranslationStrategy.createCorrespondenceResolverFactory(changedOrigin);
 
     try (
@@ -115,13 +116,13 @@ public class ViewBasedChangePropagationSpecificationAdapter
                                         unchangedCorrespondenceModelAccess,
                                         uriFactory,
                                         this,
-                                        correspondenceResolverFactory);
+                                        correspondenceObjectViewObjectTranslatorFactory);
         ChangePropagationView targetView
             = targetViewType.createView(changedOrigin,
                                         changedCorrespondenceModelAccess,
                                         uriFactory,
                                         this,
-                                        correspondenceResolverFactory)
+                                        correspondenceObjectViewObjectTranslatorFactory)
     ) {
       List<EChange<EObject>> viewChanges =
           sourceView.fitAndDetermineChanges(changedOrigin, changedCorrespondenceModelAccess,
