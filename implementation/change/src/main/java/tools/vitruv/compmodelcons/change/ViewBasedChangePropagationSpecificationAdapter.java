@@ -38,11 +38,6 @@ public class ViewBasedChangePropagationSpecificationAdapter
       ChangePropagatingViewTypeSpecification targetViewType, MetamodelDescriptor targetMetamodel) {
     super(sourceMetamodel, targetMetamodel);
 
-    if (specification instanceof ViewBasedChangePropagationSpecificationAdapter) {
-      throw new IllegalArgumentException(
-          "The specification must not be a ViewBasedChangePropagationSpecificationAdapter");
-    }
-
     if (!sourceViewType
         .getViewTypeMetamodelDescriptor()
         .equals(specification.getSourceMetamodelDescriptor())) {
@@ -124,6 +119,8 @@ public class ViewBasedChangePropagationSpecificationAdapter
                                         this,
                                         correspondenceObjectViewObjectTranslatorFactory)
     ) {
+      ModelRepositorySnapshot unchangedViewState = sourceView.createSnapshot();
+
       List<EChange<EObject>> viewChanges =
           sourceView.fitAndDetermineChanges(changedOrigin, changedCorrespondenceModelAccess,
                                             originChanges);
@@ -133,13 +130,11 @@ public class ViewBasedChangePropagationSpecificationAdapter
 
       originChanges.forEach(change -> notifyChangePropagationStarted(this, change));
 
-      // For full correctness, the previous state would need to include the unchanged state of
-      // the two views as well.
-      // However, no one is using that anyway, so I have chosen to not implement that for now.
-      specification.propagateChanges(viewChanges,
-                                     correspondenceTranslationStrategy.createTranslatedCorrespondenceModelView(
-                                         changedCorrespondenceModel, context),
-                                     context.getResourceAccess(), null);
+      specification.propagateChanges(
+          viewChanges,
+          correspondenceTranslationStrategy.createTranslatedCorrespondenceModelView(
+              changedCorrespondenceModel, context),
+          context.getResourceAccess(), unchangedViewState);
 
       targetView.commit();
 

@@ -3,6 +3,7 @@ package tools.vitruv.compmodelcons.change;
 import java.util.List;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
+import tools.vitruv.change.propagation.ModelRepositorySnapshot;
 import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslator;
 
@@ -17,6 +18,13 @@ public interface ChangePropagationView extends AutoCloseable {
    * @return the view resource access
    */
   ResourceAccess getViewResourceAccess();
+
+  /**
+   * Create a snapshot of the current state of the view.
+   *
+   * @return the snapshot
+   */
+  ModelRepositorySnapshot createSnapshot();
 
   /**
    * Fit the view to a changed origin state, reached after applying the origin changes to the origin

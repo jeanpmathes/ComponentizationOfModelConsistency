@@ -122,7 +122,7 @@ class OperationBasedViewTypeTest {
 
     class TestViewType extends OperationBasedViewType {
       public TestViewType() {
-        super("Test", List.of(Pcm_mockupPackage.eINSTANCE), viewType);
+        super("Test", List.of(Pcm_mockupPackage.eINSTANCE), viewType, null);
       }
 
       @Override
@@ -209,7 +209,7 @@ class OperationBasedViewTypeTest {
 
     class TestViewType extends OperationBasedViewType {
       public TestViewType() {
-        super("Test", List.of(Pcm_mockupPackage.eINSTANCE), viewType);
+        super("Test", List.of(Pcm_mockupPackage.eINSTANCE), viewType, null);
       }
 
       @Override
@@ -285,7 +285,7 @@ class OperationBasedViewTypeTest {
 
     class TestViewType extends OperationBasedViewType {
       public TestViewType() {
-        super("Test", List.of(Pcm_mockupPackage.eINSTANCE), viewType);
+        super("Test", List.of(Pcm_mockupPackage.eINSTANCE), viewType, null);
       }
 
       @Override

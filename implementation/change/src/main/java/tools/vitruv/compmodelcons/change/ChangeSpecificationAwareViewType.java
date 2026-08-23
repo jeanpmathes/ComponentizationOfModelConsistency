@@ -2,7 +2,6 @@ package tools.vitruv.compmodelcons.change;
 
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,10 +20,12 @@ import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.change.composite.description.VitruviusChangeFactory;
 import tools.vitruv.change.composite.description.VitruviusChangeResolverFactory;
 import tools.vitruv.change.propagation.ChangePropagationObservable;
+import tools.vitruv.change.propagation.ModelRepositorySnapshot;
 import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslator;
 import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslatorFactory;
 import tools.vitruv.compmodelcons.change.impl.RootPreservingStateBasedChangeResolutionStrategy;
+import tools.vitruv.compmodelcons.change.impl.ViewSnapshot;
 import tools.vitruv.compmodelcons.views.impl.DefaultViewObserver;
 import tools.vitruv.compmodelcons.views.impl.OperationBasedViewType;
 import tools.vitruv.compmodelcons.views.impl.ViewResourceAccessImpl;
@@ -32,6 +33,7 @@ import tools.vitruv.compmodelcons.views.internal.OriginResourceAccess;
 import tools.vitruv.compmodelcons.views.internal.ViewResourceAccess;
 import tools.vitruv.compmodelcons.views.internal.impl.InternalViewImpl;
 import tools.vitruv.compmodelcons.views.internal.impl.ResourceAccessWrappingOriginResourceAccess;
+import tools.vitruv.framework.views.ViewTypeProvider;
 
 /**
  * Abstract base class for view types that can participate in change propagation.
@@ -39,8 +41,9 @@ import tools.vitruv.compmodelcons.views.internal.impl.ResourceAccessWrappingOrig
 public abstract class ChangeSpecificationAwareViewType extends OperationBasedViewType
     implements ChangePropagatingViewTypeSpecification {
   public ChangeSpecificationAwareViewType(String name, List<EPackage> originMetamodels,
-                                          EPackage viewTypeMetamodel) {
-    super(name, originMetamodels, viewTypeMetamodel);
+                                          EPackage viewTypeMetamodel,
+                                          ViewTypeProvider viewTypeProvider) {
+    super(name, originMetamodels, viewTypeMetamodel, viewTypeProvider);
   }
 
   @Override
@@ -68,7 +71,10 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
     private final OriginResourceAccess originResourceAccess;
     private final ViewResourceAccess viewResourceAccess;
     private final InternalViewImpl internalView;
+
     private final URI viewUri;
+
+    private final CorrespondenceModelAccess correspondenceModelAccess;
     private final CorrespondenceObjectViewObjectTranslator correspondenceObjectViewObjectTranslator;
 
     public ChangePropagationViewImpl(ResourceAccess resourceAccess,
@@ -80,7 +86,8 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
       this.viewUri = this.originResourceAccess
           .getViewUriHint(getOriginMetamodels(), getMetamodel())
           .orElse(viewUri);
-      this.viewResourceAccess = new ViewResourceAccessImpl(this.viewUri);
+      this.viewResourceAccess =
+          new ViewResourceAccessImpl(this.viewUri, resourceAccess::getMetadataModelURI);
 
       this.internalView =
           new InternalViewImpl(getStructure(), viewResourceAccess, originResourceAccess,
@@ -88,10 +95,12 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                                                   : DefaultViewObserver.INSTANCE);
       this.internalView.update();
 
+      this.correspondenceModelAccess = correspondenceModelAccess;
+
       if (correspondenceObjectViewObjectTranslatorFactory != null) {
         this.correspondenceObjectViewObjectTranslator =
             correspondenceObjectViewObjectTranslatorFactory.createCorrespondenceResolver(
-            ChangeSpecificationAwareViewType.this, viewResourceAccess);
+                ChangeSpecificationAwareViewType.this, viewResourceAccess);
       } else {
         this.correspondenceObjectViewObjectTranslator = null;
       }
@@ -99,44 +108,13 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
 
     @Override
     public ResourceAccess getViewResourceAccess() {
-      return new ResourceAccess() {
-        @Override
-        public URI getMetadataModelURI(String... strings) {
-          throw new UnsupportedOperationException();
-        }
+      return viewResourceAccess;
+    }
 
-        @Override
-        public Resource getModelResource(URI uri) {
-          Resource resource = viewResourceAccess
-              .getResourceSet()
-              .getResource(uri, true);
-          if (resource == null) {
-            resource = viewResourceAccess
-                .getResourceSet()
-                .createResource(uri);
-          }
-          return resource;
-        }
-
-        @Override
-        public Collection<Resource> getModelResources() {
-          return viewResourceAccess
-              .getResourceSet()
-              .getResources();
-        }
-
-        @Override
-        public void persistAsRoot(EObject eObject, URI uri) {
-          if (!uri
-              .fileExtension()
-              .equals(getMetamodel().getNsPrefix())) {
-            throw new IllegalArgumentException(
-                "View roots must be persisted using the view type metamodel's file extension ("
-                    + getMetamodel().getNsPrefix() + "), but was " + uri.fileExtension());
-          }
-          viewResourceAccess.registerRoot(eObject, uri);
-        }
-      };
+    @Override
+    public ModelRepositorySnapshot createSnapshot() {
+      return new ViewSnapshot(viewResourceAccess,
+                              correspondenceModelAccess.getCorrespondenceModel());
     }
 
     @Override

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.change.propagation.ChangePropagationSpecification;
 import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceTranslationStrategy;
+import tools.vitruv.compmodelcons.change.correspondence.impl.PassthroughCorrespondenceTranslationStrategyImpl;
 import tools.vitruv.compmodelcons.change.correspondence.impl.ViewIdCorrespondenceTranslationStrategyImpl;
 import tools.vitruv.compmodelcons.change.impl.NullViewChangePropagatingSpecificationImpl;
 
@@ -61,11 +62,27 @@ public class ViewChangePropagationSpecificationAdapterFactory {
                                         .collect(Collectors.toSet()));
   }
 
+  private CorrespondenceTranslationStrategy getCorrespondenceTranslationStrategy(
+      CorrespondenceTranslation translation) {
+    return switch (translation) {
+      case VIEW_ID -> new ViewIdCorrespondenceTranslationStrategyImpl();
+      case NONE -> new PassthroughCorrespondenceTranslationStrategyImpl();
+    };
+  }
+
   public ChangePropagationSpecification create(
       Optional<ChangePropagatingViewTypeSpecification> sourceViewType,
       ChangePropagationSpecification specification,
       Optional<ChangePropagatingViewTypeSpecification> targetViewType) {
+    return create(sourceViewType, specification, targetViewType, CorrespondenceTranslation.VIEW_ID);
+  }
+
+  public ChangePropagationSpecification create(
+      Optional<ChangePropagatingViewTypeSpecification> sourceViewType,
+      ChangePropagationSpecification specification,
+      Optional<ChangePropagatingViewTypeSpecification> targetViewType,
+      CorrespondenceTranslation translation) {
     return create(sourceViewType, specification, targetViewType,
-                  new ViewIdCorrespondenceTranslationStrategyImpl());
+                  getCorrespondenceTranslationStrategy(translation));
   }
 }

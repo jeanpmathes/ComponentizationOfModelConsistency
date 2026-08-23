@@ -100,6 +100,14 @@ public class Root {
                            PutContext context) {
     EObject affectedViewObject =
         DynamicModels.getAffectedEObject(viewChange);
+
+    if (!affectedViewObject
+        .eClass()
+        .getEPackage()
+        .equals(rootClass.getEPackage())) {
+      return viewBinding;
+    }
+
     List<RootObjectBindingImpl> rootBindings = new ArrayList<>(viewBinding.rootBindings);
 
     int responsibleRootIndex = -1;

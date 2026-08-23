@@ -256,10 +256,15 @@ class ViewBasedChangePropagationSpecificationAdapterTest {
         if (change instanceof ReplaceSingleValuedEAttribute) {
           EObject targetRoot = resourceAccess
               .getModelResources()
-              .iterator()
-              .next()
-              .getContents()
-              .getFirst();
+              .stream()
+              .filter(resource -> resource
+                  .getURI()
+                  .toString()
+                  .contains("target"))
+              .findFirst()
+              .map(Resource::getContents)
+              .map(List::getFirst)
+              .orElseThrow();
           List<EObject> targetNonRoots = (List<EObject>) targetRoot.eGet(targetRoot
                                                                              .eClass()
                                                                              .getEStructuralFeature(
@@ -292,7 +297,7 @@ class ViewBasedChangePropagationSpecificationAdapterTest {
     private final MetamodelInfo originInfo;
 
     public TestViewType(String name, MetamodelInfo viewInfo, MetamodelInfo originInfo) {
-      super(name, List.of(originInfo.metamodel), viewInfo.metamodel);
+      super(name, List.of(originInfo.metamodel), viewInfo.metamodel, null);
       this.viewInfo = viewInfo;
       this.originInfo = originInfo;
     }

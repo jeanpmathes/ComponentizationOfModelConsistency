@@ -38,6 +38,7 @@ import tools.vitruv.compmodelcons.views.operations.Root;
 import tools.vitruv.compmodelcons.views.operations.Source;
 import tools.vitruv.dsls.common.JavaFileGenerator;
 import tools.vitruv.dsls.common.JavaImportHelper;
+import tools.vitruv.framework.views.ViewTypeProvider;
 import tools.vitruv.neojoin.Constants;
 import tools.vitruv.neojoin.aqr.AQR;
 import tools.vitruv.neojoin.aqr.AQRFeature;
@@ -117,11 +118,13 @@ public class ViewTypeSourceGenerator {
         .append(viewtypeMetamodel.getFullyQualifiedPackageInterfaceAccessor())
         .append(";\n\n");
 
+    importHelper.typeRef(ViewTypeProvider.class);
+
     builder
         .append("    public ")
         .append(getClassName())
-        .append("() {\n");
-    builder.append("        super(NAME, originMetamodels, viewtype);\n");
+        .append("(ViewTypeProvider viewTypeProvider) {\n");
+    builder.append("        super(NAME, originMetamodels, viewtype, viewTypeProvider);\n");
     builder.append("    }\n\n");
 
     importHelper.typeRef(Root.class);

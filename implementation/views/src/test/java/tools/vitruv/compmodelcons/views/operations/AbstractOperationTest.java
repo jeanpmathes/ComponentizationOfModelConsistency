@@ -303,6 +303,29 @@ class AbstractOperationTest {
         }
       }, new ViewResourceAccess() {
         @Override
+        public URI getMetadataModelURI(String... strings) {
+          throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Resource getModelResource(URI uri) {
+          return models.resourceSet.getResource(uri, true);
+        }
+
+        @Override
+        public Collection<Resource> getModelResources() {
+          return models.getViewModels();
+        }
+
+        @Override
+        public void persistAsRoot(EObject eObject, URI uri) {
+          models
+              .createViewModel(uri)
+              .getContents()
+              .add(eObject);
+        }
+
+        @Override
         public void reset() {
           throw new UnsupportedOperationException();
         }

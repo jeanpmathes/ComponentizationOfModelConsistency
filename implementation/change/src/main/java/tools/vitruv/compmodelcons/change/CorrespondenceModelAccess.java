@@ -5,6 +5,7 @@ import org.eclipse.emf.ecore.resource.Resource;
 import tools.vitruv.change.correspondence.Correspondence;
 import tools.vitruv.change.correspondence.Correspondences;
 import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
+import tools.vitruv.compmodelcons.change.correspondence.impl.TranslatingEditableCorrespondenceModelViewImpl;
 
 /**
  * This class is used as an ugly workaround for the currently missing correspondence handling
@@ -22,22 +23,22 @@ import tools.vitruv.change.correspondence.view.EditableCorrespondenceModelView;
  * correspondences directly.
  */
 public final class CorrespondenceModelAccess implements AutoCloseable {
+  private final EditableCorrespondenceModelView<Correspondence> editableCorrespondenceModelView;
   private final Correspondences correspondences;
-  private final CorrespondenceModelAccess original;
 
   public CorrespondenceModelAccess(
       EditableCorrespondenceModelView<Correspondence> editableCorrespondenceModelView) {
-    this(extractCorrespondences(editableCorrespondenceModelView), null);
-  }
-
-  private CorrespondenceModelAccess(Correspondences correspondences,
-                                    CorrespondenceModelAccess original) {
-    this.correspondences = correspondences;
-    this.original = original;
+    this.editableCorrespondenceModelView = editableCorrespondenceModelView;
+    this.correspondences = extractCorrespondences(editableCorrespondenceModelView);
   }
 
   private static Correspondences extractCorrespondences(
       EditableCorrespondenceModelView<Correspondence> editableCorrespondenceModelView) {
+    if (editableCorrespondenceModelView instanceof TranslatingEditableCorrespondenceModelViewImpl) {
+      //noinspection unchecked
+      return extractCorrespondences(getField(
+          editableCorrespondenceModelView, "editableInner", EditableCorrespondenceModelView.class));
+    }
     return getField(getField(editableCorrespondenceModelView, "correspondenceModel", Object.class),
                     "correspondences", Correspondences.class);
   }
@@ -62,15 +63,12 @@ public final class CorrespondenceModelAccess implements AutoCloseable {
     return correspondences.eResource();
   }
 
+  public EditableCorrespondenceModelView<Correspondence> getCorrespondenceModel() {
+    return editableCorrespondenceModelView;
+  }
+
   @Override
   public void close() {
-    if (original != null) {
-      Resource resource = correspondences.eResource();
-      resource.unload();
-      resource
-          .getResourceSet()
-          .getResources()
-          .remove(resource);
-    }
+
   }
 }

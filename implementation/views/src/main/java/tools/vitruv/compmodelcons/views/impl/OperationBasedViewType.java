@@ -1,7 +1,10 @@
 package tools.vitruv.compmodelcons.views.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import org.eclipse.emf.common.notify.Notification;
@@ -14,6 +17,7 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import tools.vitruv.change.atomic.hid.HierarchicalId;
 import tools.vitruv.change.composite.description.VitruviusChange;
+import tools.vitruv.compmodelcons.views.internal.CompositeView;
 import tools.vitruv.compmodelcons.views.internal.impl.InternalViewImpl;
 import tools.vitruv.compmodelcons.views.internal.impl.ViewWrappingOriginResourceAccessImpl;
 import tools.vitruv.compmodelcons.views.operations.Root;
@@ -23,6 +27,7 @@ import tools.vitruv.framework.views.View;
 import tools.vitruv.framework.views.ViewSelection;
 import tools.vitruv.framework.views.ViewSelector;
 import tools.vitruv.framework.views.ViewType;
+import tools.vitruv.framework.views.ViewTypeProvider;
 import tools.vitruv.framework.views.changederivation.StateBasedChangeResolutionStrategy;
 import tools.vitruv.framework.views.impl.AbstractViewType;
 import tools.vitruv.framework.views.impl.IdentityMappingViewType;
@@ -34,7 +39,7 @@ import tools.vitruv.framework.views.impl.ModifiableView;
  */
 public abstract class OperationBasedViewType extends AbstractViewType<AllSelector, HierarchicalId> {
   private final List<EPackage> originMetamodels;
-  private final IdentityMappingViewType sourceModelsViewType;
+  private final ViewTypeProvider viewTypeProvider;
 
   private Root structure;
 
@@ -46,12 +51,11 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
    * @param viewTypeMetamodel the metamodel of the view type
    */
   public OperationBasedViewType(String name, List<EPackage> originMetamodels,
-                                EPackage viewTypeMetamodel) {
+                                EPackage viewTypeMetamodel, ViewTypeProvider viewTypeProvider) {
     super(name, viewTypeMetamodel);
 
     this.originMetamodels = List.copyOf(originMetamodels);
-    this.sourceModelsViewType =
-        new IdentityMappingViewType(String.format("%s_InternalIdentity", name));
+    this.viewTypeProvider = viewTypeProvider;
   }
 
   public List<EPackage> getOriginMetamodels() {
@@ -110,6 +114,46 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
   @Override
   public ModifiableView createView(AllSelector selector) {
     return new OperationBasedView(selector);
+  }
+
+  private View createOriginView(ChangeableViewSource viewSource) {
+    Set<EPackage> requiredOriginMetamodels = new HashSet<>(getOriginMetamodels());
+    List<View> views = new ArrayList<>();
+
+    if (viewTypeProvider != null) {
+      for (ViewType<?> viewType : viewTypeProvider.getViewTypes()) {
+        if (viewType.getMetamodel() != null && requiredOriginMetamodels.remove(
+            viewType.getMetamodel())) {
+          views.add(viewType
+                        .createSelector(viewSource)
+                        .createView());
+        }
+      }
+    }
+
+    if (!requiredOriginMetamodels.isEmpty()) {
+      views.add(createDirectOriginModelView(requiredOriginMetamodels, viewSource));
+    }
+
+    if (views.size() == 1) {
+      return views.getFirst();
+    }
+
+    return new CompositeView(views);
+  }
+
+  private View createDirectOriginModelView(Set<EPackage> requiredOriginMetamodels,
+                                           ChangeableViewSource viewSource) {
+    var viewType = new IdentityMappingViewType(String.format("%s_InternalIdentity", getName()));
+    var selector = viewType.createSelector(viewSource);
+    selector
+        .getSelectableElements()
+        .stream()
+        .filter(eObject -> requiredOriginMetamodels.contains(eObject
+                                                                 .eClass()
+                                                                 .getEPackage()))
+        .forEach(eObject -> selector.setSelected(eObject, true));
+    return selector.createView();
   }
 
   @Override
@@ -220,24 +264,15 @@ public abstract class OperationBasedViewType extends AbstractViewType<AllSelecto
     public OperationBasedView(AllSelector selector) {
       this.selector = selector;
 
-      originResourceAccess = new ViewWrappingOriginResourceAccessImpl(createSourceModelsView());
-      viewResourceAccess = new ViewResourceAccessImpl(createPlaceholderViewUri());
+      originResourceAccess =
+          new ViewWrappingOriginResourceAccessImpl(createOriginView(selector.getViewSource()));
+      viewResourceAccess = new ViewResourceAccessImpl(createPlaceholderViewUri(), ignored -> {
+        throw new UnsupportedOperationException();
+      });
       internalView = new InternalViewImpl(getStructure(), viewResourceAccess, originResourceAccess,
                                           DefaultViewObserver.INSTANCE);
 
       update();
-    }
-
-    private View createSourceModelsView() {
-      var selector = sourceModelsViewType.createSelector(getViewSource());
-      selector
-          .getSelectableElements()
-          .stream()
-          .filter(eObject -> originMetamodels.contains(eObject
-                                                           .eClass()
-                                                           .getEPackage()))
-          .forEach(eObject -> selector.setSelected(eObject, true));
-      return selector.createView();
     }
 
     @Override

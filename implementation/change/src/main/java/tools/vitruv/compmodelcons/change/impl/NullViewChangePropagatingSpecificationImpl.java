@@ -7,6 +7,7 @@ import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.change.propagation.ChangePropagationObservable;
+import tools.vitruv.change.propagation.ModelRepositorySnapshot;
 import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.compmodelcons.change.ChangePropagatingViewTypeSpecification;
 import tools.vitruv.compmodelcons.change.ChangePropagationView;
@@ -54,6 +55,16 @@ public class NullViewChangePropagatingSpecificationImpl
     @Override
     public ResourceAccess getViewResourceAccess() {
       return resourceAccess;
+    }
+
+    @Override
+    public ModelRepositorySnapshot createSnapshot() {
+      // On the source side, the existing snapshot is enough and also passed as resource access.
+      // On the target side, this operation is currently not used and therefore support is needed.
+      if (resourceAccess instanceof ModelRepositorySnapshot snapshot) {
+        return snapshot;
+      }
+      throw new UnsupportedOperationException();
     }
 
     @Override
