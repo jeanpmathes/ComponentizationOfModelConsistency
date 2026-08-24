@@ -51,34 +51,34 @@ public class FeatureProject {
   public FeatureBinding doGet(ObjectBinding subject, GetContext context) {
     FeatureOriginBinding originFeature = origin.doGet(subject, context);
 
-    if (originFeature.value() instanceof ValueBinding.Unset) {
-      subject
-          .viewObject()
-          .eUnset(createdFeature);
-      return new FeatureProjectBindingImpl(originFeature, subject.viewObject(),
-                                           originFeature.value());
+    switch (originFeature.value()) {
+      case ValueBinding.Unset ignored -> {
+        subject
+            .viewObject()
+            .eUnset(createdFeature);
+        return new FeatureProjectBindingImpl(originFeature, subject.viewObject(),
+                                             originFeature.value());
+      }
+      case ValueBinding.Single(Object value) -> {
+        Object translated = translateOriginToView(value, context);
+        subject
+            .viewObject()
+            .eSet(createdFeature, translated);
+        return new FeatureProjectBindingImpl(originFeature, subject.viewObject(),
+                                             new ValueBinding.Single(translated));
+      }
+      case ValueBinding.Many(List<?> values) -> {
+        List<?> translated = values
+            .stream()
+            .map(value -> translateOriginToView(value, context))
+            .toList();
+        subject
+            .viewObject()
+            .eSet(createdFeature, translated);
+        return new FeatureProjectBindingImpl(originFeature, subject.viewObject(),
+                                             new ValueBinding.Many(translated));
+      }
     }
-    if (originFeature.value() instanceof ValueBinding.Single(Object value)) {
-      Object translated = translateOriginToView(value, context);
-      subject
-          .viewObject()
-          .eSet(createdFeature, translated);
-      return new FeatureProjectBindingImpl(originFeature, subject.viewObject(),
-                                           new ValueBinding.Single(translated));
-    }
-    if (originFeature.value() instanceof ValueBinding.Many(List<?> values)) {
-      List<?> translated = values
-          .stream()
-          .map(value -> translateOriginToView(value, context))
-          .toList();
-      subject
-          .viewObject()
-          .eSet(createdFeature, translated);
-      return new FeatureProjectBindingImpl(originFeature, subject.viewObject(),
-                                           new ValueBinding.Many(translated));
-    }
-
-    throw new UnsupportedOperationException();
   }
 
   public FeatureBinding initializeBindingFromView(ObjectBinding subject, PutContext context) {
@@ -120,7 +120,7 @@ public class FeatureProject {
 
   private FeatureOriginBinding put(int index, EChange<EObject> change,
                                    FeatureProjectBindingImpl binding,
-                             ObjectBinding subject, PutContext context) {
+                                   ObjectBinding subject, PutContext context) {
     ValueUpdateBinding value = switch (change) {
       case ReplaceSingleValuedFeatureEChange<EObject, ?, ?> replaceSingleValuedFeatureEChange ->
           new ValueUpdateBinding.Replace(

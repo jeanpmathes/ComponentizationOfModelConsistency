@@ -4,7 +4,8 @@ import java.util.List;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
 
-public interface ValueBinding {
+public sealed interface ValueBinding
+    permits ValueBinding.Unset, ValueBinding.Single, ValueBinding.Many {
   static ValueBinding of(Object single) {
     return new Single(single);
   }
