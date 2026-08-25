@@ -44,7 +44,7 @@ public class TranslatingEditableCorrespondenceModelViewImpl<C extends Correspond
   public <V extends C> EditableCorrespondenceModelView<V> getEditableView(
       Class<V> correspondenceType, Supplier<V> supplier) {
     return new TranslatingEditableCorrespondenceModelViewImpl<>(
-        editableInner.getEditableView(correspondenceType, supplier), sourceResolver,
-        targetResolver);
+        editableInner.getEditableView(correspondenceType, supplier), sourceTranslator,
+        targetTranslator);
   }
 }

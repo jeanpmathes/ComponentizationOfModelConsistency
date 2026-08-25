@@ -2,6 +2,7 @@ package tools.vitruv.compmodelcons.views;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 
@@ -27,4 +28,6 @@ public interface ViewCorrespondences {
                                                                  EClass viewClass);
 
   boolean correspond(List<EObject> originObjects, EObject viewObject);
+
+  void forEach(BiConsumer<List<EObject>, EObject> action);
 }

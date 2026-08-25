@@ -8,13 +8,13 @@ import org.eclipse.emf.ecore.EObject;
  * View objects cannot be stored in the correspondence model because views are temporary.
  */
 public interface CorrespondenceObjectViewObjectTranslator extends AutoCloseable {
-  boolean canResolveViewEObject(EObject viewObject);
+  boolean canTranslateViewEObject(EObject viewObject);
 
-  boolean canResolveCorrespondenceEObject(EObject correspondenceObject);
+  boolean canTranslateCorrespondenceEObject(EObject correspondenceObject);
 
-  EObject getViewEObject(EObject correspondenceEObject);
+  EObject translateViewEObject(EObject correspondenceEObject);
 
-  EObject getCorrespondenceEObject(EObject viewEObject, boolean createIfNotExist);
+  EObject translateCorrespondenceEObject(EObject viewEObject, boolean createIfNotExist);
 
   void onViewFitted();
 

@@ -16,6 +16,7 @@ import tools.vitruv.change.propagation.impl.AbstractChangePropagationSpecificati
 import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslatorFactory;
 import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceTranslationStrategy;
+import tools.vitruv.compmodelcons.change.correspondence.TranslatedCorrespondenceModelView;
 import tools.vitruv.dsls.reactions.runtime.helper.PersistenceHelper;
 
 /**
@@ -123,20 +124,29 @@ public class ViewBasedChangePropagationSpecificationAdapter
 
       List<EChange<EObject>> viewChanges =
           sourceView.fitAndDetermineChanges(changedOrigin, changedCorrespondenceModelAccess,
-                                            originChanges);
+                                            originChanges,
+                                            originObject -> unchangedOrigin
+                                                                .getSnapshotToRepositoryMap()
+                                                                .getOrDefault(originObject,
+                                                                              originObject));
 
       var context =
           new ViewChangePropagationContext(sourceView, sourceViewType, targetView, targetViewType);
 
       originChanges.forEach(change -> notifyChangePropagationStarted(this, change));
 
-      specification.propagateChanges(
-          viewChanges,
-          correspondenceTranslationStrategy.createTranslatedCorrespondenceModelView(
-              changedCorrespondenceModel, context),
-          context.getResourceAccess(), unchangedViewState);
+      try (
+          TranslatedCorrespondenceModelView translatedChangedCorrespondenceModel =
+              correspondenceTranslationStrategy.createTranslatedCorrespondenceModelView(
+                  changedCorrespondenceModel, context)
+      ) {
+        specification.propagateChanges(
+            viewChanges,
+            translatedChangedCorrespondenceModel.getCorrespondenceModelView(),
+            context.getResourceAccess(), unchangedViewState);
 
-      targetView.commit();
+        targetView.commit();
+      }
 
       originChanges.forEach(change -> notifyChangePropagationStopped(this, change));
     } catch (Exception e) {

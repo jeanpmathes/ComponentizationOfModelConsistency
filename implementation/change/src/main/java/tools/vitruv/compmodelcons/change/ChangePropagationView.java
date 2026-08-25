@@ -1,11 +1,13 @@
 package tools.vitruv.compmodelcons.change;
 
 import java.util.List;
+import java.util.function.Function;
 import org.eclipse.emf.ecore.EObject;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.propagation.ModelRepositorySnapshot;
 import tools.vitruv.change.utils.ResourceAccess;
 import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslator;
+import tools.vitruv.compmodelcons.change.correspondence.ViewCorrespondences;
 
 /**
  * A view that is used during change propagation as part of a view-based change propagation
@@ -34,12 +36,15 @@ public interface ChangePropagationView extends AutoCloseable {
    * @param changedOrigin              the changed origin state
    * @param changedCorrespondenceModel the changed correspondence model
    * @param originChanges              the changes that created the changed origin state
+   * @param unchangedToChanged         maps origin objects from the unchanged origin state to the
+   *                                   respective origin objects in the changed origin state
    * @return the changes that were needed to change this view to the changed, fitted view state
    */
   List<EChange<EObject>> fitAndDetermineChanges(
       ResourceAccess changedOrigin,
       CorrespondenceModelAccess changedCorrespondenceModel,
-      List<EChange<EObject>> originChanges);
+      List<EChange<EObject>> originChanges,
+      Function<EObject, EObject> unchangedToChanged);
 
   /**
    * Get the correspondence resolver for this view.
@@ -47,6 +52,14 @@ public interface ChangePropagationView extends AutoCloseable {
    * @return the correspondence resolver
    */
   CorrespondenceObjectViewObjectTranslator getCorrespondenceResolver();
+
+  /**
+   * Get the view-correspondences of this view. View-correspondences connect view objects with
+   * the origin objects the view elements were projected from.
+   *
+   * @return the view-correspondences
+   */
+  ViewCorrespondences getCorrespondences();
 
   /**
    * Commit all changes that were made to this view to the origin.

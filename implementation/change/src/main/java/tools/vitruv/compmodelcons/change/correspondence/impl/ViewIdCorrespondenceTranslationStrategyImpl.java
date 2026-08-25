@@ -37,15 +37,17 @@ public class ViewIdCorrespondenceTranslationStrategyImpl
   }
 
   @Override
-  public EditableCorrespondenceModelView<Correspondence> createTranslatedCorrespondenceModelView(
-      EditableCorrespondenceModelView<Correspondence> inner, ViewChangePropagationContext context) {
-    return new TranslatingEditableCorrespondenceModelViewImpl<>(inner,
-                                                                context
-                                                                    .sourceView()
-                                                                    .getCorrespondenceResolver(),
-                                                                context
-                                                                    .targetView()
-                                                                    .getCorrespondenceResolver());
+  public TranslatedCorrespondenceModelViewImpl createTranslatedCorrespondenceModelView(
+      EditableCorrespondenceModelView<Correspondence> correspondenceModel,
+      ViewChangePropagationContext context) {
+    return new TranslatedCorrespondenceModelViewImpl(
+        new TranslatingEditableCorrespondenceModelViewImpl<>(correspondenceModel,
+                                                             context
+                                                                 .sourceView()
+                                                                 .getCorrespondenceResolver(),
+                                                             context
+                                                                 .targetView()
+                                                                 .getCorrespondenceResolver()));
   }
 
   private record RemoteCorrespondenceObjectViewObjectTranslatorFactoryImpl(
@@ -82,7 +84,7 @@ public class ViewIdCorrespondenceTranslationStrategyImpl
           loadViewIdModel(viewType, actualResourceAccess),
           viewType.getMetamodel(),
           HierarchicalIdResolver.create(
-                                                      viewResourceAccess.getResourceSet()));
+              viewResourceAccess.getResourceSet()));
     }
   }
 
@@ -149,7 +151,7 @@ public class ViewIdCorrespondenceTranslationStrategyImpl
     }
 
     @Override
-    public boolean canResolveViewEObject(EObject viewObject) {
+    public boolean canTranslateViewEObject(EObject viewObject) {
       return viewObject
           .eClass()
           .getEPackage()
@@ -157,7 +159,7 @@ public class ViewIdCorrespondenceTranslationStrategyImpl
     }
 
     @Override
-    public boolean canResolveCorrespondenceEObject(EObject correspondenceObject) {
+    public boolean canTranslateCorrespondenceEObject(EObject correspondenceObject) {
       return correspondenceObject
           .eClass()
           .getEPackage()
@@ -168,14 +170,14 @@ public class ViewIdCorrespondenceTranslationStrategyImpl
     }
 
     @Override
-    public EObject getViewEObject(EObject correspondenceEObject) {
+    public EObject translateViewEObject(EObject correspondenceEObject) {
       return viewObjectToViewId
           .inverse()
           .get((ViewId) correspondenceEObject);
     }
 
     @Override
-    public EObject getCorrespondenceEObject(EObject viewEObject, boolean createIfNotExist) {
+    public EObject translateCorrespondenceEObject(EObject viewEObject, boolean createIfNotExist) {
       ViewId existingViewId = viewObjectToViewId.get(viewEObject);
       if (existingViewId != null || !createIfNotExist) {
         return existingViewId;

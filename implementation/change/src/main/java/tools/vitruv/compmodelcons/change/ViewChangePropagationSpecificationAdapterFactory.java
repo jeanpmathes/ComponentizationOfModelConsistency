@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.change.propagation.ChangePropagationSpecification;
 import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceTranslationStrategy;
+import tools.vitruv.compmodelcons.change.correspondence.impl.OriginElementCorrespondenceTranslationStrategyImpl;
 import tools.vitruv.compmodelcons.change.correspondence.impl.PassthroughCorrespondenceTranslationStrategyImpl;
 import tools.vitruv.compmodelcons.change.correspondence.impl.ViewIdCorrespondenceTranslationStrategyImpl;
 import tools.vitruv.compmodelcons.change.impl.NullViewChangePropagatingSpecificationImpl;
@@ -66,6 +67,7 @@ public class ViewChangePropagationSpecificationAdapterFactory {
       CorrespondenceTranslation translation) {
     return switch (translation) {
       case VIEW_ID -> new ViewIdCorrespondenceTranslationStrategyImpl();
+      case ORIGIN_ELEMENTS -> new OriginElementCorrespondenceTranslationStrategyImpl();
       case NONE -> new PassthroughCorrespondenceTranslationStrategyImpl();
     };
   }

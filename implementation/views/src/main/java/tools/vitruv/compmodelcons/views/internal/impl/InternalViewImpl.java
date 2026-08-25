@@ -6,7 +6,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import tools.vitruv.change.atomic.EChange;
 import tools.vitruv.change.atomic.EChangeUtil;
 import tools.vitruv.change.atomic.eobject.DeleteEObject;
@@ -15,6 +18,7 @@ import tools.vitruv.change.atomic.feature.reference.SubtractiveReferenceEChange;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.change.composite.recording.ChangeRecorder;
 import tools.vitruv.compmodelcons.views.EditableViewCorrespondences;
+import tools.vitruv.compmodelcons.views.ViewCorrespondences;
 import tools.vitruv.compmodelcons.views.ViewObserver;
 import tools.vitruv.compmodelcons.views.impl.EditableViewCorrespondencesImpl;
 import tools.vitruv.compmodelcons.views.impl.GetContextImpl;
@@ -178,6 +182,15 @@ public class InternalViewImpl implements AutoCloseable {
     }
     changeRecorder.close();
     changeRecorder = null;
+  }
+
+  public void mapAndApplyCorrespondences(
+      ViewCorrespondences newCorrespondences,
+      Function<EObject, EObject> originObjectMapper) {
+    correspondences.update(newCorrespondences, originObjectMapper, viewObject -> {
+      URI uri = EcoreUtil.getURI(viewObject);
+      return viewResourceAccess.getResourceSet().getEObject(uri, false);
+    });
   }
 
   @Override

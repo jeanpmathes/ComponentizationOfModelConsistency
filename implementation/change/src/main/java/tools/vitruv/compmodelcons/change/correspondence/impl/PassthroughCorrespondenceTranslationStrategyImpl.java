@@ -19,8 +19,9 @@ public class PassthroughCorrespondenceTranslationStrategyImpl implements
   }
 
   @Override
-  public EditableCorrespondenceModelView<Correspondence> createTranslatedCorrespondenceModelView(
-      EditableCorrespondenceModelView<Correspondence> inner, ViewChangePropagationContext context) {
-    return inner;
+  public TranslatedCorrespondenceModelViewImpl createTranslatedCorrespondenceModelView(
+      EditableCorrespondenceModelView<Correspondence> correspondenceModel,
+      ViewChangePropagationContext context) {
+    return new TranslatedCorrespondenceModelViewImpl(correspondenceModel);
   }
 }

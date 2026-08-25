@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EAttribute;
@@ -369,6 +370,16 @@ class ViewBasedChangePropagationSpecificationAdapterTest {
     public EditableCorrespondenceModelView<Correspondence> getCorrespondenceModel() {
       return CorrespondenceModelViewFactory.createEditableCorrespondenceModelView(
           correspondenceModel);
+    }
+
+    @Override
+    public Map<EObject, EObject> getRepositoryToSnapshotMap() {
+      return Map.of();
+    }
+
+    @Override
+    public Map<EObject, EObject> getSnapshotToRepositoryMap() {
+      return Map.of();
     }
 
     @Override

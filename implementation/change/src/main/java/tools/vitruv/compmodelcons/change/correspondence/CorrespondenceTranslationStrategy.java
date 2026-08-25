@@ -9,6 +9,7 @@ public interface CorrespondenceTranslationStrategy {
   CorrespondenceObjectViewObjectTranslatorFactory createCorrespondenceResolverFactory(
       ResourceAccess resourceAccess);
 
-  EditableCorrespondenceModelView<Correspondence> createTranslatedCorrespondenceModelView(
-      EditableCorrespondenceModelView<Correspondence> inner, ViewChangePropagationContext context);
+  TranslatedCorrespondenceModelView createTranslatedCorrespondenceModelView(
+      EditableCorrespondenceModelView<Correspondence> correspondenceModel,
+      ViewChangePropagationContext context);
 }

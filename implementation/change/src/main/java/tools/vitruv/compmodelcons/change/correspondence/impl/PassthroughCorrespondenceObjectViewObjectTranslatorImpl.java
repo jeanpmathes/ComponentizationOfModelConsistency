@@ -1,7 +1,7 @@
 package tools.vitruv.compmodelcons.change.correspondence.impl;
 
+import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EPackage;
 import tools.vitruv.change.composite.MetamodelDescriptor;
 import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslator;
 
@@ -13,33 +13,31 @@ public class PassthroughCorrespondenceObjectViewObjectTranslatorImpl
     this.metamodel = metamodel;
   }
 
-  private boolean canResolveEPackage(EPackage ePackage) {
+  @Override
+  public boolean canTranslateViewEObject(EObject viewObject) {
+    return isPartOfMetamodel(viewObject
+                                 .eClass());
+  }
+
+  private boolean isPartOfMetamodel(EClass eClass) {
     return metamodel
-        .getNsUris()
-        .contains(ePackage.getNsURI());
+               .getNsUris()
+               .contains(eClass.getEPackage().getNsURI());
   }
 
   @Override
-  public boolean canResolveViewEObject(EObject viewObject) {
-    return canResolveEPackage(viewObject
-                                  .eClass()
-                                  .getEPackage());
+  public boolean canTranslateCorrespondenceEObject(EObject correspondenceObject) {
+    return isPartOfMetamodel(correspondenceObject
+                                 .eClass());
   }
 
   @Override
-  public boolean canResolveCorrespondenceEObject(EObject correspondenceObject) {
-    return canResolveEPackage(correspondenceObject
-                                  .eClass()
-                                  .getEPackage());
-  }
-
-  @Override
-  public EObject getViewEObject(EObject correspondenceEObject) {
+  public EObject translateViewEObject(EObject correspondenceEObject) {
     return correspondenceEObject;
   }
 
   @Override
-  public EObject getCorrespondenceEObject(EObject viewEObject, boolean createIfNotExist) {
+  public EObject translateCorrespondenceEObject(EObject viewEObject, boolean createIfNotExist) {
     return viewEObject;
   }
 
