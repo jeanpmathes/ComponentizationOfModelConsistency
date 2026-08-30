@@ -39,7 +39,7 @@ import tools.vitruv.compmodelcons.views.internal.ViewResourceAccess;
 class AbstractOperationTest {
   protected Models models;
   protected EditableViewCorrespondences correspondences;
-  protected TestContext context;
+  protected PutContextImpl context;
 
   protected static Models loadModels() throws URISyntaxException {
     ResourceSet resourceSet = new ResourceSetImpl();
@@ -125,7 +125,7 @@ class AbstractOperationTest {
   public void setUp() throws URISyntaxException {
     models = loadModels();
     correspondences = new EditableViewCorrespondencesImpl();
-    context = new TestContext();
+    context = createTestContext();
   }
 
   @AfterEach
@@ -258,9 +258,8 @@ class AbstractOperationTest {
     }
   }
 
-  public class TestContext extends PutContextImpl {
-    protected TestContext() {
-      super(new OriginResourceAccess() {
+  private PutContextImpl createTestContext() {
+    return new PutContextImpl(new OriginResourceAccess() {
         @Override
         public Optional<Resource> getDefaultResource(EPackage ePackage) {
           return Optional.of(models.getModel(models.getModelIdentifier(ePackage)));
@@ -369,6 +368,5 @@ class AbstractOperationTest {
 
         }
       }, correspondences, DefaultViewObserver.INSTANCE);
-    }
   }
 }

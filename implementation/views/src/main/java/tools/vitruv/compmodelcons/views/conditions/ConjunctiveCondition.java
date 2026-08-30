@@ -1,6 +1,5 @@
 package tools.vitruv.compmodelcons.views.conditions;
 
-import java.util.Arrays;
 import tools.vitruv.compmodelcons.views.bindings.OriginBinding;
 
 public class ConjunctiveCondition implements Condition {
@@ -12,8 +11,11 @@ public class ConjunctiveCondition implements Condition {
 
   @Override
   public boolean evaluate(OriginBinding originBinding) {
-    return Arrays
-        .stream(conditions)
-        .allMatch(condition -> condition.evaluate(originBinding));
+    for (Condition condition : conditions) {
+      if (!condition.evaluate(originBinding)) {
+        return false;
+      }
+    }
+    return true;
   }
 }

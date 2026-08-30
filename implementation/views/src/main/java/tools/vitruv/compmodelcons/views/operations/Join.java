@@ -1,11 +1,7 @@
 package tools.vitruv.compmodelcons.views.operations;
 
-import com.google.common.collect.Streams;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
@@ -47,25 +43,25 @@ public class Join implements OriginOperation {
 
   @Override
   public List<OriginBinding> doGet(GetContext context) {
-    return origin
-        .doGet(context)
-        .stream()
-        .flatMap(originBinding -> {
-          Stream<OriginBinding> result = context
-              .getOriginObjects(sourceClass)
-              .stream()
-              .map(joined -> (OriginBinding) new JoinOriginBindingImpl(originBinding, joined))
-              .filter(condition::evaluate);
+    List<OriginBinding> originBindings = origin.doGet(context);
+    List<OriginBinding> result = new ArrayList<>();
+    List<EObject> candidates = context.getOriginObjects(sourceClass);
 
-          return type == Type.INNER ? result : defaultIfEmpty(result, () -> originBinding);
-        })
-        .toList();
-  }
+    for (OriginBinding originBinding : originBindings) {
+      boolean atLeastOneValuePasses = false;
+      for (EObject candidate : candidates) {
+        OriginBinding joinedBinding = new JoinOriginBindingImpl(originBinding, candidate);
+        if (condition.evaluate(joinedBinding)) {
+          result.add(joinedBinding);
+          atLeastOneValuePasses = true;
+        }
+      }
+      if (type == Type.LEFT && !atLeastOneValuePasses) {
+        result.add(originBinding);
+      }
+    }
 
-  private Stream<OriginBinding> defaultIfEmpty(Stream<OriginBinding> stream,
-                                               Supplier<OriginBinding> defaultFunction) {
-    Iterator<OriginBinding> iterator = stream.iterator();
-    return iterator.hasNext() ? Streams.stream(iterator) : Stream.of(defaultFunction.get());
+    return result;
   }
 
   @Override

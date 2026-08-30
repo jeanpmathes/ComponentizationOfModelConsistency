@@ -11,7 +11,7 @@ import tools.vitruv.compmodelcons.views.ViewObserver;
 import tools.vitruv.compmodelcons.views.internal.OriginResourceAccess;
 import tools.vitruv.compmodelcons.views.internal.ViewResourceAccess;
 
-public class PutContextImpl extends GetContextImpl implements PutContext {
+public final class PutContextImpl extends AbstractGetContext implements PutContext {
   private final Set<EObject> unattachedCreatedOriginObjects = new HashSet<>();
   private final Set<EObject> undetachedDeletedOriginObjects = new HashSet<>();
 

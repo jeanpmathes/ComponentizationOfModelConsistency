@@ -5,6 +5,8 @@ import com.google.common.collect.HashBiMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -67,7 +69,9 @@ public class OriginElementCorrespondenceTranslationStrategyImpl
     private final ViewCorrespondences targetViewCorrespondences;
 
     private final EditableCorrespondenceModelView<Correspondence> innerCorrespondenceModel;
-    private final List<PendingCorrespondence> pendingCorrespondences = new ArrayList<>();
+
+    private final Map<EObject, List<PendingCorrespondence>> pendingCorrespondences =
+        new LinkedHashMap<>();
 
     public TranslatedCorrespondenceModel(
         EditableCorrespondenceModelView<Correspondence> innerCorrespondenceModel,
@@ -116,7 +120,7 @@ public class OriginElementCorrespondenceTranslationStrategyImpl
                                                       leftViewObject),
                                                   translateViewObjectToOriginObjects(
                                                       rightViewObject), completeTag.toString()));
-      pendingCorrespondences.add(pendingCorrespondence);
+      addPendingCorrespondence(pendingCorrespondence);
 
       return correspondence;
     }
@@ -132,12 +136,42 @@ public class OriginElementCorrespondenceTranslationStrategyImpl
       ensureSingularViewObject(sourceEObjects);
       EObject viewObject = sourceEObjects.getFirst();
 
-      if (filterByViewObject(pendingCorrespondences.stream(), viewObject).findAny().isPresent()) {
+      if (!getPendingCorrespondences(viewObject).isEmpty()) {
         return true;
       }
 
       List<EObject> originObjects = translateViewObjectToOriginObjects(viewObject);
       return originObjects != null && innerCorrespondenceModel.hasCorrespondences(originObjects);
+    }
+
+    @Override
+    public Set<EObject> getAllEObjectsInACorrespondence() {
+      HashSet<EObject> result = new HashSet<>();
+
+      pendingCorrespondences.values().forEach(pendingCorrespondences -> {
+        for (PendingCorrespondence pendingCorrespondence : pendingCorrespondences) {
+          result.add(pendingCorrespondence.leftViewObject);
+          result.add(pendingCorrespondence.rightViewObject);
+        }
+      });
+
+      result.addAll(innerCorrespondenceModel.getAllEObjectsInACorrespondence());
+
+      return result;
+    }
+
+    @Override
+    public Set<String> getAllTags() {
+      HashSet<String> tags = new HashSet<>();
+
+      pendingCorrespondences.values().forEach(pendingCorrespondences -> {
+        for (PendingCorrespondence pendingCorrespondence : pendingCorrespondences) {
+          tags.add(pendingCorrespondence.tag);
+        }
+      });
+      tags.addAll(innerCorrespondenceModel.getAllTags());
+
+      return tags;
     }
 
     @Override
@@ -149,7 +183,7 @@ public class OriginElementCorrespondenceTranslationStrategyImpl
 
       Map<String, Set<EObject>> result = new HashMap<>();
 
-      filterByTypeAndTag(filterByViewObject(pendingCorrespondences.stream(), viewObject),
+      filterByTypeAndTag(getPendingCorrespondences(viewObject).stream(),
                          correspondenceType, null)
           .forEach(pendingCorrespondence -> {
             String tag = pendingCorrespondence.tag;
@@ -186,30 +220,6 @@ public class OriginElementCorrespondenceTranslationStrategyImpl
     }
 
     @Override
-    public Set<EObject> getAllEObjectsInACorrespondence() {
-      HashSet<EObject> result = new HashSet<>();
-
-      pendingCorrespondences.forEach(pendingCorrespondence -> {
-        result.add(pendingCorrespondence.leftViewObject);
-        result.add(pendingCorrespondence.rightViewObject);
-      });
-
-      result.addAll(innerCorrespondenceModel.getAllEObjectsInACorrespondence());
-
-      return result;
-    }
-
-    @Override
-    public Set<String> getAllTags() {
-      HashSet<String> tags = new HashSet<>();
-
-      pendingCorrespondences.forEach(pendingCorrespondence -> tags.add(pendingCorrespondence.tag));
-      tags.addAll(innerCorrespondenceModel.getAllTags());
-
-      return tags;
-    }
-
-    @Override
     public Set<List<EObject>> getCorrespondingEObjects(
         Class<? extends Correspondence> correspondenceType, List<EObject> sourceEObjects,
         String tag) {
@@ -218,7 +228,7 @@ public class OriginElementCorrespondenceTranslationStrategyImpl
 
       Set<List<EObject>> result = new HashSet<>();
 
-      filterByTypeAndTag(filterByViewObject(pendingCorrespondences.stream(), viewObject),
+      filterByTypeAndTag(getPendingCorrespondences(viewObject).stream(),
                          correspondenceType, tag).map(
               pendingCorrespondence -> pendingCorrespondence.getCorresponding(viewObject))
           .map(List::of)
@@ -261,11 +271,11 @@ public class OriginElementCorrespondenceTranslationStrategyImpl
       EObject rightViewObject = secondEObjects.getFirst();
 
       Set<PendingCorrespondence> toRemove = new HashSet<>();
-      filterByTypeAndTag(pendingCorrespondences.stream(), correspondenceType, tag).filter(
-              pendingCorrespondence -> pendingCorrespondence.isOnEitherSide(leftViewObject)
-                                           && pendingCorrespondence.isOnEitherSide(rightViewObject))
+      filterByTypeAndTag(getPendingCorrespondences(leftViewObject).stream(), correspondenceType,
+                         tag).filter(
+              pendingCorrespondence -> pendingCorrespondence.isOnEitherSide(rightViewObject))
           .forEach(toRemove::add);
-      pendingCorrespondences.removeAll(toRemove);
+      toRemove.forEach(this::removePendingCorrespondence);
 
       HashSet<C> result = toRemove.stream()
                               .map(pendingCorrespondence -> correspondenceType.cast(
@@ -362,12 +372,34 @@ public class OriginElementCorrespondenceTranslationStrategyImpl
       throw new IllegalStateException("No translation found for origin objects " + originObjects);
     }
 
-    private Stream<PendingCorrespondence> filterByViewObject(
-        Stream<PendingCorrespondence> stream,
-        EObject viewObject) {
-      return stream.filter(
-          pendingCorrespondence -> pendingCorrespondence.isOnEitherSide(viewObject));
+    private void removePendingCorrespondence(PendingCorrespondence pendingCorrespondence) {
+      removePendingCorrespondenceFromIndex(pendingCorrespondence,
+                                           pendingCorrespondence.leftViewObject);
+      removePendingCorrespondenceFromIndex(pendingCorrespondence,
+                                           pendingCorrespondence.rightViewObject);
+    }
 
+    private void removePendingCorrespondenceFromIndex(
+        PendingCorrespondence pendingCorrespondence, EObject viewObject) {
+      pendingCorrespondences.get(viewObject).remove(pendingCorrespondence);
+      if (pendingCorrespondences.get(viewObject).isEmpty()) {
+        pendingCorrespondences.remove(viewObject);
+      }
+    }
+
+    private List<PendingCorrespondence> getPendingCorrespondences(EObject viewObject) {
+      return pendingCorrespondences.getOrDefault(viewObject, List.of());
+    }
+
+    private void addPendingCorrespondence(PendingCorrespondence pendingCorrespondence) {
+      addPendingCorrespondence(pendingCorrespondence, pendingCorrespondence.leftViewObject);
+      addPendingCorrespondence(pendingCorrespondence, pendingCorrespondence.rightViewObject);
+    }
+
+    private void addPendingCorrespondence(
+        PendingCorrespondence pendingCorrespondence, EObject viewObject) {
+      pendingCorrespondences.computeIfAbsent(viewObject, ignored -> new ArrayList<>())
+          .add(pendingCorrespondence);
     }
 
     private List<EObject> translateViewObjectToOriginObjects(EObject viewObject) {
@@ -382,8 +414,11 @@ public class OriginElementCorrespondenceTranslationStrategyImpl
 
     @Override
     public void close() {
-      pendingCorrespondences.forEach(pendingCorrespondence -> pendingCorrespondence.runnable()
-                                                                  .run());
+      Set<PendingCorrespondence> allPendingCorrespondences = new LinkedHashSet<>();
+      pendingCorrespondences.values().forEach(allPendingCorrespondences::addAll);
+      allPendingCorrespondences.forEach(
+          pendingCorrespondence -> pendingCorrespondence.runnable.run());
+
       pendingCorrespondences.clear();
     }
 
