@@ -26,7 +26,7 @@ import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectView
 import tools.vitruv.compmodelcons.change.correspondence.CorrespondenceObjectViewObjectTranslatorFactory;
 import tools.vitruv.compmodelcons.change.correspondence.ViewCorrespondences;
 import tools.vitruv.compmodelcons.change.correspondence.impl.ViewCorrespondencesImpl;
-import tools.vitruv.compmodelcons.change.impl.RootPreservingStateBasedChangeResolutionStrategy;
+import tools.vitruv.compmodelcons.change.impl.ViewAdaptedStateBasedChangeResolutionStrategy;
 import tools.vitruv.compmodelcons.change.impl.ViewSnapshot;
 import tools.vitruv.compmodelcons.views.impl.DefaultViewObserver;
 import tools.vitruv.compmodelcons.views.impl.OperationBasedViewType;
@@ -133,8 +133,10 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
                                                                                  viewUri, null,
                                                                                  null)
       ) {
+        StateBasedChangeResolutionStrategy stateBasedChangeResolutionStrategy =
+            getStateBasedChangeResolutionStrategy(this, changedView, unchangedToChanged);
         viewChanges =
-            deriveAndApplyChangesToReach(changedView, getStateBasedChangeResolutionStrategy());
+            deriveAndApplyChangesToReach(changedView, stateBasedChangeResolutionStrategy);
         internalView.mapAndApplyCorrespondences(changedView.internalView.getCorrespondences(),
                                                 unchangedToChanged);
       } catch (Exception e) {
@@ -164,6 +166,45 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
     @Override
     public void commit() {
       internalView.commit();
+    }
+
+    private static StateBasedChangeResolutionStrategy getStateBasedChangeResolutionStrategy(
+        ChangePropagationViewImpl unchangedView,
+        ChangePropagationViewImpl changedView,
+        Function<EObject, EObject> unchangedToChanged) {
+      return new ViewAdaptedStateBasedChangeResolutionStrategy(viewObject -> {
+        Resource resource = viewObject.eResource();
+        if (resource == null || resource.getResourceSet() == null) {
+          return null;
+        }
+        if (resource.getResourceSet() == changedView.viewResourceAccess.getResourceSet()) {
+          return changedView.internalView.getCorrespondences()
+                     .getCorrespondingOriginObjectsForViewObject(viewObject);
+        } else {
+          // Change Resolution creates a copy of the unchanged side, so we have to map back.
+
+          Resource originalResource = unchangedView.viewResourceAccess.getResourceSet()
+                                          .getResource(resource.getURI(), false);
+          if (originalResource == null) {
+            return null;
+          }
+
+          EObject originalViewObject =
+              originalResource.getEObject(resource.getURIFragment(viewObject));
+          if (originalViewObject == null) {
+            return null;
+          }
+
+          List<EObject> originObjects = unchangedView.internalView.getCorrespondences()
+                                            .getCorrespondingOriginObjectsForViewObject(
+                                                originalViewObject);
+          if (originObjects == null) {
+            return null;
+          }
+
+          return originObjects.stream().map(unchangedToChanged).toList();
+        }
+      });
     }
 
     private List<EChange<EObject>> deriveAndApplyChangesToReach(
@@ -209,10 +250,6 @@ public abstract class ChangeSpecificationAwareViewType extends OperationBasedVie
       return VitruviusChangeResolverFactory.forHierarchicalIds(viewResourceAccess.getResourceSet())
                  .resolveAndApply(change)
                  .getEChanges();
-    }
-
-    private StateBasedChangeResolutionStrategy getStateBasedChangeResolutionStrategy() {
-      return new RootPreservingStateBasedChangeResolutionStrategy();
     }
 
     private Map<URI, Resource> getResources() {

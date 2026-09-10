@@ -6,7 +6,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -138,19 +137,16 @@ public class EditableViewCorrespondencesImpl implements EditableViewCorresponden
       ViewCorrespondences newCorrespondences,
       Function<EObject, EObject> originObjectMapper,
       Function<EObject, EObject> viewObjectMapper) {
-    correspondences.entrySet().stream()
-        .map(entry -> Map.entry(entry.getKey(), entry.getValue()))
-        .toList()
-        .forEach(entry -> {
-          List<EObject> originalOriginObjects = entry.getKey().originObjects();
-          List<EObject> mappedOriginObjects =
-              originalOriginObjects.stream().map(originObjectMapper).toList();
-          if (!mappedOriginObjects.equals(originalOriginObjects)) {
-            EObject viewObject = entry.getValue().viewObject();
-            removeCorrespondence(entry.getKey().originObjects(), viewObject);
-            addCorrespondence(mappedOriginObjects, viewObject);
-          }
-        });
+    HashBiMap.create(correspondences).forEach((key, value) -> {
+      List<EObject> originalOriginObjects = key.originObjects();
+      List<EObject> mappedOriginObjects =
+          originalOriginObjects.stream().map(originObjectMapper).toList();
+      if (!mappedOriginObjects.equals(originalOriginObjects)) {
+        EObject viewObject = value.viewObject();
+        removeCorrespondence(key.originObjects(), viewObject);
+        addCorrespondence(mappedOriginObjects, viewObject);
+      }
+    });
 
     newCorrespondences.forEach(
         (originObjects, viewObject) -> {

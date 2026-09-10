@@ -62,6 +62,34 @@ public class OriginElementCorrespondenceTranslationStrategyImpl
     };
   }
 
+  public static String getCorrespondenceTag(
+      EClass leftViewClass, EClass rightViewClass, String tag) {
+    String leftViewClassString = EcoreUtil.getURI(leftViewClass).toString();
+    String rightViewClassString = EcoreUtil.getURI(rightViewClass).toString();
+    return getCorrespondenceTag(leftViewClassString, rightViewClassString, tag);
+  }
+
+  private static String getCorrespondenceTag(
+      String leftViewClassString, String rightViewClassString, String tag) {
+    StringBuilder result = new StringBuilder();
+
+    result.append("view<");
+    if (leftViewClassString != null) {
+      result.append(leftViewClassString);
+    }
+    result.append("><");
+    if (rightViewClassString != null) {
+      result.append(rightViewClassString);
+    }
+    result.append(">");
+    if (tag != null) {
+      result.append(" ");
+      result.append(tag);
+    }
+
+    return result.toString();
+  }
+
   private class TranslatedCorrespondenceModel implements CorrespondenceModel {
     private final BiMap<String, EClass> viewClasses = HashBiMap.create();
 
@@ -322,7 +350,7 @@ public class OriginElementCorrespondenceTranslationStrategyImpl
     }
 
     public Optional<Tag> parse(String tag) {
-      if (tag == null || !tag.startsWith("origin")) {
+      if (tag == null || !tag.startsWith("view")) {
         return Optional.empty();
       }
 
@@ -462,25 +490,9 @@ public class OriginElementCorrespondenceTranslationStrategyImpl
 
       @Override
       public String toString() {
-        StringBuilder result = new StringBuilder();
-
-        result.append("origin<");
         String leftClassString = viewClasses.inverse().get(leftViewClass);
-        if (leftClassString != null) {
-          result.append(leftClassString);
-        }
-        result.append("><");
         String rightClassString = viewClasses.inverse().get(rightViewClass);
-        if (rightClassString != null) {
-          result.append(rightClassString);
-        }
-        result.append(">");
-        if (tag != null) {
-          result.append(" ");
-          result.append(tag);
-        }
-
-        return result.toString();
+        return getCorrespondenceTag(leftClassString, rightClassString, tag);
       }
 
       public boolean hasViewClasses(EClass otherLeftViewClass, EClass otherRightViewClass) {

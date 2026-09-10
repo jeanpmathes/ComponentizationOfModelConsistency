@@ -37,55 +37,24 @@ public abstract class AbstractOriginResourceAccess implements OriginResourceAcce
     return List.of();
   }
 
-  protected URI determineOriginUri(EPackage originPackage, URI uriHint) {
-    return uriHint
-        .trimFileExtension()
-        .appendFileExtension(originPackage.getNsPrefix());
-  }
-
   @Override
   public Optional<URI> getViewUriHint(List<EPackage> originPackages, EPackage viewtypePackage) {
     return resources
-        .entrySet()
-        .stream()
-        .filter(entry -> originPackages.contains(entry.getKey()))
-        .filter(entry -> canDeriveNameFromPackage(entry.getKey()))
-        .map(entry -> entry
-            .getValue()
-            .defaultResource()
-            .getURI()
-            .trimFileExtension()
-            .appendFileExtension(viewtypePackage.getNsPrefix()))
-        .min(Comparator.comparing(URI::toString));
+               .entrySet()
+               .stream()
+               .filter(entry -> originPackages.contains(entry.getKey()))
+               .filter(entry -> canDeriveNameFromPackage(entry.getKey()))
+               .map(entry -> entry
+                                 .getValue()
+                                 .defaultResource()
+                                 .getURI()
+                                 .trimFileExtension()
+                                 .appendFileExtension(viewtypePackage.getNsPrefix()))
+               .min(Comparator.comparing(URI::toString));
   }
-
-  protected abstract Collection<EObject> getRoots();
 
   protected boolean canDeriveNameFromPackage(EPackage ePackage) {
     return true;
-  }
-
-  protected void rebuildResourceMapping() {
-    knownDefaults.clear();
-    resources.clear();
-
-    for (EObject eObject : getRoots()) {
-      EPackage ePackage = eObject
-          .eClass()
-          .getEPackage();
-
-      if (resources.containsKey(ePackage)) {
-        resources
-            .get(ePackage)
-            .allResources()
-            .add(eObject.eResource());
-      } else {
-        knownDefaults.put(ePackage, eObject
-            .eResource()
-            .getURI());
-        resources.put(ePackage, ResourceEntry.create(eObject));
-      }
-    }
   }
 
   @Override
@@ -95,8 +64,8 @@ public abstract class AbstractOriginResourceAccess implements OriginResourceAcce
     Map<EPackage, Map<URI, Resource>> allResources = new HashMap<>();
     for (EObject eObject : getRoots()) {
       EPackage ePackage = eObject
-          .eClass()
-          .getEPackage();
+                              .eClass()
+                              .getEPackage();
       allResources
           .computeIfAbsent(ePackage, ignore -> new HashMap<>())
           .put(eObject
@@ -112,15 +81,46 @@ public abstract class AbstractOriginResourceAccess implements OriginResourceAcce
           .ofNullable(knownDefaults.get(ePackage))
           .flatMap(uri -> Optional.ofNullable(packageResources.get(uri)))
           .or(() -> packageResources
-              .values()
-              .stream()
-              .min(Comparator.comparing(resource -> resource
-                  .getURI()
-                  .toString()
-                  .length())))
+                        .values()
+                        .stream()
+                        .min(Comparator.comparing(resource -> resource
+                                                                  .getURI()
+                                                                  .toString()
+                                                                  .length())))
           .map(defaultResource -> new ResourceEntry(defaultResource,
                                                     new HashSet<>(packageResources.values())))
           .ifPresent(resourceEntry -> resources.put(ePackage, resourceEntry));
+    }
+  }
+
+  protected abstract Collection<EObject> getRoots();
+
+  protected URI determineOriginUri(EPackage originPackage, URI uriHint) {
+    return uriHint
+               .trimFileExtension()
+               .appendFileExtension(originPackage.getNsPrefix());
+  }
+
+  protected void rebuildResourceMapping() {
+    knownDefaults.clear();
+    resources.clear();
+
+    for (EObject eObject : getRoots()) {
+      EPackage ePackage = eObject
+                              .eClass()
+                              .getEPackage();
+
+      if (resources.containsKey(ePackage)) {
+        resources
+            .get(ePackage)
+            .allResources()
+            .add(eObject.eResource());
+      } else {
+        knownDefaults.put(ePackage, eObject
+                                        .eResource()
+                                        .getURI());
+        resources.put(ePackage, ResourceEntry.create(eObject));
+      }
     }
   }
 

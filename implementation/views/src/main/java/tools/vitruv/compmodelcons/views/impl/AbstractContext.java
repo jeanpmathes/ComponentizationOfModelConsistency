@@ -13,8 +13,9 @@ public abstract class AbstractContext implements Context {
   private final OriginResourceAccess originResourceAccess;
   private final EditableViewCorrespondences correspondences;
 
-  protected AbstractContext(OriginResourceAccess originResourceAccess,
-                            EditableViewCorrespondences correspondences) {
+  protected AbstractContext(
+      OriginResourceAccess originResourceAccess,
+      EditableViewCorrespondences correspondences) {
     this.originResourceAccess = originResourceAccess;
     this.correspondences = correspondences;
   }
@@ -29,10 +30,7 @@ public abstract class AbstractContext implements Context {
 
     for (Resource resource : originResourceAccess.getResources(eClass.getEPackage())) {
       for (EObject root : resource.getContents()) {
-        if (!root
-            .eClass()
-            .getEPackage()
-            .equals(eClass.getEPackage())) {
+        if (!root.eClass().getEPackage().equals(eClass.getEPackage())) {
           continue;
         }
         if (eClass.isSuperTypeOf(root.eClass())) {
